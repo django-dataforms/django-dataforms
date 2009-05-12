@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div id="name" style="margin: 30px;">
+			<form action="." method="post" accept-charset="utf-8">
+				{{ form.as_p }}
+				<p><input type="submit" value="Submit"></p>
+			</form>
+		</div>
+{% endblock %}
