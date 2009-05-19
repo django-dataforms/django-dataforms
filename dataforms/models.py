@@ -116,7 +116,7 @@ class Submission(models.Model):
 	Model that holdsa unique submission
 	"""
 	data_formcollection = models.ForeignKey('DataFormCollection', null=True)
-	data_forms = models.ManyToManyField('DataForm')
+	data_forms = models.ManyToManyField('DataForm', null=True)
 	slug = models.SlugField(verbose_name=_('slug'), max_length=255, blank=True)
 	last_modified = models.DateTimeField(verbose_name=_('last modified'), auto_now=True)
 
