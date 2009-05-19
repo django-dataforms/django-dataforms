@@ -25,7 +25,7 @@ def form(request):
 #TODO
 def form_collection(request):
 
-	form_collection = create_form_collection(request, 'irb')
+	form_collection = create_form_collection('irb')
 
 	assert False
 
