@@ -19,7 +19,6 @@ def create_form_collection(slug):
 	:param slug: the form slug from the DB
 	:return: a dictionary containing: ``title``, ``description``, ``slug``, and ``form_list``
 	"""
-	
 	# Get the queryset for the form collection to pass in our dcitionary
 	try:
 		form_collection_qs = DataFormCollection.objects.get(visible=True,slug=slug)
