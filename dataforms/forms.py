@@ -163,6 +163,13 @@ def _create_form(slug, title=None, description=None):
 			choices += choices_dict[row.id]
 			kwargs['choices'] = choices
 			
+			# If initial has multiple values
+			if ',' in kwargs['initial']:
+				kwargs['initial'] = kwargs['initial'].split(',')
+				
+				# remove whitespace
+				kwargs['initial'] = [element.strip() for element in kwargs['initial']]
+			
 		#-----Additional logic for field types GO HERE----
 		#efif row.field_type == CharField (example)
 		
@@ -199,7 +206,7 @@ def create_form_class_title(slug):
 	:param slug: the form slug from the DB
 	"""
 
-	return ''.join([word.capitalize() for word in slug.split('-')] + ['Form'])
+	return ''.join([word.capitalize() for word in str(slug).split('-')] + ['Form'])
 
 
 
