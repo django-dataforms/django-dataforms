@@ -117,11 +117,11 @@ class Submission(models.Model):
 	"""
 	data_formcollection = models.ForeignKey('DataFormCollection', null=True)
 	data_form = models.ForeignKey('DataForm')
-	slug = models.SlugField(verbose_name=_('slug'), max_length=255)
+	slug = models.SlugField(verbose_name=_('slug'), max_length=255, blank=True)
 	last_modified = models.DateTimeField(verbose_name=_('last modified'), auto_now=True)
 
 	def __unicode__(self):
-		return u'%s - %s' % (self.slug, self.last_modified)
+		return self.slug
 
 
 class Answer(models.Model):
