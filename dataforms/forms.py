@@ -12,7 +12,7 @@ from django import forms
 from settings import FIELD_MAPPINGS
 from models import DataForm, DataFormCollection, Field, FieldChoice, Answer
 
-def create_form_collection(request, slug):
+def create_form_collection(slug):
 	"""
 	Based on a form collection slug, create a list of form objects.
 	
@@ -42,7 +42,7 @@ def create_form_collection(request, slug):
 	
 	# Populate the list
 	for row in forms_qs:
-		form_list.append(create_form(request, str(row.slug), title=row.title, description=row.description))
+		form_list.append(_create_form(str(row.slug), title=row.title, description=row.description))
 	
 	# Pass our collection info and our form list to the dictionary
 	form_collection_dict = {
