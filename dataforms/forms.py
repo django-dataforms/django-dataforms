@@ -143,7 +143,6 @@ def _create_form(slug, title=None, description=None):
 		if row.arguments:
 			json_args = json.loads(row.arguments)
 		
-		kwargs['pk'] = row.pk
 		kwargs['label'] = row.label
 		kwargs['help_text'] = row.help_text
 		kwargs['initial'] = row.initial
