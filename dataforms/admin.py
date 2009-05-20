@@ -64,7 +64,7 @@ class AnswerAdmin(admin.ModelAdmin):
 	list_select_related = True
 
 class SubmissionAdmin(admin.ModelAdmin):
-	list_display = ('slug', 'last_modified',)
+	list_display = ('__unicode__', 'last_modified',)
 	search_fields = ('slug',)
 	list_select_related = True
 
