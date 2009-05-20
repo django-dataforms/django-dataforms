@@ -20,16 +20,17 @@ class DataFormCollectionDataForm(models.Model):
 	""" 
 	Model bridge for DataFormset and DataForm
 	"""
-	data_formcollection = models.ForeignKey('DataFormCollection', null=True)
+	collection = models.ForeignKey('DataFormCollection', null=True)
 	data_form = models.ForeignKey('DataForm', null=True)
 	order = models.IntegerField(verbose_name=_('order'), null=True, blank=True)
+	section = models.IntegerField(verbose_name=_('section'), null=False, blank=False)
 
 	class Meta:
-		unique_together = ('data_formcollection', 'data_form')
-		ordering = ['order',]
+		unique_together = ('collection', 'data_form')
+		ordering = ['section','order',]
 
 	def __unicode__(self):
-		return u'%s in %s' % (self.data_formcollection, self.data_form)
+		return u'%s in %s' % (self.collection, self.data_form)
 
 class DataForm(models.Model):
 	"""
@@ -115,7 +116,7 @@ class Submission(models.Model):
 	"""
 	Model that holdsa unique submission
 	"""
-	data_formcollection = models.ForeignKey('DataFormCollection', null=True, blank=True)
+	collection = models.ForeignKey('DataFormCollection', null=True, blank=True)
 	data_forms = models.ManyToManyField('DataForm', null=True, blank=True)
 	slug = models.SlugField(verbose_name=_('slug'), max_length=255, blank=True)
 	last_modified = models.DateTimeField(verbose_name=_('last modified'), auto_now=True)

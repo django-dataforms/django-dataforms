@@ -29,8 +29,8 @@ def create_form_collection(slug):
 	try:
 		forms_qs = (
 			DataForm.objects.filter(
-				dataformcollectiondataform__data_formcollection__slug=slug,
-				dataformcollectiondataform__data_formcollection__visible=True)
+				dataformcollectiondataform__collection__slug=slug,
+				dataformcollectiondataform__collection__visible=True)
 			.order_by('dataformcollectiondataform__order')
 		)
 	except DataForm.DoesNotExist:
