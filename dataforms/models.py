@@ -23,7 +23,7 @@ class DataFormCollectionDataForm(models.Model):
 	collection = models.ForeignKey('DataFormCollection', null=True)
 	data_form = models.ForeignKey('DataForm', null=True)
 	order = models.IntegerField(verbose_name=_('order'), null=True, blank=True)
-	section = models.IntegerField(verbose_name=_('section'), null=False, blank=False)
+	section = models.CharField(verbose_name=_('section'), max_length=255, null=False, blank=False)
 
 	class Meta:
 		unique_together = ('collection', 'data_form')
