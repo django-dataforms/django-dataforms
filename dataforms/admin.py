@@ -59,8 +59,8 @@ class FieldAdmin(admin.ModelAdmin):
 		js = ADMIN_SORT_JS
 
 class AnswerAdmin(admin.ModelAdmin):
-	list_display = ('submission', 'field', 'answer', 'last_modified',)
-	search_fields = ('answer',)
+	list_display = ('submission', 'field', 'content', 'last_modified',)
+	search_fields = ('content',)
 	list_select_related = True
 
 class SubmissionAdmin(admin.ModelAdmin):

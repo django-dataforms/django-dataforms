@@ -7,6 +7,7 @@ class DataFormCollection(models.Model):
 	"""
 	Model that holds a collection of forms
 	"""
+	
 	data_forms = models.ManyToManyField('DataForm', through='DataFormCollectionDataForm')
 	title = models.CharField(verbose_name=_('collection title'), max_length=255)
 	description = models.TextField(verbose_name=_('description'), blank=True)
@@ -20,6 +21,7 @@ class DataFormCollectionDataForm(models.Model):
 	""" 
 	Model bridge for DataFormset and DataForm
 	"""
+	
 	collection = models.ForeignKey('DataFormCollection', null=True)
 	data_form = models.ForeignKey('DataForm', null=True)
 	order = models.IntegerField(verbose_name=_('order'), null=True, blank=True)
@@ -36,6 +38,7 @@ class DataForm(models.Model):
 	"""
 	Model for each form 
 	"""
+	
 	fields = models.ManyToManyField('Field', through='DataFormField')
 	title = models.CharField(verbose_name=_('form title'), max_length=255)
 	description = models.TextField(verbose_name=_('description'), blank=True)
@@ -50,6 +53,7 @@ class DataFormField(models.Model):
 	""" 
 	Model bridge for DataForm and Field
 	"""
+	
 	data_form = models.ForeignKey('DataForm', null=True)
 	field = models.ForeignKey('Field', null=True)
 	order = models.IntegerField(verbose_name=_('order'), null=True, blank=True)
@@ -66,6 +70,7 @@ class Field(models.Model):
 	"""
 	Model that holds fields
 	"""
+	
 	choices = models.ManyToManyField('Choice', through='FieldChoice')
 	field_type = models.CharField(verbose_name=_('feild type key'), max_length=255, choices=FIELD_TYPE_CHOICES)
 	slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
@@ -89,6 +94,7 @@ class FieldChoice(models.Model):
 	""" 
 	Model bridge for Field and Choice
 	"""
+	
 	field = models.ForeignKey('Field', null=True)
 	choice = models.ForeignKey('Choice', null=True)
 	order = models.IntegerField(verbose_name=_('order'), null=True, blank=True)
@@ -105,6 +111,7 @@ class Choice(models.Model):
 	"""
 	Model that holds choices for fields and their values
 	"""
+	
 	title = models.CharField(verbose_name=_('choice title'), max_length=255)
 	value = models.CharField(verbose_name=_('choice value'), max_length=255)
 
@@ -114,11 +121,12 @@ class Choice(models.Model):
 
 class Submission(models.Model):
 	"""
-	Model that holdsa unique submission
+	Model that holds a unique submission
 	"""
+	
+	slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
 	collection = models.ForeignKey('DataFormCollection', null=True, blank=True)
 	data_forms = models.ManyToManyField('DataForm', null=True, blank=True)
-	slug = models.SlugField(verbose_name=_('slug'), max_length=255, blank=True)
 	last_modified = models.DateTimeField(verbose_name=_('last modified'), auto_now=True)
 
 	def __unicode__(self):
@@ -129,11 +137,14 @@ class Answer(models.Model):
 	"""
 	Model that holds answers for each submission
 	"""
-	#choice = models.ManyToManyField('Choice')
+	
+	choice = models.ManyToManyField('Choice')
 	submission = models.ForeignKey('Submission')
 	field = models.ForeignKey('Field')
-	answer = models.TextField(verbose_name=_('answer'))
+	content = models.TextField(verbose_name=_('content'), null=True, blank=True)
 	last_modified = models.DateTimeField(verbose_name=_('last modified'), auto_now=True)
 	
 	def __unicode__(self):
-		return self.answer
+		return self.content
+	
+	
