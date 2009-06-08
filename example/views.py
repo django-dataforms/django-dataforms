@@ -4,9 +4,8 @@ from django.http import HttpResponseRedirect, HttpResponseServerError, HttpRespo
 from dataforms.forms import create_form, create_form_collection, _create_form
 from dataforms.models import Submission, DataForm
 from itertools import chain
-from django.db import connection, transaction
+from django.db import connection
 
-@transaction.commit_on_success
 def form(request):
 	"""
 	A demo page to show a form dynamically generated from the database. 
@@ -27,11 +26,9 @@ def form(request):
 	
 	return render_to_response('index.html', vals, RequestContext(request))
 
-@transaction.commit_on_success
 def form_collection(request):
 	"""
-	A demo page to show a form collection (many forms)
-	dynamically generated from the database. 
+	A demo page to show a form collection (many forms) dynamically generated from the database. 
 	"""
 
 	# FIXME: finish code 

@@ -20,6 +20,10 @@ class BaseDataForm(forms.BaseForm):
 		Saves the validated, cleaned form data. If a submission already exists,
 		the new data will be merged over the old data.
 		"""
+		
+		# TODO: think about adding an "overwrite" argument to this function, default of False,
+		# which will determine if an error should be thrown if the submission object already
+		# exists, or if we should trust the data and overwrite the previous submission.
 
 		if not hasattr(self, "submission"):
 			self.submission = Submission.objects.create(slug=self.submission_slug)
@@ -162,7 +166,7 @@ def create_form(request, form, submission=None, title=None, description=None):
 
 	:param request: the current page request object, so we can pull POST and other vars.
 	:param form: a data form slug or object
-	:param submission: submission slug or object;passed in to retrieve answers from an existing submission
+	:param submission: submission slug or object; passed in to retrieve answers from an existing submission
 	:param title: optional title; pulled from DB by default
 	:param description: optional description; pulled from DB by default
 	"""
