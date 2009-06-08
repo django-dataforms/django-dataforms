@@ -149,7 +149,7 @@ def get_answers(submission):
 			
 	return dict(data)
 
-def create_form(request, form, submission=None, title=None, description=None):
+def create_form(request, form, submission, title=None, description=None):
 	"""
 	Instantiate and return a dynamic form object, optionally already populated from an
 	already submitted form.
@@ -166,13 +166,14 @@ def create_form(request, form, submission=None, title=None, description=None):
 
 	:param request: the current page request object, so we can pull POST and other vars.
 	:param form: a data form slug or object
-	:param submission: submission slug or object; passed in to retrieve answers from an existing submission
+	:param submission: create-on-use submission slug or object; passed in to retrieve
+		Answers from an existing Submission, or to be the slug for a new Submission.
 	:param title: optional title; pulled from DB by default
 	:param description: optional description; pulled from DB by default
 	"""
 	
 	data = None
-
+		
 	# Slightly evil, do type checking to see if submission is a Submission object or string
 	if isinstance(submission, str):
 		submission_slug = submission
@@ -183,10 +184,9 @@ def create_form(request, form, submission=None, title=None, description=None):
 			submission = None
 	else:
 		submission_slug = submission.slug
-		
+	
 	# Before we populate from submitted data, prepare the answers for insertion into the form
-	if submission:
-		data = get_answers(submission=submission)
+	data = get_answers(submission=submission)
 	
 	# Create our form class
 	FormClass = _create_form(form=form, title=title, description=description)
@@ -198,7 +198,6 @@ def create_form(request, form, submission=None, title=None, description=None):
 		# the resulting POST data will (in normal cases) originate from database defaults already.
 		
 		# This creates a bound form object.
-		
 		form = FormClass(data=request.POST, files=request.FILES)
 	else:
 		# We populate the initial data of the form from the database answers. Any questions we
