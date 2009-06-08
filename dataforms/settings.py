@@ -31,7 +31,10 @@ FIELD_MAPPINGS.update( {
 	'CheckboxSelectMultiple' : { 'class':forms.MultipleChoiceField, 'widget':forms.CheckboxSelectMultiple },
 } )
 
-MULTICHOICE_FIELDS = ('SelectMultiple', 'CheckboxSelectMultiple')
+BOOLEAN_FIELDS = ('CheckboxInput',)
+SINGLE_CHOICE_FIELDS = ('Select', 'RadioSelect')
+MULTI_CHOICE_FIELDS = ('SelectMultiple', 'CheckboxSelectMultiple')
+CHOICE_FIELDS = SINGLE_CHOICE_FIELDS + MULTI_CHOICE_FIELDS  
 
 # You need to import your django settings to get the MEDIA_URL for this to work.
 ADMIN_SORT_JS = (
