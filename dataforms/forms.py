@@ -88,7 +88,7 @@ def create_form_collection(slug):
 	try:
 		form_collection_qs = DataFormCollection.objects.get(visible=True, slug=slug)
 	except DataFormCollection.DoesNotExist:
-		raise Exception(
+		raise DataFormCollection.DoesNotExist(
 			'''DataFormCollection %s does not exist. Make sure the slug
 			name is correct and the collection is visible.''' % slug
 		)
@@ -102,8 +102,8 @@ def create_form_collection(slug):
 			).order_by('dataformcollectiondataform__order')
 		)
 	except DataForm.DoesNotExist:
-		raise Exception(
-			'''Data Forms for %s do not exist. Make sure the slug
+		raise DataForm.DoesNotExist(
+			'''Data Forms for collection %s do not exist. Make sure the slug
 			name is correct and the forms are visible.''' % slug
 		)
 	
@@ -154,14 +154,13 @@ def create_form(request, form, submission, title=None, description=None):
 	Instantiate and return a dynamic form object, optionally already populated from an
 	already submitted form.
 	
-	Either called to create an unbound form::
+	Usage:
 	
-		create_form(request, slug="personal-info")
-		# or
-		create_form(request, slug="personal-info", title="Title", description="Desc")
+		# Get a dynamic form. If a Submission with slug "myForm" exists,
+		# this will return a bound form. Otherwise, it will be unbound.
+		create_form(request, form="personal-info", submission="myForm")
 		
-	or to create a bound form tied to a previous submission::
-	
+		# Create a bound form to a previous submission object
 		create_form(request, slug="personal-info", submission=Submission.objects.get(...))
 
 	:param request: the current page request object, so we can pull POST and other vars.
@@ -234,13 +233,14 @@ def _create_form(form, title=None, description=None):
 	# Parse the slug and create a class title
 	form_class_title = create_form_class_title(slug)
 	
+	# Make sure the form definition exists before continuing
+	try:
+		form_qs = DataForm.objects.get(visible=True, slug=slug)
+	except DataForm.DoesNotExist:
+		raise DataForm.DoesNotExist('DataForm %s does not exist. Make sure the slug name is correct and the form is visible.' % slug)
+	
 	# Get the queryset detail for the form
 	if not title or not description:
-		try:
-			form_qs = DataForm.objects.get(visible=True, slug=slug)
-		except DataForm.DoesNotExist:
-			raise Exception('DataForm %s does not exist. Make sure the slug name is correct and the form is visible.' % slug)
-		
 		# Set the title and/or the description from the DB (but only if it wasn't given)
 		meta['title'] = form_qs.title if not title else title
 		meta['description'] = form_qs.description if not description else description
@@ -252,7 +252,8 @@ def _create_form(form, title=None, description=None):
 			visible=True
 		).order_by('dataformfield__order')
 	except Field.DoesNotExist:
-		raise Exception('Field for %s do not exist. Make sure the slug name is correct and the fields are visible.' % slug)
+		# FIXME: is this error ever going to be raised? Won't it just be [] and not raise an error?
+		raise Field.DoesNotExist('Field for %s do not exist. Make sure the slug name is correct and the fields are visible.' % slug)
 		
 	# Initialize a sorted dictionary to keep the order of our fields
 	fields = SortedDict()
