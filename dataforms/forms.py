@@ -1,17 +1,20 @@
-from __future__ import absolute_import
+"""
+Forms System
+============
+"""
 
 # Load the user's custom validation, if it exists
 try: import validation
 except ImportError: validation = None
 
+from collections import defaultdict
 from django import forms
 from django.db import transaction
 from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
 
-from collections import defaultdict
 from .settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS, BOOLEAN_FIELDS
-from .models import DataForm, DataFormCollection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice
+from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice
 
 class BaseDataForm(forms.BaseForm):
 	@transaction.commit_on_success
@@ -25,13 +28,6 @@ class BaseDataForm(forms.BaseForm):
 		# which will determine if an error should be thrown if the submission object already
 		# exists, or if we should trust the data and overwrite the previous submission.
 
-		if not hasattr(self, "submission"):
-			self.submission = Submission.objects.create(slug=self.submission_slug)
-			
-		# Make sure that this submission has at least my (self) DataForm associated with
-		# it which it needs in order to save properly
-		self.submission.data_forms.add(DataForm.objects.get(slug=self.slug))
-		
 		# FIXME: This is probably ridiculously inefficient and may generate a ton of SQL.
 		# Do some profiling and see if there are ways to batch some of the SQL queries together.
 		#
@@ -46,17 +42,21 @@ class BaseDataForm(forms.BaseForm):
 			if field.field_type in CHOICE_FIELDS:
 				# This is an answer that is tied to the choices relation, not content
 				
+				if not hasattr(self, "submission"):
+					self.submission = Submission.objects.create(slug=self.submission_slug)
+				
 				answer, was_created = Answer.objects.get_or_create(
 					submission=self.submission,
 					field=field,
+					data_form=DataForm.objects.get(slug=self.slug),
 				)
+				
+				# Delete all previous choices
+				answer.choices.clear()
 				
 				# If string, wrap as a list because the for-loop below assumes a list
 				if isinstance(self.cleaned_data[key], unicode) or isinstance(self.cleaned_data[key], str):
 					self.cleaned_data[key] = [self.cleaned_data[key]]
-				
-				# Delete all previous choices
-				answer.choices.clear()
 				
 				# Add the selected choices
 				choices = Choice.objects.filter(value__in=self.cleaned_data[key])
@@ -70,6 +70,7 @@ class BaseDataForm(forms.BaseForm):
 				answer, was_created = Answer.objects.get_or_create(
 					submission=self.submission,
 					field=field,
+					data_form=DataForm.objects.get(slug=self.slug),
 				)
 				
 				# Update the content and re-save.
@@ -86,26 +87,18 @@ def create_form_collection(slug):
 	
 	# Get the queryset for the form collection to pass in our dictionary
 	try:
-		form_collection_qs = DataFormCollection.objects.get(visible=True, slug=slug)
-	except DataFormCollection.DoesNotExist:
-		raise DataFormCollection.DoesNotExist(
-			'''DataFormCollection %s does not exist. Make sure the slug
-			name is correct and the collection is visible.''' % slug
-		)
+		form_collection_qs = Collection.objects.get(visible=True, slug=slug)
+	except Collection.DoesNotExist:
+		raise Collection.DoesNotExist('''Collection %s does not exist. Make sure the slug name is correct and the collection is visible.''' % slug)
 	
 	# Get queryset for all the forms that are needed
 	try:
-		forms_qs = (
-			DataForm.objects.filter(
-				dataformcollectiondataform__collection__slug=slug,
-				dataformcollectiondataform__collection__visible=True
-			).order_by('dataformcollectiondataform__order')
-		)
+		forms_qs = DataForm.objects.filter(
+				collectiondataform__collection__slug=slug,
+				collectiondataform__collection__visible=True
+			).order_by('collectiondataform__order')
 	except DataForm.DoesNotExist:
-		raise DataForm.DoesNotExist(
-			'''Data Forms for collection %s do not exist. Make sure the slug
-			name is correct and the forms are visible.''' % slug
-		)
+		raise DataForm.DoesNotExist('''Data Forms for collection %s	do not exist. Make sure the slug name is correct and the forms are visible.''' % slug)
 	
 	# Initialize a list to contain all the form classes
 	form_list = []
@@ -154,7 +147,7 @@ def create_form(request, form, submission, title=None, description=None):
 	Instantiate and return a dynamic form object, optionally already populated from an
 	already submitted form.
 	
-	Usage:
+	Usage::
 	
 		# Get a dynamic form. If a Submission with slug "myForm" exists,
 		# this will return a bound form. Otherwise, it will be unbound.
@@ -335,7 +328,6 @@ def _create_form(form, title=None, description=None):
 def create_form_class_title(slug):
 	"""
 	Transform "my-form-name" into "MyFormName"
-	
 	This is important because we need each form class to have a unique name.
 
 	:param slug: the form slug from the DB

@@ -8,7 +8,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
 	(r'^$', form),
-	(r'^wizard/$', form_collection),
+	url(r'^collection/$', form_collection, name="form_collection"),
 	(r'^admin/(.*)', admin.site.root),
 )
 

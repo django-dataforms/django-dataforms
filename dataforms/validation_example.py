@@ -7,7 +7,6 @@ This is really freakn sweet!
 
 from django import forms
 
-
 class BaseValidationForm(object):
 	@staticmethod
 	def clean_frogs(self):

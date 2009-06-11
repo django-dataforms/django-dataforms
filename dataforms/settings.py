@@ -1,5 +1,6 @@
 """
-Default settings file.  
+App Settings
+============
 
 This file should not be updated.  Instead, please put any additional field mappings
 in your project settings file.  That way any custom fields and widgets will be
@@ -7,11 +8,20 @@ de-coupled from this app.
 
 :constant FIELD_MAPPINGS: a dictionary of form fields are available to be used.
 :constant ADMIN_SORT_JS: tuple that references the custom javascript for the django admin.
-:constant FIELD_TYPE_CHOICES: tuple that is used by the model as choices  
+:constant FIELD_TYPE_CHOICES: tuple that is used by the model as choices
+
+:constant BOOLEAN_FIELDS: an element of FIELD_MAPPINGS that should be interpreted
+	on save as only yes/no
+:constant SINGLE_CHOICE_FIELDS = field types that have choices, but only one selected
+	on save, for Select boxes or a single RadioSelect type
+:constant MULTI_CHOICE_FIELDS = field types that have choices and multiple
+	ones can be selected on save, for SelectMultiple boxes or CheckboxSelectMultiple
+:constant CHOICE_FIELDS: both SINGLE_CHOICE_FIELDS and MULTI_CHOICE_FIELDS  
 """
+
+from django.conf import settings
 from django import forms
 from django.contrib.admin.widgets import AdminDateWidget, AdminSplitDateTime
-from django.conf import settings
 
 FIELD_MAPPINGS = {}
 

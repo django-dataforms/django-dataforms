@@ -1,0 +1,5 @@
+.. automodule:: dataforms.forms
+	:synopsis: Main dataforms module
+	:members:
+	:undoc-members:
+ 

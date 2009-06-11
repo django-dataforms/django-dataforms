@@ -3,7 +3,7 @@
 {% block content %}
 		<div id="name" style="margin: 30px;">
 			<h1>Form sample</h1>
-			<p>This form has been dynamically created from a database definition.<p>
+			<p>This form has been dynamically created from a database definition. See the <a href="{% url form_collection %}">form collection</a> demo.<p>
 			
 			<form action="." method="post" accept-charset="utf-8">
 				{{ form.as_p }}

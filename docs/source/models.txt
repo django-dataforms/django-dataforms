@@ -1,0 +1,5 @@
+.. automodule:: dataforms.models
+	:synopsis: The Django models
+	:members:
+	:undoc-members:
+ 

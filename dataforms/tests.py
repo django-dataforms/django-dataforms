@@ -10,7 +10,7 @@ from django.test import TestCase
 from django.http import HttpRequest
 
 from . import forms
-from .models import DataForm, DataFormCollection 
+from .models import DataForm, Collection 
 
 class FormsTestCase(TestCase):
 	def testDataFormClass(self):
@@ -29,7 +29,7 @@ class FormsTestCase(TestCase):
 		
 		forms.create_form(request, form="personal-information", submission="myForm")
 		
-	def testDataFormCollection(self):
+	def testCollection(self):
 		self.assertEquals(True, True)
 		
 	def testCreateFormClassTitle(self):

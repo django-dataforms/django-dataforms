@@ -1,14 +1,13 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from settings import FIELD_TYPE_CHOICES
+from .settings import FIELD_TYPE_CHOICES
 
-
-class DataFormCollection(models.Model):
+class Collection(models.Model):
 	"""
 	Model that holds a collection of forms
 	"""
 	
-	data_forms = models.ManyToManyField('DataForm', through='DataFormCollectionDataForm')
+	data_forms = models.ManyToManyField('DataForm', through='CollectionDataForm')
 	title = models.CharField(verbose_name=_('collection title'), max_length=255)
 	description = models.TextField(verbose_name=_('description'), blank=True)
 	slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
@@ -17,12 +16,12 @@ class DataFormCollection(models.Model):
 	def __unicode__(self):
 		return self.title
 
-class DataFormCollectionDataForm(models.Model):
+class CollectionDataForm(models.Model):
 	""" 
-	Model bridge for DataFormset and DataForm
+	Model bridge for Collection and DataForm
 	"""
 	
-	collection = models.ForeignKey('DataFormCollection', null=True)
+	collection = models.ForeignKey('Collection', null=True)
 	data_form = models.ForeignKey('DataForm', null=True)
 	order = models.IntegerField(verbose_name=_('order'), null=True, blank=True)
 	section = models.CharField(verbose_name=_('section'), max_length=255, null=False, blank=False)
@@ -48,7 +47,6 @@ class DataForm(models.Model):
 	def __unicode__(self):
 		return self.title
 
-
 class DataFormField(models.Model):
 	""" 
 	Model bridge for DataForm and Field
@@ -64,7 +62,6 @@ class DataFormField(models.Model):
 		
 	def __unicode__(self):
 		return u'%s in %s' % (self.data_form, self.field)
-
 
 class Field(models.Model):
 	"""
@@ -106,7 +103,6 @@ class FieldChoice(models.Model):
 	def __unicode__(self):
 		return u'%s in %s' % (self.field, self.choice)
 
-
 class Choice(models.Model):
 	"""
 	Model that holds choices for fields and their values
@@ -118,23 +114,17 @@ class Choice(models.Model):
 	def __unicode__(self):
 		return self.title
 
-
 class Submission(models.Model):
 	"""
 	Model that holds a unique submission
 	"""
 	
 	slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
-	# TODO: I don't think we need a relation between a submission to a data collection
-	# collection = models.ForeignKey('DataFormCollection', null=True, blank=True)
-	
-	# FIXME: find a way to make at least one m2m data_forms relation required 
-	data_forms = models.ManyToManyField('DataForm', null=False, blank=False)
+	collection = models.ForeignKey('Collection', null=True, blank=True)
 	last_modified = models.DateTimeField(verbose_name=_('last modified'), auto_now=True)
 
 	def __unicode__(self):
-		return '%s-%s' % (self.slug, self.pk)
-
+		return '%s' % (self.slug)
 
 class AnswerChoice(models.Model):
 	"""
@@ -152,10 +142,11 @@ class Answer(models.Model):
 	Model that holds answers for each submission
 	"""
 	
-	choices = models.ManyToManyField('Choice', through='AnswerChoice')
-	submission = models.ForeignKey('Submission')
-	field = models.ForeignKey('Field')
+	submission = models.ForeignKey('Submission', null=False, blank=False)
+	data_form = models.ForeignKey('DataForm', null=False, blank=False)
+	field = models.ForeignKey('Field', null=False, blank=False)
 	content = models.TextField(verbose_name=_('content'), null=True, blank=True)
+	choices = models.ManyToManyField('Choice', through='AnswerChoice')
 	last_modified = models.DateTimeField(verbose_name=_('last modified'), auto_now=True)
 	
 	def __unicode__(self):

@@ -1,7 +1,8 @@
-from models import DataFormCollection, DataFormCollectionDataForm, DataForm, DataFormField, Field, FieldChoice, Choice, Answer, Submission
 from django import forms
 from django.contrib import admin
-from settings import ADMIN_SORT_JS
+
+from .settings import ADMIN_SORT_JS
+from .models import Collection, CollectionDataForm, DataForm, DataFormField, Field, FieldChoice, Choice, Answer, Submission
 
 #Admin Forms
 class FieldAdminForm(forms.ModelForm):
@@ -17,7 +18,7 @@ class FieldAdminForm(forms.ModelForm):
 
 #Inline ModelAdmin classes
 class DataFormInline(admin.StackedInline):
-	model = DataFormCollectionDataForm
+	model = CollectionDataForm
 	extra = 1
 
 class ChoiceInline(admin.StackedInline):
@@ -29,7 +30,7 @@ class FieldInline(admin.StackedInline):
 	extra = 1
 
 #ModelAdmin Classes
-class DataFormCollectionAdmin(admin.ModelAdmin):
+class CollectionAdmin(admin.ModelAdmin):
 	prepopulated_fields = {'slug': ('title',)}
 	inlines = [DataFormInline,]
 	
@@ -73,7 +74,7 @@ class ChoiceAdmin(admin.ModelAdmin):
 	search_fields = ('text',)
 
 
-admin.site.register(DataFormCollection, DataFormCollectionAdmin)
+admin.site.register(Collection, CollectionAdmin)
 admin.site.register(DataForm, DataFormAdmin)
 admin.site.register(Field, FieldAdmin)
 admin.site.register(Answer, AnswerAdmin)
