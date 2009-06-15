@@ -46,6 +46,8 @@ SINGLE_CHOICE_FIELDS = ('Select', 'RadioSelect')
 MULTI_CHOICE_FIELDS = ('SelectMultiple', 'CheckboxSelectMultiple')
 CHOICE_FIELDS = SINGLE_CHOICE_FIELDS + MULTI_CHOICE_FIELDS  
 
+FIELD_DELIMITER = "__"
+
 # You need to import your django settings to get the MEDIA_URL for this to work.
 ADMIN_SORT_JS = (
 	'https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',

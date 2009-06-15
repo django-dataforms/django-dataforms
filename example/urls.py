@@ -1,14 +1,13 @@
 from django.conf.urls.defaults import *
 from django.conf import settings
-from views import form, form_collection
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns('',
-	(r'^$', form),
-	url(r'^collection/$', form_collection, name="form_collection"),
+urlpatterns = patterns('views',
+	url(r'^$', 'index', name="index"),
+	url(r'^collection/$', 'form_collection', name="form_collection"),
 	(r'^admin/(.*)', admin.site.root),
 )
 

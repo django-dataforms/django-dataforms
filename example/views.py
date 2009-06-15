@@ -1,50 +1,43 @@
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.http import HttpResponseRedirect, HttpResponseServerError, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotAllowed
-from dataforms.forms import create_form, create_form_collection, _create_form
+from dataforms.forms import create_form, create_collection, _create_form
 from dataforms.models import Submission, DataForm
 from itertools import chain
 from django.db import connection
 
-def form(request):
+def index(request):
 	"""
 	A demo page to show a form dynamically generated from the database. 
 	"""
 	
-	form = create_form(request=request, form='personal-information', submission="myForm")
+	form = create_form(request=request, form="personal-information", submission="myForm")
 	
 	if request.method == "POST":
-		# They have submitted the form
 		if form.is_valid():
-			# Save the form. Automagically creates a submission if it doesn't exist
-			# and associates the submission to the right data_forms
+			# Creates a Submission and saves the submitted form data
 			form.save()
 	
 	vals = {
 		'form':form,
 	}
 	
-	return render_to_response('index.html', vals, RequestContext(request))
+	return render_to_response("index.html", vals, RequestContext(request))
 
 def form_collection(request):
 	"""
 	A demo page to show a form collection (many forms) dynamically generated from the database. 
 	"""
 
-	# FIXME: finish code 
+	form_collection = create_collection(request=request, collection="test-collection", submission="myCollection")
 
-	form_collection = create_form_collection('irb')
-
-	if request.method == 'POST':
-		form = FormClass(request.POST, request.FILES)
-
-		if form.is_valid():
-			pass
-	else:
-		form = FormClass()
+	if request.method == "POST":
+		if form_collection.is_valid():
+			# Creates a Submission and saves the submitted form data
+			form_collection.save()
 
 	vals = {
-		'form':form,
+		'forms':form_collection,
 	}
 
-	return render_to_response('index.html', vals, RequestContext(request))
+	return render_to_response('collection.html', vals, RequestContext(request))

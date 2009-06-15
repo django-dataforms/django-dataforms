@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+		<div id="name" style="margin: 30px;">
+			<h1>Collection sample</h1>
+			<p>These forms have been dynamically created from database definitions. See the single <a href="{% url index %}">form</a> demo.<p>
+			
+			<form action="." method="post">
+			    {% for form in forms %}
+			    	<h2>{{ form.meta.title }}</h2>
+			    	<h2>{{ form.meta.description }}</h2>
+				    {% for field in form %}
+			        <div class="form-row">
+			            {{ field.errors }}
+			            {{ field.label_tag }}
+			            {{ field }}
+			        </div>
+				    {% endfor %}
+			    {% endfor %}
+			    
+			    <input type="submit" value="Save" />
+	        </form>
+		</div>
+{% endblock %}

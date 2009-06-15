@@ -13,7 +13,7 @@ from django.db import transaction
 from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
 
-from .settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS, BOOLEAN_FIELDS
+from .settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS, BOOLEAN_FIELDS, FIELD_DELIMITER
 from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice
 
 class BaseDataForm(forms.BaseForm):
@@ -36,14 +36,18 @@ class BaseDataForm(forms.BaseForm):
 		#    that we are about to update.
 		#  * Is there any way to batch INSERTs in Django's ORM?
 		
+		if not hasattr(self, "submission"):
+			# This needs to be get_or_create (not just create) for form collections
+			# IE, the first form saved in a collection will create the submission
+			# but all other forms will still not have self.submission
+			self.submission, was_created = Submission.objects.get_or_create(slug=self.submission_slug)
+		
 		for key in self.fields.keys():
-			field = Field.objects.get(slug=key)
+			# Mangle the key into the DB form, then get the right Field
+			field = Field.objects.get(slug=_field_for_db(key))
 			
 			if field.field_type in CHOICE_FIELDS:
 				# This is an answer that is tied to the choices relation, not content
-				
-				if not hasattr(self, "submission"):
-					self.submission = Submission.objects.create(slug=self.submission_slug)
 				
 				answer, was_created = Answer.objects.get_or_create(
 					submission=self.submission,
@@ -77,70 +81,84 @@ class BaseDataForm(forms.BaseForm):
 				answer.content = content=self.cleaned_data[key] if self.cleaned_data[key] else ''
 				answer.save()
 
-def create_form_collection(slug):
+class BaseCollection(object):
+	def __init__(self, title, description, slug, forms):
+		self.title = str(title)
+		self.description = str(description)
+		self.slug = str(slug)
+		self.forms = forms
+		
+	def __getitem__(self, index):
+		return self.forms[index]
+	
+	def __getslice__(self, start, end):
+		return self.forms[start, end]
+	
+	# FIXME: does this transaction encapsulate the inner save()
+	# transactions? If not, we need to do that.
+	@transaction.commit_on_success
+	def save(self):
+		"""
+		Save all contained forms
+		"""
+		
+		for form in self.forms:
+			form.save()
+		
+	def is_valid(self):
+		"""
+		Validate all contained forms
+		"""
+		
+		for form in self.forms:
+			if not form.is_valid():
+				return False
+		return True
+
+def create_collection(request, collection, submission):
 	"""
 	Based on a form collection slug, create a list of form objects.
 	
-	:param slug: the form slug from the DB
-	:return: a dictionary containing: ``title``, ``description``, ``slug``, and ``form_list``
+	:param request: the current page request object, so we can pull POST and other vars.
+	:param collection: a data form collection slug or object
+	:param submission: create-on-use submission slug or object; passed in to retrieve
+		Answers from an existing Submission, or to be the slug for a new Submission.
+	:return: a BaseCollection object, populated with the correct data forms and data
 	"""
 	
-	# Get the queryset for the form collection to pass in our dictionary
-	try:
-		form_collection_qs = Collection.objects.get(visible=True, slug=slug)
-	except Collection.DoesNotExist:
-		raise Collection.DoesNotExist('''Collection %s does not exist. Make sure the slug name is correct and the collection is visible.''' % slug)
+	# Slightly evil, do type checking to see if submission is a Submission object or string
+	if isinstance(collection, str):
+		# Get the queryset for the form collection to pass in our dictionary
+		try:
+			form_collection_qs = Collection.objects.get(visible=True, slug=collection)
+		except Collection.DoesNotExist:
+			raise Collection.DoesNotExist('''Collection %s does not exist. Make sure the slug name is correct and the collection is visible.''' % collection)
 	
 	# Get queryset for all the forms that are needed
 	try:
 		forms_qs = DataForm.objects.filter(
-				collectiondataform__collection__slug=slug,
+				collectiondataform__collection__slug=collection,
 				collectiondataform__collection__visible=True
 			).order_by('collectiondataform__order')
 	except DataForm.DoesNotExist:
-		raise DataForm.DoesNotExist('''Data Forms for collection %s	do not exist. Make sure the slug name is correct and the forms are visible.''' % slug)
+		raise DataForm.DoesNotExist('''Data Forms for collection %s	do not exist. Make sure the slug name is correct and the forms are visible.''' % collection)
 	
 	# Initialize a list to contain all the form classes
 	form_list = []
 	
 	# Populate the list
-	for row in forms_qs:
-		form_list.append(_create_form(str(row.slug), title=row.title, description=row.description))
+	for form in forms_qs:
+		form_list.append(create_form(request, form=form, submission=submission))
 	
 	# Pass our collection info and our form list to the dictionary
-	form_collection_dict = {
-		'title':form_collection_qs.title,
-		'description':form_collection_qs.description,
-		'slug':form_collection_qs.slug,
-		'form_list':form_list,
-	}
+	collection = BaseCollection(
+		title=form_collection_qs.title,
+		description=form_collection_qs.description,
+		slug=form_collection_qs.slug,
+		forms=form_list
+	)
 	
-	return form_collection_dict
-
-def get_answers(submission):
-	"""
-	Get the answers for a submission
-	
-	:return: a dictionary of answers
-	"""
-	
-	data = defaultdict(list)
-	
-	answer_qs = Answer.objects.select_related('field', 'choice').filter(submission=submission)
-		
-	for answer in answer_qs:
-		if answer.field.field_type in MULTI_CHOICE_FIELDS:
-			data[str(answer.field.slug)] += [choice.value for choice in answer.choices.all()]
-		elif answer.field.field_type in SINGLE_CHOICE_FIELDS:
-			try:
-				data[str(answer.field.slug)] = [choice.value for choice in answer.choices.all()][0]
-			except IndexError:
-				# If we couldn't find a choice relation, just use the DB default
-				pass
-		else:
-			data[str(answer.field.slug)] = answer.content
-			
-	return dict(data)
+	return collection
 
 def create_form(request, form, submission, title=None, description=None):
 	"""
@@ -304,7 +322,7 @@ def _create_form(form, title=None, description=None):
 		#efif row.field_type == CharField (example)
 		
 		# Create our field key with any widgets and additional arguments (initial, label, required, help_text, etc)
-		fields[row.slug] = field_type['class'](widget=field_type['widget'] if field_type.has_key('widget') else None, **kwargs)
+		fields[_field_for_form(name=row.slug, form=slug)] = field_type['class'](widget=field_type['widget'] if field_type.has_key('widget') else None, **kwargs)
 	
 	attrs = {
 		'base_fields' : fields,
@@ -325,6 +343,37 @@ def _create_form(form, title=None, description=None):
 	# Return a class object of this form with all attributes
 	return type(form_class_title, (BaseDataForm,), attrs)
 
+def get_answers(submission):
+	"""
+	Get the answers for a submission
+	
+	:return: a dictionary of answers
+	"""
+	
+	data = defaultdict(list)
+	
+	answer_qs = Answer.objects.select_related('field', 'choice').filter(submission=submission)
+		
+	# For every answer, 
+	for answer in answer_qs:
+		
+		# Refactor the answer field name to be globally unique (so
+		# that a field can be in multiple forms in the same POST)
+		answer_key = _field_for_form(name=str(answer.field.slug), form=answer.data_form.slug) 
+		
+		if answer.field.field_type in MULTI_CHOICE_FIELDS:
+			data[answer_key] += [choice.value for choice in answer.choices.all()]
+		elif answer.field.field_type in SINGLE_CHOICE_FIELDS:
+			try:
+				data[answer_key] = [choice.value for choice in answer.choices.all()][0]
+			except IndexError:
+				# If we couldn't find a choice relation, just use the DB default
+				pass
+		else:
+			data[answer_key] = answer.content
+			
+	return dict(data)
+
 def create_form_class_title(slug):
 	"""
 	Transform "my-form-name" into "MyFormName"
@@ -335,9 +384,21 @@ def create_form_class_title(slug):
 
 	return ''.join([word.capitalize() for word in str(slug).split('-')] + ['Form'])
 
+def _field_for_form(name, form):
+	"""
+	Make a form field globally unique by prepending the form name
+	field-name --> form-name--field-name
+	"""
+	return "%s%s%s" % (form, FIELD_DELIMITER, name)
+
+def _field_for_db(name):
+	"""
+	Take a form from POST data and get it back to its DB-capable name
+	id_form-name--field-name --> field-name 
+	"""
+	return name[name.find(FIELD_DELIMITER)+len(FIELD_DELIMITER):]
 
 # Custom dataform exception classes
-
 class RequiredArgument(Exception):
 	pass
 
