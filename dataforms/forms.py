@@ -1,6 +1,9 @@
 """
-Forms System
-============
+DataForms System
+================
+
+See the GettingStarted guide at:
+http://code.google.com/p/django-dataforms/wiki/GettingStarted
 """
 
 # Load the user's custom validation, if it exists
@@ -17,7 +20,6 @@ from .settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS,
 from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice
 
 class BaseDataForm(forms.BaseForm):
-	@transaction.commit_on_success
 	def save(self):
 		"""
 		Saves the validated, cleaned form data. If a submission already exists,
@@ -35,6 +37,9 @@ class BaseDataForm(forms.BaseForm):
 		#  * All the get_or_create() functions could become creates if we delete all answers
 		#    that we are about to update.
 		#  * Is there any way to batch INSERTs in Django's ORM?
+		
+		# FIXME: check if cleaned_data exists and throw an error informing the user
+		# they need to call is_valid() before calling this save function.
 		
 		if not hasattr(self, "submission"):
 			# This needs to be get_or_create (not just create) for form collections
@@ -94,9 +99,6 @@ class BaseCollection(object):
 	def __getslice__(self, start, end):
 		return self.forms[start, end]
 	
-	# FIXME: does this transaction encapsulate the inner save()
-	# transactions? If not, we need to do that.
-	@transaction.commit_on_success
 	def save(self):
 		"""
 		Save all contained forms
@@ -345,16 +347,26 @@ def _create_form(form, title=None, description=None):
 
 def get_answers(submission):
 	"""
-	Get the answers for a submission
+	Get the answers for a submission.
+	
+	This function intentionally does not return the answers in the same
+	form as request.POST data will have submitted them (ie, every element
+	wrapped as a list). This is because this function is meant to provide
+	data that can be instantly consumed by some `FormClass(data=data)`
+	instantiation, as done by create_form. 
 	
 	:return: a dictionary of answers
 	"""
 	
 	data = defaultdict(list)
 	
+	# Slightly evil, do type checking to see if submission is a Submission object or string
+	if isinstance(submission, str):
+		submission = Submission.objects.get(slug=submission)
+	
 	answer_qs = Answer.objects.select_related('field', 'choice').filter(submission=submission)
 		
-	# For every answer, 
+	# For every answer, do some magic and get it into our data dictionary
 	for answer in answer_qs:
 		
 		# Refactor the answer field name to be globally unique (so
