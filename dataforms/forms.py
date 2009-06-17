@@ -17,7 +17,7 @@ from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
 
 from .settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS, BOOLEAN_FIELDS, FIELD_DELIMITER
-from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice
+from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice, CollectionDataForm
 
 class BaseDataForm(forms.BaseForm):
 	def save(self):
@@ -93,11 +93,42 @@ class BaseCollection(object):
 		self.slug = str(slug)
 		self.forms = forms
 		
-	def __getitem__(self, index):
-		return self.forms[index]
+	def __getitem__(self, arg):
+		"""
+		Usage::
+		
+			# Returns a new Collection with just the forms from this section
+			collection["Section Name"]
+			collection["2"]
+			
+			# Returns a new Collection with just the specified form
+			collection[2]
+		"""
+		
+		# This is evil type checking...is there a duck-typing way of doing this?
+		if isinstance(arg, str) or isinstance(arg, unicode):
+			# If arg was a string, treat it as a section identifier and
+			# return a new collection with just the forms from that section
+			return BaseCollection(
+				title=self.title,
+				description=self.description,
+				slug=self.slug,
+				forms=[form for form in self.forms if form.section == arg]
+			)
+		else:
+			return self.forms[arg]
 	
 	def __getslice__(self, start, end):
-		return self.forms[start, end]
+		"""
+		Make a new collection with the given subset of forms
+		"""
+		
+		return BaseCollection(
+			title=self.title,
+			description=self.description,
+			slug=self.slug,
+			forms=self.forms[start, end]
+		)
 	
 	def save(self):
 		"""
@@ -132,37 +163,45 @@ def create_collection(request, collection, submission):
 	if isinstance(collection, str):
 		# Get the queryset for the form collection to pass in our dictionary
 		try:
-			form_collection_qs = Collection.objects.get(visible=True, slug=collection)
+			collection = Collection.objects.get(visible=True, slug=collection)
 		except Collection.DoesNotExist:
 			raise Collection.DoesNotExist('''Collection %s does not exist. Make sure the slug name is correct and the collection is visible.''' % collection)
 	
 	# Get queryset for all the forms that are needed
 	try:
-		forms_qs = DataForm.objects.filter(
-				collectiondataform__collection__slug=collection,
+		forms = DataForm.objects.filter(
+				collectiondataform__collection=collection,
 				collectiondataform__collection__visible=True
 			).order_by('collectiondataform__order')
 	except DataForm.DoesNotExist:
 		raise DataForm.DoesNotExist('''Data Forms for collection %s	do not exist. Make sure the slug name is correct and the forms are visible.''' % collection)
 	
+	collection_bridge = CollectionDataForm.objects.filter(
+		collection=collection,
+		data_form__in=forms,
+	)
+	
 	# Initialize a list to contain all the form classes
 	form_list = []
 	
 	# Populate the list
-	for form in forms_qs:
-		form_list.append(create_form(request, form=form, submission=submission))
+	for form in forms:
+		# Hmm...is this evil?
+		section = collection_bridge.filter(data_form=form)[0].section
+		
+		form_list.append(create_form(request, form=form, submission=submission, section=section))
 	
 	# Pass our collection info and our form list to the dictionary
 	collection = BaseCollection(
-		title=form_collection_qs.title,
-		description=form_collection_qs.description,
-		slug=form_collection_qs.slug,
+		title=collection.title,
+		description=collection.description,
+		slug=collection.slug,
 		forms=form_list
 	)
 	
 	return collection
 
-def create_form(request, form, submission, title=None, description=None):
+def create_form(request, form, submission, title=None, description=None, section=None):
 	"""
 	Instantiate and return a dynamic form object, optionally already populated from an
 	already submitted form.
@@ -182,6 +221,7 @@ def create_form(request, form, submission, title=None, description=None):
 		Answers from an existing Submission, or to be the slug for a new Submission.
 	:param title: optional title; pulled from DB by default
 	:param description: optional description; pulled from DB by default
+	:param section: optional section; will be added as an attr to the form instance 
 	"""
 	
 	data = None
@@ -218,11 +258,14 @@ def create_form(request, form, submission, title=None, description=None):
 		# This creates an unbound form object.
 		form = FormClass(initial=(data if data else None))
 		
+	
 	# Now that we have an instantiated form object, let's add our custom attributes
 	if submission:
 		form.submission = submission
 	if submission_slug:
 		form.submission_slug = submission_slug
+		
+	form.section = section
 		
 	return form
 
@@ -248,15 +291,15 @@ def _create_form(form, title=None, description=None):
 	
 	# Make sure the form definition exists before continuing
 	try:
-		form_qs = DataForm.objects.get(visible=True, slug=slug)
+		form = DataForm.objects.get(visible=True, slug=slug)
 	except DataForm.DoesNotExist:
 		raise DataForm.DoesNotExist('DataForm %s does not exist. Make sure the slug name is correct and the form is visible.' % slug)
 	
 	# Get the queryset detail for the form
 	if not title or not description:
 		# Set the title and/or the description from the DB (but only if it wasn't given)
-		meta['title'] = form_qs.title if not title else title
-		meta['description'] = form_qs.description if not description else description
+		meta['title'] = form.title if not title else title
+		meta['description'] = form.description if not description else description
 		
 	# Get all the fields
 	try:
@@ -364,10 +407,10 @@ def get_answers(submission):
 	if isinstance(submission, str):
 		submission = Submission.objects.get(slug=submission)
 	
-	answer_qs = Answer.objects.select_related('field', 'choice').filter(submission=submission)
+	answers = Answer.objects.select_related('field', 'choice').filter(submission=submission)
 		
 	# For every answer, do some magic and get it into our data dictionary
-	for answer in answer_qs:
+	for answer in answers:
 		
 		# Refactor the answer field name to be globally unique (so
 		# that a field can be in multiple forms in the same POST)
