@@ -35,7 +35,7 @@ class CollectionDataForm(models.Model):
 
 class DataForm(models.Model):
 	"""
-	Model for each form 
+	Model for each form
 	"""
 	
 	fields = models.ManyToManyField('Field', through='DataFormField')
@@ -62,14 +62,14 @@ class DataFormField(models.Model):
 		
 	def __unicode__(self):
 		return u'%s in %s' % (self.data_form, self.field)
-
+	
 class Field(models.Model):
 	"""
 	Model that holds fields
 	"""
 	
 	choices = models.ManyToManyField('Choice', through='FieldChoice')
-	field_type = models.CharField(verbose_name=_('feild type key'), max_length=255, choices=FIELD_TYPE_CHOICES)
+	field_type = models.CharField(verbose_name=_('field type key'), max_length=255, choices=FIELD_TYPE_CHOICES)
 	slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
 	label = models.TextField(verbose_name=_('field label'))
 	help_text = models.TextField(verbose_name=_('field help text'), blank=True)
@@ -77,15 +77,20 @@ class Field(models.Model):
 	arguments = models.CharField(verbose_name=_('additional arguments'), blank=True, max_length=255)
 	required = models.BooleanField(verbose_name=_('field is required'), default=False)
 	visible = models.BooleanField(verbose_name=_('field is visible'), default=True)
+	bindings = models.ManyToManyField('self', symmetrical=False, through="Binding")
 	
 	def __unicode__(self):
 		return self.label
 
-	# def __unicode__(self):
-	# 	field_dict = {}
-	# 	for d in self.__dict__:
-	# 		field_dict[d] = eval('self.%s' % d)
-	# 	return unicode(field_dict)
+class Binding(models.Model):
+	"""
+	Recursive model bridge for Field
+	"""
+	
+	data_form = models.ForeignKey('DataForm', null=False, blank=False)
+	parent_field = models.ForeignKey('Field', related_name="bindingparent_set", help_text="Leave blank if a choice is selected", null=True, blank=True)
+	parent_choice = models.ForeignKey('FieldChoice', help_text="Leave blank if a parent is selected", null=True, blank=True)
+	child = models.ForeignKey('Field', related_name="bindingchild_set", null=False, blank=False)
 
 class FieldChoice(models.Model):
 	""" 
@@ -98,10 +103,10 @@ class FieldChoice(models.Model):
 
 	class Meta:
 		unique_together = ('field', 'choice')
-		ordering = ['order',]
+		ordering = ['field', 'order',]
 
 	def __unicode__(self):
-		return u'%s in %s' % (self.field, self.choice)
+		return u'%s - %s' % (self.field, str(self.choice).upper())
 
 class Choice(models.Model):
 	"""

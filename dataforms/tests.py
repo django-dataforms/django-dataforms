@@ -125,13 +125,17 @@ class FormsTestCase(CustomTestCase):
 		answers = forms.get_answers(submission="testSubmission")
 		
 		# Just make sure it's not empty (could do more I guess)
+		# FIXME: should verify that answers come back WITHOUT form name prepended
+		# (ie. default argument to get_answers of for_form=False) 
 		self.assertTrue(answers)
 		
 		# Test the submission from the tests fixture using a Submission object arg
 		submission = Submission.objects.get(slug="testSubmission")
-		answers = forms.get_answers(submission=submission)
+		answers = forms.get_answers(submission=submission, for_form=True)
 		
 		# Just make sure it's not empty (could do more I guess)
+		# FIXME: should verify that answers come back WITH form name prepended
+		# (ie. argument to get_answers of for_form=True) 
 		self.assertTrue(answers)
 		
 	def testValidation(self):

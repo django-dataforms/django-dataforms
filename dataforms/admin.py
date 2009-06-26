@@ -2,9 +2,9 @@ from django import forms
 from django.contrib import admin
 
 from .settings import ADMIN_SORT_JS
-from .models import Collection, CollectionDataForm, DataForm, DataFormField, Field, FieldChoice, Choice, Answer, Submission
+from .models import Collection, CollectionDataForm, DataForm, DataFormField, Field, Binding, FieldChoice, Choice, Answer, Submission
 
-#Admin Forms
+# Admin Forms
 class FieldAdminForm(forms.ModelForm):
 	class Meta:
 		model = Field
@@ -16,7 +16,7 @@ class FieldAdminForm(forms.ModelForm):
 			raise forms.ValidationError("You cannot use the term 'meta' as a label as it is reserved.")
 		return data
 
-#Inline ModelAdmin classes
+# Inline ModelAdmin classes
 class DataFormInline(admin.StackedInline):
 	model = CollectionDataForm
 	extra = 1
@@ -29,7 +29,11 @@ class FieldInline(admin.StackedInline):
 	model = DataFormField
 	extra = 1
 
-#ModelAdmin Classes
+class BindingInline(admin.StackedInline):
+	model = Binding
+	extra = 1
+
+# ModelAdmin Classes
 class CollectionAdmin(admin.ModelAdmin):
 	prepopulated_fields = {'slug': ('title',)}
 	inlines = [DataFormInline,]
@@ -58,7 +62,10 @@ class FieldAdmin(admin.ModelAdmin):
 	
 	class Media:
 		js = ADMIN_SORT_JS
-
+		
+class BindingAdmin(admin.ModelAdmin):
+	list_display = ('parent_field', 'parent_choice', 'child',)
+		
 class AnswerAdmin(admin.ModelAdmin):
 	list_display = ('submission', 'field', 'content', 'last_modified',)
 	search_fields = ('content',)
@@ -77,6 +84,7 @@ class ChoiceAdmin(admin.ModelAdmin):
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(DataForm, DataFormAdmin)
 admin.site.register(Field, FieldAdmin)
+admin.site.register(Binding, BindingAdmin)
 admin.site.register(Answer, AnswerAdmin)
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(Choice, ChoiceAdmin)

@@ -28,14 +28,16 @@ FIELD_MAPPINGS = {}
 if hasattr(settings, 'FIELD_MAPPINGS'):
 	FIELD_MAPPINGS = settings.FIELD_MAPPINGS
 
+
+# Make sure to specify a 'widget' for every FIELD_MAPPING entry
 FIELD_MAPPINGS.update( {
-	'TextInput' : { 'class':forms.CharField },
+	'TextInput' : { 'class':forms.CharField, 'widget':forms.TextInput },
 	'Textarea' : { 'class':forms.CharField, 'widget':forms.Textarea },
-	'Select' : { 'class':forms.ChoiceField },
-	'SelectMultiple' : { 'class':forms.MultipleChoiceField },
+	'Select' : { 'class':forms.ChoiceField, 'widget':forms.Select },
+	'SelectMultiple' : { 'class':forms.MultipleChoiceField, 'widget' : forms.SelectMultiple },
 	'RadioSelect' : { 'class':forms.ChoiceField, 'widget':forms.RadioSelect },
 	'Password' : { 'class':forms.CharField, 'widget':forms.PasswordInput },
-	'Email' : { 'class':forms.EmailField },
+	'Email' : { 'class':forms.EmailField, 'widget':forms.TextInput },
 	'DateField' : { 'class':forms.DateField, 'widget':AdminDateWidget },
 	'CheckboxInput' : { 'class':forms.BooleanField, 'widget':forms.CheckboxInput },
 	'CheckboxSelectMultiple' : { 'class':forms.MultipleChoiceField, 'widget':forms.CheckboxSelectMultiple },
@@ -48,11 +50,13 @@ CHOICE_FIELDS = SINGLE_CHOICE_FIELDS + MULTI_CHOICE_FIELDS
 
 FIELD_DELIMITER = "__"
 
-# You need to import your django settings to get the MEDIA_URL for this to work.
-ADMIN_SORT_JS = (
-	'https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',
-	'https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js',
-	'%s/scripts/jquery.adminmenusort.js' % settings.MEDIA_URL,
-)
+if hasattr(settings, 'ADMIN_SORT_JS'):
+	ADMIN_SORT_JS = settings.ADMIN_SORT_JS
+else:
+	ADMIN_SORT_JS = (
+		'https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',
+		'https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js',
+		'%s/scripts/jquery.adminmenusort.js' % settings.MEDIA_URL,
+	)
 
 FIELD_TYPE_CHOICES = tuple([(field,field) for field in FIELD_MAPPINGS])

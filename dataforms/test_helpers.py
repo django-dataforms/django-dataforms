@@ -58,7 +58,7 @@ class CustomTestCase(TestCase):
 		# Slightly evil, do type checking to see if submission is a Submission object or string
 		if isinstance(submission, str):
 			submission = Submission.objects.get(slug=submission)
-		answers_to_compare = get_answers(submission=submission)
+		answers_to_compare = get_answers(submission=submission, for_form=True)
 		
 		# ------ 1 ------
 		# This fixes the fact that a POST request will not have a checkbox key,

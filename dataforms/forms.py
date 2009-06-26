@@ -12,16 +12,15 @@ except ImportError: validation = None
 
 from collections import defaultdict
 from django import forms
-from django.db import transaction
 from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
 
-from .settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS, BOOLEAN_FIELDS, FIELD_DELIMITER
-from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice, CollectionDataForm
+from .settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS, FIELD_DELIMITER
+from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice, CollectionDataForm, Binding
 
 class BaseDataForm(forms.BaseForm):
 	def save(self):
-		"""
+		"""	
 		Saves the validated, cleaned form data. If a submission already exists,
 		the new data will be merged over the old data.
 		"""
@@ -87,37 +86,66 @@ class BaseDataForm(forms.BaseForm):
 				answer.save()
 
 class BaseCollection(object):
-	def __init__(self, title, description, slug, forms):
+	"""
+	You shouldn't need to instantiate this object directly, use create_collection.
+	
+	When you have a collection, here are some tips:: 
+	
+		# You can see what's next and what came before
+		collection.current_section
+		collection.next_section
+		collection.prev_section
+	"""
+		
+	def __init__(self, title, description, slug, forms, sections):
 		self.title = str(title)
 		self.description = str(description)
 		self.slug = str(slug)
 		self.forms = forms
 		
+		# Section helpers
+		self.sections = sections
+		# Set all forms to be viewable initially
+		self.set_section()
+		
+	def set_section(self, section=None):
+		"""
+		Set the visible section whose forms will be returned
+		when using array indexing.
+		"""
+		
+		if section is None:
+			self.form_existence = [True for form in self.forms]
+		else:
+			self.form_existence = [True if form.section == section else False for form in self.forms]
+			
+		if True not in self.form_existence:
+			raise SectionDoesNotExist(section)
+		
+		# Set the indexes
+		self._section = self.sections.index(section) if section else 0
+		self._next_section = self._section+1 if self._section+1 < len(self.sections) else None
+		self._prev_section = self._section-1 if self._section-1 >= 0 else None
+		
+		# Set the names
+		self.section = self.sections[self._section]
+		self.next_section = self.sections[self._next_section] if self._next_section else None
+		self.prev_section = self.sections[self._prev_section] if self._prev_section else None
+		
 	def __getitem__(self, arg):
 		"""
 		Usage::
-		
-			# Returns a new Collection with just the forms from this section
-			collection["Section Name"]
-			collection["2"]
-			
-			# Returns a new Collection with just the specified form
+			# Returns just the specified form
 			collection[2]
 		"""
 		
-		# This is evil type checking...is there a duck-typing way of doing this?
-		if isinstance(arg, str) or isinstance(arg, unicode):
-			# If arg was a string, treat it as a section identifier and
-			# return a new collection with just the forms from that section
-			return BaseCollection(
-				title=self.title,
-				description=self.description,
-				slug=self.slug,
-				forms=[form for form in self.forms if form.section == arg]
-			)
-		else:
-			return self.forms[arg]
-	
+		fake_index = -1
+		for i in range(0, len(self.forms)+1):
+			if self.form_existence[i]:
+				fake_index +=1
+			if fake_index == arg:
+				return self.forms[i]
+				
 	def __getslice__(self, start, end):
 		"""
 		Make a new collection with the given subset of forms
@@ -130,12 +158,19 @@ class BaseCollection(object):
 			forms=self.forms[start, end]
 		)
 	
+	def __len__(self):
+		"""
+		:return: the number of contained forms (that are visible)
+		"""
+		
+		return len([truth for truth in self.form_existence if truth])
+		
 	def save(self):
 		"""
 		Save all contained forms
 		"""
 		
-		for form in self.forms:
+		for form in self:
 			form.save()
 		
 	def is_valid(self):
@@ -143,7 +178,7 @@ class BaseCollection(object):
 		Validate all contained forms
 		"""
 		
-		for form in self.forms:
+		for form in self:
 			if not form.is_valid():
 				return False
 		return True
@@ -181,13 +216,17 @@ def create_collection(request, collection, submission):
 		data_form__in=forms,
 	)
 	
+	# Get the sections from the many-to-many, and then make the elements unique (a set)
+	collection_m2m = CollectionDataForm.objects.filter(collection=collection)
+	sections = list(set([row.section for row in collection_m2m]))
+
 	# Initialize a list to contain all the form classes
 	form_list = []
 	
 	# Populate the list
 	for form in forms:
 		# Hmm...is this evil?
-		section = collection_bridge.filter(data_form=form)[0].section
+		section = collection_bridge.get(data_form=form).section
 		
 		form_list.append(create_form(request, form=form, submission=submission, section=section))
 	
@@ -196,7 +235,8 @@ def create_collection(request, collection, submission):
 		title=collection.title,
 		description=collection.description,
 		slug=collection.slug,
-		forms=form_list
+		forms=form_list,
+		sections=sections
 	)
 	
 	return collection
@@ -224,8 +264,6 @@ def create_form(request, form, submission, title=None, description=None, section
 	:param section: optional section; will be added as an attr to the form instance 
 	"""
 	
-	data = None
-		
 	# Slightly evil, do type checking to see if submission is a Submission object or string
 	if isinstance(submission, str):
 		submission_slug = submission
@@ -238,7 +276,7 @@ def create_form(request, form, submission, title=None, description=None, section
 		submission_slug = submission.slug
 	
 	# Before we populate from submitted data, prepare the answers for insertion into the form
-	data = get_answers(submission=submission)
+	data = get_answers(submission=submission, for_form=True)
 	
 	# Create our form class
 	FormClass = _create_form(form=form, title=title, description=description)
@@ -285,6 +323,8 @@ def _create_form(form, title=None, description=None):
 	
 	meta = {}
 	slug = form if isinstance(form, str) else form.slug
+	fields = SortedDict()
+	choices_dict = defaultdict(tuple)
 	
 	# Parse the slug and create a class title
 	form_class_title = create_form_class_title(slug)
@@ -310,40 +350,43 @@ def _create_form(form, title=None, description=None):
 	except Field.DoesNotExist:
 		# FIXME: is this error ever going to be raised? Won't it just be [] and not raise an error?
 		raise Field.DoesNotExist('Field for %s do not exist. Make sure the slug name is correct and the fields are visible.' % slug)
-		
-	# Initialize a sorted dictionary to keep the order of our fields
-	fields = SortedDict()
 	
 	# Get all the choices associated to fields
 	choices_qs = (
 		FieldChoice.objects.select_related('choice', 'field').filter(
 			field__dataformfield__data_form__slug=slug,
 			field__visible=True
-		)
-		.order_by('field__dataformfield__order')
+		).order_by('field__dataformfield__order')
 	)
-	
-	# Anyone tell you defaultdict is sweet?	
-	# We take the data in choices_qs and turn it into a dict so we can reference it later
-	choices_dict = defaultdict(tuple)
+
+	# Get the bindings for use in the Field Loop
+	bindings = get_bindings(form=form)
 	
 	# Populate our choices dictionary
 	for row in choices_qs:
 		choices_dict[row.field.pk] += (row.choice.value, row.choice.title),
 		
+	# ----- Field Loop -----
 	# Populate our fields dictionary for this form
 	for row in field_qs:
-		kwargs = {}
+		form_field_name = _field_for_form(name=row.slug, form=slug)
 		
-		# TODO: parse any additional arguments in json format and include them in :args:
+		field_kwargs = {}
+		field_attrs = {}
+		
 		if row.arguments:
 			json_args = json.loads(row.arguments)
+			# TODO: parse any additional arguments in json format and include them in :args:
 		
-		kwargs['label'] = row.label
-		kwargs['help_text'] = row.help_text
-		kwargs['initial'] = row.initial
-		kwargs['required'] = row.required
+		field_kwargs['label'] = row.label
+		field_kwargs['help_text'] = row.help_text
+		field_kwargs['initial'] = row.initial
+		field_kwargs['required'] = row.required
 		field_type = FIELD_MAPPINGS[row.field_type]
+		
+		# Set the rel attribute if this field is bound to a parent so the JavaScript can know the relation
+		if bindings.has_key(form_field_name):
+			field_attrs['rel'] = "id_%s" % bindings[form_field_name]
 		
 		# Get the choices for single and multiple choice fields 
 		if row.field_type in CHOICE_FIELDS:
@@ -355,19 +398,24 @@ def _create_form(form, title=None, description=None):
 			
 			# Populate our choices tuple
 			choices += choices_dict[row.id]
-			kwargs['choices'] = choices
+			field_kwargs['choices'] = choices
 			
 			if row.field_type in MULTI_CHOICE_FIELDS:
 				# Get all of the specified default selected values (as a list, even if one element)
-				kwargs['initial'] = kwargs['initial'].split(',') if ',' in kwargs['initial'] else [kwargs['initial'],]
+				field_kwargs['initial'] = (
+					field_kwargs['initial'].split(',')
+					if ',' in field_kwargs['initial']
+					else [field_kwargs['initial'],]
+				)
 				# Remove whitespace so the user can use spaces
-				kwargs['initial'] = [element.strip() for element in kwargs['initial']]
+				field_kwargs['initial'] = [element.strip() for element in field_kwargs['initial']]
 			
 		#-----Additional logic for field types GO HERE----
 		#efif row.field_type == CharField (example)
 		
 		# Create our field key with any widgets and additional arguments (initial, label, required, help_text, etc)
-		fields[_field_for_form(name=row.slug, form=slug)] = field_type['class'](widget=field_type['widget'] if field_type.has_key('widget') else None, **kwargs)
+		widget = field_type['widget'](attrs=field_attrs)
+		fields[form_field_name] = field_type['class'](widget=widget, **field_kwargs)
 	
 	attrs = {
 		'base_fields' : fields,
@@ -388,7 +436,7 @@ def _create_form(form, title=None, description=None):
 	# Return a class object of this form with all attributes
 	return type(form_class_title, (BaseDataForm,), attrs)
 
-def get_answers(submission):
+def get_answers(submission, for_form=False):
 	"""
 	Get the answers for a submission.
 	
@@ -396,8 +444,14 @@ def get_answers(submission):
 	form as request.POST data will have submitted them (ie, every element
 	wrapped as a list). This is because this function is meant to provide
 	data that can be instantly consumed by some `FormClass(data=data)`
-	instantiation, as done by create_form. 
+	instantiation, as done by create_form.
 	
+	:param submission: A Submission object or slug
+	:param for_form: whether or not these answers should be made unique for
+		use on a form, ie. if every field slug should be prepended with
+		the form's slug. This can be annoying when just wanting to inspect
+		answers from a submission, so it is set to False by default, but	needs
+		to be True when used the keys will be used as form element names. 
 	:return: a dictionary of answers
 	"""
 	
@@ -408,13 +462,16 @@ def get_answers(submission):
 		submission = Submission.objects.get(slug=submission)
 	
 	answers = Answer.objects.select_related('field', 'choice').filter(submission=submission)
-		
+	
 	# For every answer, do some magic and get it into our data dictionary
 	for answer in answers:
 		
-		# Refactor the answer field name to be globally unique (so
+		# Refactors the answer field name to be globally unique (so
 		# that a field can be in multiple forms in the same POST)
-		answer_key = _field_for_form(name=str(answer.field.slug), form=answer.data_form.slug) 
+		if for_form:
+			answer_key = _field_for_form(name=str(answer.field.slug), form=answer.data_form.slug)
+		else:
+			answer_key = str(answer.field.slug) 
 		
 		if answer.field.field_type in MULTI_CHOICE_FIELDS:
 			data[answer_key] += [choice.value for choice in answer.choices.all()]
@@ -428,6 +485,32 @@ def get_answers(submission):
 			data[answer_key] = answer.content
 			
 	return dict(data)
+
+def get_bindings(form):
+	"""
+	Get the bindings for specific submission
+	
+	:return: a dictionary of child_field_name-->parent_bound_field_name
+	"""
+	
+	bindings = Binding.objects.select_related('parent_field__slug').filter(data_form=form)
+	
+	data = {}
+	
+	for binding in bindings:
+		if binding.parent_field:
+			value = _field_for_form(name=binding.parent_field.slug, form=form.slug)
+		elif binding.parent_choice:
+			# TODO: implement me
+			value = False
+			pass
+		#	value = _field_for_form(name=binding.choice_field.slug, form=form.slug)
+		
+		if value:
+			key = _field_for_form(name=binding.child.slug, form=form.slug)
+			data[key] = value
+		
+	return data
 
 def create_form_class_title(slug):
 	"""
@@ -455,5 +538,8 @@ def _field_for_db(name):
 
 # Custom dataform exception classes
 class RequiredArgument(Exception):
+	pass
+
+class SectionDoesNotExist(Exception):
 	pass
 

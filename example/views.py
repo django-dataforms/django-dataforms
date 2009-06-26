@@ -15,29 +15,21 @@ def index(request):
 	
 	if request.method == "POST":
 		if form.is_valid():
-			# Creates a Submission and saves the submitted form data
 			form.save()
 	
-	vals = {
-		'form':form,
-	}
-	
-	return render_to_response("index.html", vals, RequestContext(request))
+	return render_to_response("index.html", { 'form':form }, RequestContext(request))
 
 def form_collection(request):
 	"""
 	A demo page to show a form collection (many forms) dynamically generated from the database. 
 	"""
 
-	form_collection = create_collection(request=request, collection="test-collection", submission="myCollection")
+	collection = create_collection(request=request, collection="test-collection", submission="myCollection")
+	
+	collection.set_section("A")
 
 	if request.method == "POST":
-		if form_collection.is_valid():
-			# Creates a Submission and saves the submitted form data
-			form_collection.save()
+		if collection.is_valid():
+			collection.save()
 
-	vals = {
-		'forms':form_collection,
-	}
-
-	return render_to_response('collection.html', vals, RequestContext(request))
+	return render_to_response('collection.html', { 'forms':collection }, RequestContext(request))
