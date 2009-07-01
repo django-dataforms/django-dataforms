@@ -139,6 +139,8 @@ class BaseCollection(object):
 			collection[2]
 		"""
 		
+		# The true index to the form the user is asking for is the normal index
+		# into self.forms, but excluding forms masked out by form_existence[] == False
 		fake_index = -1
 		for i in range(0, len(self.forms)+1):
 			if self.form_existence[i]:
