@@ -74,7 +74,7 @@ class Field(models.Model):
 	label = models.TextField(verbose_name=_('field label'))
 	help_text = models.TextField(verbose_name=_('field help text'), blank=True)
 	initial = models.TextField(verbose_name=_('initial value of the field'), blank=True)
-	arguments = models.CharField(verbose_name=_('additional arguments'), blank=True, max_length=255)
+	arguments = models.CharField(verbose_name=_('additional arguments'), help_text="A JSON dictionary of keyword arguments.", blank=True, max_length=255)
 	required = models.BooleanField(verbose_name=_('field is required'), default=False)
 	visible = models.BooleanField(verbose_name=_('field is visible'), default=True)
 	bindings = models.ManyToManyField('self', symmetrical=False, through="Binding")

@@ -82,7 +82,7 @@ class BaseDataForm(forms.BaseForm):
 				)
 				
 				# Update the content and re-save.
-				answer.content = content=self.cleaned_data[key] if self.cleaned_data[key] else ''
+				answer.content = self.cleaned_data[key] if self.cleaned_data[key] else ''
 				answer.save()
 
 class BaseCollection(object):
@@ -377,8 +377,10 @@ def _create_form(form, title=None, description=None):
 		field_attrs = {}
 		
 		if row.arguments:
-			json_args = json.loads(row.arguments)
-			# TODO: parse any additional arguments in json format and include them in :args:
+			# Parse any additional arguments as JSON and include them in field_kwargs
+			additional_args = json.loads(str(row.arguments))
+			for arg in additional_args:
+				field_kwargs[str(arg)] = additional_args[arg]
 		
 		field_kwargs['label'] = row.label
 		field_kwargs['help_text'] = row.help_text
