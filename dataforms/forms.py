@@ -376,17 +376,22 @@ def _create_form(form, title=None, description=None):
 		field_kwargs = {}
 		field_attrs = {}
 		
-		if row.arguments:
-			# Parse any additional arguments as JSON and include them in field_kwargs
-			additional_args = json.loads(str(row.arguments))
-			for arg in additional_args:
-				field_kwargs[str(arg)] = additional_args[arg]
-		
 		field_kwargs['label'] = row.label
 		field_kwargs['help_text'] = row.help_text
 		field_kwargs['initial'] = row.initial
 		field_kwargs['required'] = row.required
-		field_type = FIELD_MAPPINGS[row.field_type]
+		
+		additional_field_kwargs = {}
+		if row.arguments:
+			# Parse any additional field arguments as JSON and include them in field_kwargs
+			temp_args = json.loads(str(row.arguments))
+			for arg in temp_args:
+				additional_field_kwargs[str(arg)] = temp_args[arg]
+		
+		# Update the field arguments with the "additional arguments" JSON in the DB
+		field_kwargs.update(additional_field_kwargs)
+		
+		field_map = FIELD_MAPPINGS[row.field_type]
 		
 		# Set the rel attribute if this field is bound to a parent so the JavaScript can know the relation
 		if bindings.has_key(form_field_name):
@@ -415,13 +420,17 @@ def _create_form(form, title=None, description=None):
 				field_kwargs['initial'] = [element.strip() for element in field_kwargs['initial']]
 			
 		#-----Additional logic for field types GO HERE----
-		#efif row.field_type == CharField (example)
+		#efif row.field_map == CharField (example)
+
+		# Instantiate the widget that this field will use
+		widget = field_map['widget'](attrs=field_attrs, **field_map['widget_kwargs'])
 		
-		# Create our field key with any widgets and additional arguments (initial, label, required, help_text, etc)
-		widget = field_type['widget'](attrs=field_attrs)
-		fields[form_field_name] = field_type['class'](widget=widget, **field_kwargs)
+		# Add this field, including any widgets and additional arguments
+		# (initial, label, required, help_text, etc)
+		fields[form_field_name] = field_map['class'](widget=widget, **field_kwargs)
 	
 	attrs = {
+		'declared_fields' : fields,
 		'base_fields' : fields,
 		'meta' : meta,
 		'slug' : slug,
@@ -438,7 +447,12 @@ def _create_form(form, title=None, description=None):
 				attrs[attr_name] = getattr(validate, attr_name)
 	
 	# Return a class object of this form with all attributes
-	return type(form_class_title, (BaseDataForm,), attrs)
+	DataFormClass = type(form_class_title, (BaseDataForm,), attrs)
+	
+	for key in fields:
+		setattr(DataFormClass, key, fields[key])
+	
+	return DataFormClass
 
 def get_answers(submission, for_form=False):
 	"""
@@ -477,6 +491,11 @@ def get_answers(submission, for_form=False):
 		else:
 			answer_key = str(answer.field.slug) 
 		
+		# FIXME: remove this ... temp hack
+		if answer.field.field_type == u'MultiPersonAutoComplete':
+			data[answer_key] = [1L]
+			continue
+			
 		if answer.field.field_type in MULTI_CHOICE_FIELDS:
 			data[answer_key] += [choice.value for choice in answer.choices.all()]
 		elif answer.field.field_type in SINGLE_CHOICE_FIELDS:

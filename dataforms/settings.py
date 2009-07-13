@@ -42,6 +42,7 @@ FIELD_MAPPINGS.update( {
 
 # Process the field mappings and import any modules specified by string name
 for key in FIELD_MAPPINGS:
+	# Replace the string arguments with the actual modules or classes
 	for sub_key in ('class', 'widget'):
 		value = FIELD_MAPPINGS[key][sub_key]
 		
@@ -54,6 +55,10 @@ for key in FIELD_MAPPINGS:
 			# Replace the string with a class pointer
 			FIELD_MAPPINGS[key][sub_key] = getattr(module, class_name)
 
+	# Handle widget arguments
+	if not FIELD_MAPPINGS[key].has_key('widget_kwargs'):
+		# Initialize all field-mappings that don't have a 'widget_kwargs' key
+		FIELD_MAPPINGS[key]['widget_kwargs'] = {}
 
 BOOLEAN_FIELDS = ('CheckboxInput',)
 SINGLE_CHOICE_FIELDS = ('Select', 'RadioSelect')
