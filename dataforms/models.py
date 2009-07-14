@@ -133,14 +133,33 @@ class Submission(models.Model):
 
 class AnswerChoice(models.Model):
 	"""
-	Model that bridges choices for answers in a submission
+	Stores the data for an answer that is a choice
 	"""
-	
-	# Right now, we don't need extra fields here, but we need this
-	# m2m model to be present so we can reference it in the view
-	
 	answer = models.ForeignKey('Answer', null=False, blank=False)
 	choice = models.ForeignKey('Choice', null=False, blank=False)
+	
+	def __unicode__(self):
+		return str(" - ".join([str(self.answer), str(self.choice)]))
+	
+class AnswerText(models.Model):
+	"""
+	Stores the data for an answer that text
+	"""
+	answer = models.ForeignKey('Answer', null=False, blank=False)
+	text = models.TextField(verbose_name=_('content'), null=False, blank=False)
+	
+	def __unicode__(self):
+		return str(" - ".join([str(self.answer), self.text]))
+	
+class AnswerNumber(models.Model):
+	"""
+	Stores the data for an answer that text
+	"""
+	answer = models.ForeignKey('Answer', null=False, blank=False)
+	number = models.IntegerField(verbose_name=_('number'), null=False, blank=False)
+	
+	def __unicode__(self):
+		return str(" - ".join([str(self.answer), self.number]))
 	
 class Answer(models.Model):
 	"""
@@ -150,10 +169,9 @@ class Answer(models.Model):
 	submission = models.ForeignKey('Submission', null=False, blank=False)
 	data_form = models.ForeignKey('DataForm', null=False, blank=False)
 	field = models.ForeignKey('Field', null=False, blank=False)
-	content = models.TextField(verbose_name=_('content'), null=True, blank=True)
-	choices = models.ManyToManyField('Choice', through='AnswerChoice')
+
 	last_modified = models.DateTimeField(verbose_name=_('last modified'), auto_now=True)
-	
+
 	def __unicode__(self):
 		return str(self.field)
 	

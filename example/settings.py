@@ -89,3 +89,7 @@ INSTALLED_APPS = (
 	'django.contrib.admin',
 	'dataforms',
 )
+
+try: __import__("django_extensions")
+except ImportError: pass
+else: INSTALLED_APPS += ("django_extensions",)

@@ -17,6 +17,8 @@ de-coupled from this app.
 :constant MULTI_CHOICE_FIELDS = field types that have choices and multiple
 	ones can be selected on save, for SelectMultiple boxes or CheckboxSelectMultiple
 :constant CHOICE_FIELDS: both SINGLE_CHOICE_FIELDS and MULTI_CHOICE_FIELDS  
+:constant SINGLE_NUMBER_FIELDS: For fields that need pseudo-foreign key storage
+:constant MULTI_NUMBER_FIELDS: For fields that need pseudo-many-to-many storage
 """
 
 from django.conf import settings
@@ -25,7 +27,7 @@ FIELD_MAPPINGS = {}
 
 if hasattr(settings, 'FIELD_MAPPINGS'):
 	FIELD_MAPPINGS = settings.FIELD_MAPPINGS
-
+	
 # Make sure to specify a 'widget' for every FIELD_MAPPING entry
 FIELD_MAPPINGS.update( {
 	'TextInput' : { 'class': 'django.forms.CharField', 'widget': 'django.forms.TextInput' },
@@ -60,20 +62,26 @@ for key in FIELD_MAPPINGS:
 		# Initialize all field-mappings that don't have a 'widget_kwargs' key
 		FIELD_MAPPINGS[key]['widget_kwargs'] = {}
 
-BOOLEAN_FIELDS = ('CheckboxInput',)
-SINGLE_CHOICE_FIELDS = ('Select', 'RadioSelect')
-MULTI_CHOICE_FIELDS = ('SelectMultiple', 'CheckboxSelectMultiple')
-CHOICE_FIELDS = SINGLE_CHOICE_FIELDS + MULTI_CHOICE_FIELDS  
+BOOLEAN_FIELDS = getattr(settings, "BOOLEAN_FIELDS", ()) + ('CheckboxInput',)
+SINGLE_CHOICE_FIELDS = getattr(settings, "SINGLE_CHOICE_FIELDS", ()) + ('Select', 'RadioSelect')
+MULTI_CHOICE_FIELDS = getattr(settings, "MULTI_CHOICE_FIELDS", ()) + ('SelectMultiple', 'CheckboxSelectMultiple')
+CHOICE_FIELDS = getattr(settings, "CHOICE_FIELDS", ()) + (SINGLE_CHOICE_FIELDS + MULTI_CHOICE_FIELDS)
 
-FIELD_DELIMITER = "__"
+# This is for pseudo-foreign key storage (for usage of things like django-ajax-selects)
+SINGLE_NUMBER_FIELDS = getattr(settings, "SINGLE_NUMBER_FIELDS", ())
 
-if hasattr(settings, 'ADMIN_SORT_JS'):
-	ADMIN_SORT_JS = settings.ADMIN_SORT_JS
-else:
-	ADMIN_SORT_JS = (
-		'https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',
-		'https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js',
-		'scripts/jquery.adminmenusort.js',
+# This is for pseudo-many-to-many key storage
+MULTI_NUMBER_FIELDS = getattr(settings, "MULTI_NUMBER_FIELDS", ())
+NUMBER_FIELDS = getattr(settings, "CHOICE_FIELDS", ()) + (SINGLE_NUMBER_FIELDS + MULTI_NUMBER_FIELDS)
+
+FIELD_DELIMITER = getattr(settings, "FIELD_DELIMITER", "__")
+
+ADMIN_SORT_JS = getattr(settings, "ADMIN_SORT_JS",
+	(
+	'https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',
+	'https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js',
+	'scripts/jquery.adminmenusort.js',
 	)
+)
 
 FIELD_TYPE_CHOICES = tuple([(field,field) for field in FIELD_MAPPINGS])

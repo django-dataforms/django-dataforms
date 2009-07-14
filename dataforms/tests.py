@@ -15,10 +15,8 @@ Usage::
 	
 """
 
-from django.utils import simplejson as json
-
 from . import forms
-from .models import DataForm, Collection, Submission
+from .models import DataForm, Submission
 from .test_helpers import RequestFactory, CustomTestCase
 rf = RequestFactory()
 
@@ -28,7 +26,7 @@ TEST_FORM_POST_DATA = {
 	u'personal-information__password': [u'new password!'],
 	u'personal-information__languages': [u'java', u'cpp'],
 	u'personal-information__p-np': [u'no'],
-	u'personal-information__email': [u'email@new-example.com'],
+	u'personal-information__email': [u'newemail@example.com'],
 	u'personal-information__dropdown': [u'no'],
 	u'personal-information__title': [u'new title'],
 	u'personal-information__date': [u'2012-09-11'],

@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 
 from .settings import ADMIN_SORT_JS
-from .models import Collection, CollectionDataForm, DataForm, DataFormField, Field, Binding, FieldChoice, Choice, Answer, Submission
+from .models import Collection, CollectionDataForm, DataForm, DataFormField, Field, Binding, FieldChoice, Choice, Answer, Submission, AnswerText, AnswerChoice, AnswerNumber
 
 # Admin Forms
 class FieldAdminForm(forms.ModelForm):
@@ -31,6 +31,16 @@ class FieldInline(admin.StackedInline):
 
 class BindingInline(admin.StackedInline):
 	model = Binding
+	extra = 1
+	
+class AnswerChoiceInline(admin.StackedInline):
+	model = AnswerChoice
+	extra = 1
+class AnswerTextInline(admin.StackedInline):
+	model = AnswerText
+	extra = 1
+class AnswerNumberInline(admin.StackedInline):
+	model = AnswerNumber
 	extra = 1
 
 # ModelAdmin Classes
@@ -67,8 +77,8 @@ class BindingAdmin(admin.ModelAdmin):
 	list_display = ('parent_field', 'parent_choice', 'child',)
 		
 class AnswerAdmin(admin.ModelAdmin):
-	list_display = ('submission', 'field', 'content', 'last_modified',)
-	search_fields = ('content',)
+	list_display = ('submission', 'field', 'last_modified',)
+	inlines = [AnswerTextInline, AnswerNumberInline, AnswerChoiceInline]
 	list_select_related = True
 
 class SubmissionAdmin(admin.ModelAdmin):

@@ -15,8 +15,8 @@ from django import forms
 from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
 
-from .settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS, FIELD_DELIMITER
-from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice, CollectionDataForm, Binding
+from .settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS, FIELD_DELIMITER, SINGLE_NUMBER_FIELDS, MULTI_NUMBER_FIELDS, NUMBER_FIELDS
+from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice, AnswerText, AnswerNumber, CollectionDataForm, Binding
 
 class BaseDataForm(forms.BaseForm):
 	def save(self):
@@ -51,7 +51,7 @@ class BaseDataForm(forms.BaseForm):
 			field = Field.objects.get(slug=_field_for_db(key))
 			
 			if field.field_type in CHOICE_FIELDS:
-				# This is an answer that is tied to the choices relation, not content
+				# STORAGE MODEL: AnswerChoice
 				
 				answer, was_created = Answer.objects.get_or_create(
 					submission=self.submission,
@@ -60,7 +60,7 @@ class BaseDataForm(forms.BaseForm):
 				)
 				
 				# Delete all previous choices
-				answer.choices.clear()
+				answer.answerchoice_set = []
 				
 				# If string, wrap as a list because the for-loop below assumes a list
 				if isinstance(self.cleaned_data[key], unicode) or isinstance(self.cleaned_data[key], str):
@@ -73,17 +73,46 @@ class BaseDataForm(forms.BaseForm):
 						choice=choice,
 						answer=answer
 					)
-			else:
-				# Single answer with content, no choice relations needed
+			elif field.field_type in NUMBER_FIELDS:
+				# STORAGE MODEL: AnswerNumber
+				
 				answer, was_created = Answer.objects.get_or_create(
 					submission=self.submission,
 					field=field,
 					data_form=DataForm.objects.get(slug=self.slug),
 				)
 				
-				# Update the content and re-save.
-				answer.content = self.cleaned_data[key] if self.cleaned_data[key] else ''
 				answer.save()
+				
+				# Update the content model
+				answer_num, was_created = AnswerNumber.objects.get_or_create(
+					answer=answer,
+					number=self.cleaned_data[key],
+				)
+				
+				answer_num.save()
+			else:
+				# STORAGE MODEL: AnswerText
+				# Single answer with text content
+				
+				answer, was_created = Answer.objects.get_or_create(
+					submission=self.submission,
+					field=field,
+					data_form=DataForm.objects.get(slug=self.slug),
+				)
+				
+				# Leave this conditional check here. It makes single checkboxes work. 
+				content = self.cleaned_data[key] if self.cleaned_data[key] else ''
+				
+				if was_created:
+					# Create new answer text
+					AnswerText.objects.create(answer=answer, text=content).save()
+				else:
+					# Update old text answer
+					answer.answertext_set.get().text = content 
+					
+				answer.save()
+				
 
 class BaseCollection(object):
 	"""
@@ -479,7 +508,8 @@ def get_answers(submission, for_form=False):
 	if isinstance(submission, str):
 		submission = Submission.objects.get(slug=submission)
 	
-	answers = Answer.objects.select_related('field', 'choice').filter(submission=submission)
+	# FIXME: Is this selected related working?
+	answers = Answer.objects.select_related('field', 'answerchoice_set', 'answertext_set', 'answernumber_set').filter(submission=submission)
 	
 	# For every answer, do some magic and get it into our data dictionary
 	for answer in answers:
@@ -491,21 +521,25 @@ def get_answers(submission, for_form=False):
 		else:
 			answer_key = str(answer.field.slug) 
 		
-		# FIXME: remove this ... temp hack
-		if answer.field.field_type == u'MultiPersonAutoComplete':
-			data[answer_key] = [1L]
-			continue
-			
 		if answer.field.field_type in MULTI_CHOICE_FIELDS:
-			data[answer_key] += [choice.value for choice in answer.choices.all()]
+			# STORAGE MODEL: AnswerChoice
+			data[answer_key] += [answer_choice.choice.value for answer_choice in answer.answerchoice_set.all()]
 		elif answer.field.field_type in SINGLE_CHOICE_FIELDS:
+			# STORAGE MODEL: AnswerChoice
 			try:
-				data[answer_key] = [choice.value for choice in answer.choices.all()][0]
+				data[answer_key] = [answer_choice.choice.value for answer_choice in answer.answerchoice_set.all()][0]
 			except IndexError:
 				# If we couldn't find a choice relation, just use the DB default
 				pass
+		elif answer.field.field_type in SINGLE_NUMBER_FIELDS:
+			# STORAGE MODEL: AnswerNumber
+			data[answer_key] = answer.answernumber_set.get().number
+		elif answer.field.field_type in MULTI_NUMBER_FIELDS:
+			# STORAGE MODEL: AnswerNumber
+			data[answer_key] = [answer_number.number for answer_number in answer.answernumber_set.all()]
 		else:
-			data[answer_key] = answer.content
+			# STORAGE MODEL: AnswerText
+			data[answer_key] = answer.answertext_set.get().text
 			
 	return dict(data)
 
