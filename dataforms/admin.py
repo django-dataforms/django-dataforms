@@ -63,7 +63,7 @@ class FieldAdmin(admin.ModelAdmin):
 	list_select_related = True
 	list_filter = ('field_type', 'visible', 'required',)
 	list_display_links = ('label',)
-	list_display = ('label', 'field_type', 'visible', 'required',)
+	list_display = ('label', 'slug', 'field_type', 'visible', 'required',)
 	list_editable = ('field_type', 'visible', 'required')
 	search_fields = ('label',)
 	inlines = [ChoiceInline, FieldInline]
