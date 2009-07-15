@@ -50,14 +50,14 @@ class BaseDataForm(forms.BaseForm):
 			# Mangle the key into the DB form, then get the right Field
 			field = Field.objects.get(slug=_field_for_db(key))
 			
+			answer, was_created = Answer.objects.get_or_create(
+				submission=self.submission,
+				field=field,
+				data_form=DataForm.objects.get(slug=self.slug),
+			)
+			
 			if field.field_type in CHOICE_FIELDS:
 				# STORAGE MODEL: AnswerChoice
-				
-				answer, was_created = Answer.objects.get_or_create(
-					submission=self.submission,
-					field=field,
-					data_form=DataForm.objects.get(slug=self.slug),
-				)
 				
 				# Delete all previous choices
 				answer.answerchoice_set = []
@@ -76,14 +76,6 @@ class BaseDataForm(forms.BaseForm):
 			elif field.field_type in NUMBER_FIELDS:
 				# STORAGE MODEL: AnswerNumber
 				
-				answer, was_created = Answer.objects.get_or_create(
-					submission=self.submission,
-					field=field,
-					data_form=DataForm.objects.get(slug=self.slug),
-				)
-				
-				answer.save()
-				
 				# Update the content model
 				answer_num, was_created = AnswerNumber.objects.get_or_create(
 					answer=answer,
@@ -95,12 +87,6 @@ class BaseDataForm(forms.BaseForm):
 				# STORAGE MODEL: AnswerText
 				# Single answer with text content
 				
-				answer, was_created = Answer.objects.get_or_create(
-					submission=self.submission,
-					field=field,
-					data_form=DataForm.objects.get(slug=self.slug),
-				)
-				
 				# Leave this conditional check here. It makes single checkboxes work. 
 				content = self.cleaned_data[key] if self.cleaned_data[key] else ''
 				
@@ -111,7 +97,7 @@ class BaseDataForm(forms.BaseForm):
 					# Update old text answer
 					answer.answertext_set.get().text = content 
 					
-				answer.save()
+			answer.save()
 				
 
 class BaseCollection(object):
@@ -533,13 +519,21 @@ def get_answers(submission, for_form=False):
 				pass
 		elif answer.field.field_type in SINGLE_NUMBER_FIELDS:
 			# STORAGE MODEL: AnswerNumber
-			data[answer_key] = answer.answernumber_set.get().number
+			try:
+				data[answer_key] = answer.answernumber_set.get().number
+			except AnswerText.DoesNotExist:
+				# Is this the right thing to do here? Just don't set it if it the answer doesn't exist
+				pass
 		elif answer.field.field_type in MULTI_NUMBER_FIELDS:
 			# STORAGE MODEL: AnswerNumber
 			data[answer_key] = [answer_number.number for answer_number in answer.answernumber_set.all()]
 		else:
 			# STORAGE MODEL: AnswerText
-			data[answer_key] = answer.answertext_set.get().text
+			try:
+				data[answer_key] = answer.answertext_set.get().text
+			except AnswerText.DoesNotExist:
+				# Is this the right thing to do here? Just don't set it if it the answer doesn't exist
+				pass
 			
 	return dict(data)
 
