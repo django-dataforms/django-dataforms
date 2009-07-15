@@ -80,7 +80,7 @@ class Field(models.Model):
 	bindings = models.ManyToManyField('self', symmetrical=False, through="Binding")
 	
 	def __unicode__(self):
-		return self.label + ' / ' + self.slug
+		return "%s / %s" % (self.label, self.slug)
 
 class Binding(models.Model):
 	"""
