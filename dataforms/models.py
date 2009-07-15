@@ -159,7 +159,7 @@ class AnswerNumber(models.Model):
 	number = models.IntegerField(verbose_name=_('number'), null=False, blank=False)
 	
 	def __unicode__(self):
-		return str(" - ".join([str(self.answer), self.number]))
+		return str(" - ".join([str(self.answer), str(self.number)]))
 	
 class Answer(models.Model):
 	"""

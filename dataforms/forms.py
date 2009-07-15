@@ -69,20 +69,29 @@ class BaseDataForm(forms.BaseForm):
 				# Add the selected choices
 				choices = Choice.objects.filter(value__in=self.cleaned_data[key])
 				for choice in choices:
-					AnswerChoice.objects.get_or_create(
+					AnswerChoice.objects.create(
 						choice=choice,
 						answer=answer
 					)
-			elif field.field_type in NUMBER_FIELDS:
+			elif field.field_type in SINGLE_NUMBER_FIELDS:
 				# STORAGE MODEL: AnswerNumber
+				# Pseudo-foreign key storage
 				
-				# Update the content model
-				answer_num, was_created = AnswerNumber.objects.get_or_create(
-					answer=answer,
-					number=self.cleaned_data[key],
-				)
+				assert len(self.cleaned_data[key]) == 1
+				
+				answer_num, was_created = AnswerNumber.objects.get_or_create(answer=answer)
+				answer_num.number = self.cleaned_data[key][0]
 				
 				answer_num.save()
+			elif field.field_type in MULTI_NUMBER_FIELDS:
+				# STORAGE MODEL: AnswerNumber
+				# Pseudo-many-to-many storage
+				
+				# Delete all previous numbers
+				answer.answernumber_set = []
+				
+				for num in self.cleaned_data[key]:
+					AnswerNumber.objects.create(answer=answer, number=num)
 			else:
 				# STORAGE MODEL: AnswerText
 				# Single answer with text content
