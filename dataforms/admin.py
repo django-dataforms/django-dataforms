@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 
 from .settings import ADMIN_SORT_JS
-from .models import Collection, CollectionDataForm, DataForm, DataFormField, Field, Binding, FieldChoice, Choice, Answer, Submission, AnswerText, AnswerChoice, AnswerNumber
+from .models import Collection, CollectionDataForm, DataForm, DataFormField, Field, Binding, FieldChoice, Choice, Answer, Submission, AnswerText, AnswerChoice, AnswerNumber, Section
 
 # Admin Forms
 class FieldAdminForm(forms.ModelForm):
@@ -90,7 +90,10 @@ class ChoiceAdmin(admin.ModelAdmin):
 	list_display = ('title', 'value',)
 	search_fields = ('text',)
 
-
+class SectionAdmin(admin.ModelAdmin):
+	list_display = ('title',)
+	
+admin.site.register(Section, SectionAdmin)
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(DataForm, DataFormAdmin)
 admin.site.register(Field, FieldAdmin)
