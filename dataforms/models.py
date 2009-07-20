@@ -20,11 +20,11 @@ class CollectionDataForm(models.Model):
 	""" 
 	Model bridge for Collection and DataForm
 	"""
-	
+
 	collection = models.ForeignKey('Collection', null=True)
 	data_form = models.ForeignKey('DataForm', null=True)
 	order = models.IntegerField(verbose_name=_('order'), null=True, blank=True)
-	section = models.CharField(verbose_name=_('section'), max_length=255, null=False, blank=False)
+	section = models.ForeignKey('Section', null=True)
 
 	class Meta:
 		unique_together = ('collection', 'data_form')
@@ -32,6 +32,12 @@ class CollectionDataForm(models.Model):
 
 	def __unicode__(self):
 		return u'%s in %s' % (self.collection, self.data_form)
+
+class Section(models.Model):
+	"""
+	Model that gives a section to a DataForm within a Collection
+	"""
+	title = models.CharField(verbose_name=_('section'), max_length=255, null=False, blank=False)
 
 class DataForm(models.Model):
 	"""
