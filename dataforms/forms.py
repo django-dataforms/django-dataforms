@@ -14,8 +14,11 @@ from collections import defaultdict
 from django import forms
 from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
+from django.core.exceptions import FieldError
+from django.template.defaultfilters import safe, force_escape
 
-from .settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS, FIELD_DELIMITER, SINGLE_NUMBER_FIELDS, MULTI_NUMBER_FIELDS, NUMBER_FIELDS
+from .settings import (FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS,
+				FIELD_DELIMITER, SINGLE_NUMBER_FIELDS, MULTI_NUMBER_FIELDS, NUMBER_FIELDS, HIDDEN_BINDINGS_SLUG)
 from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice, AnswerText, AnswerNumber, CollectionDataForm, Binding
 
 class BaseDataForm(forms.BaseForm):
@@ -45,6 +48,11 @@ class BaseDataForm(forms.BaseForm):
 			# IE, the first form saved in a collection will create the submission
 			# but all other forms will still not have self.submission
 			self.submission, was_created = Submission.objects.get_or_create(slug=self.submission_slug)
+		
+		# Delete the hidden bindings field before we process, because it should never be handled
+		hidden_bindings_field_slug = _field_for_form(name=HIDDEN_BINDINGS_SLUG, form=self.meta['slug'])
+		if self.fields.has_key(hidden_bindings_field_slug):
+			del self.fields[hidden_bindings_field_slug]
 		
 		for key in self.fields.keys():
 			# Mangle the key into the DB form, then get the right Field
@@ -79,10 +87,11 @@ class BaseDataForm(forms.BaseForm):
 				
 				assert len(self.cleaned_data[key]) == 1
 				
-				answer_num, was_created = AnswerNumber.objects.get_or_create(answer=answer)
-				answer_num.number = self.cleaned_data[key][0]
+				# Delete all previous numbers
+				answer.answernumber_set = []
 				
-				answer_num.save()
+				AnswerNumber.objects.create(answer=answer, number=self.cleaned_data[key][0])
+				
 			elif field.field_type in MULTI_NUMBER_FIELDS:
 				# STORAGE MODEL: AnswerNumber
 				# Pseudo-many-to-many storage
@@ -101,7 +110,7 @@ class BaseDataForm(forms.BaseForm):
 				
 				if was_created:
 					# Create new answer text
-					AnswerText.objects.create(answer=answer, text=content).save()
+					AnswerText.objects.create(answer=answer, text=content)
 				else:
 					# Update old text answer
 					answer.answertext_set.get().text = content 
@@ -349,7 +358,7 @@ def _create_form(form, title=None, description=None):
 	
 	meta = {}
 	slug = form if isinstance(form, str) else form.slug
-	fields = SortedDict()
+	final_fields = SortedDict()
 	choices_dict = defaultdict(tuple)
 	
 	# Parse the slug and create a class title
@@ -361,11 +370,10 @@ def _create_form(form, title=None, description=None):
 	except DataForm.DoesNotExist:
 		raise DataForm.DoesNotExist('DataForm %s does not exist. Make sure the slug name is correct and the form is visible.' % slug)
 	
-	# Get the queryset detail for the form
-	if not title or not description:
-		# Set the title and/or the description from the DB (but only if it wasn't given)
-		meta['title'] = form.title if not title else title
-		meta['description'] = form.description if not description else description
+	# Set the title and/or the description from the DB (but only if it wasn't given)
+	meta['title'] = form.title if not title else title
+	meta['description'] = form.description if not description else description
+	meta['slug'] = form.slug
 		
 	# Get all the fields
 	try:
@@ -388,52 +396,70 @@ def _create_form(form, title=None, description=None):
 	# Get the bindings for use in the Field Loop
 	bindings = get_bindings(form=form)
 	
+	fields = list(field_qs.values())
+	
+	# We originally were setting the "rel" attr on the field objects to do the bindings,
+	# but this only works for checkboxes and other top-level field types. It does not work
+	# with sub-options (like elements of a drop down) because Django does not yet support
+	# (as of v1.0) extra attributes on <option> elements on Select widgets. So, instead:
+	
+	# Add a hidden field used for passing information to the JavaScript bindings function
+	fields.append({
+		'field_type': 'HiddenInput',
+		'slug': HIDDEN_BINDINGS_SLUG,
+		'initial': safe(force_escape(json.dumps(bindings))),
+	})
+	
 	# Populate our choices dictionary
 	for row in choices_qs:
 		choices_dict[row.field.pk] += (row.choice.value, row.choice.title),
 		
 	# ----- Field Loop -----
 	# Populate our fields dictionary for this form
-	for row in field_qs:
-		form_field_name = _field_for_form(name=row.slug, form=slug)
+	for row in fields:
+		form_field_name = _field_for_form(name=row['slug'], form=slug)
 		
 		field_kwargs = {}
 		field_attrs = {}
 		
-		field_kwargs['label'] = row.label
-		field_kwargs['help_text'] = row.help_text
-		field_kwargs['initial'] = row.initial
-		field_kwargs['required'] = row.required
+		if row.has_key('label'):
+			field_kwargs['label'] = row['label']
+		if row.has_key('help_text'):
+			field_kwargs['help_text'] = row['help_text']
+		if row.has_key('initial'):
+			field_kwargs['initial'] = row['initial']
+		if row.has_key('required'):
+			field_kwargs['required'] = row['required']
 		
 		additional_field_kwargs = {}
-		if row.arguments:
+		if row.has_key('arguments') and row['arguments'].strip():
 			# Parse any additional field arguments as JSON and include them in field_kwargs
-			temp_args = json.loads(str(row.arguments))
+			temp_args = json.loads(str(row['arguments']))
 			for arg in temp_args:
 				additional_field_kwargs[str(arg)] = temp_args[arg]
 		
 		# Update the field arguments with the "additional arguments" JSON in the DB
 		field_kwargs.update(additional_field_kwargs)
 		
-		field_map = FIELD_MAPPINGS[row.field_type]
-		
-		# Set the rel attribute if this field is bound to a parent so the JavaScript can know the relation
-		if bindings.has_key(form_field_name):
-			field_attrs['rel'] = "id_%s" % bindings[form_field_name]
-		
+		field_map = FIELD_MAPPINGS[row['field_type']]
+#		
+#		# Set the rel attribute if this field is bound to a parent so the JavaScript can know the relation
+#		if bindings.has_key(form_field_name):
+#			field_attrs['rel'] = "id_%s" % bindings[form_field_name]
+#		
 		# Get the choices for single and multiple choice fields 
-		if row.field_type in CHOICE_FIELDS:
+		if row['field_type'] in CHOICE_FIELDS:
 			choices = ()
 
 			# We add a separator for select boxes
-			if row.field_type == 'Select':
+			if row['field_type'] == 'Select':
 				choices += ('', '--------'),
 			
 			# Populate our choices tuple
-			choices += choices_dict[row.id]
+			choices += choices_dict[row['id']]
 			field_kwargs['choices'] = choices
 			
-			if row.field_type in MULTI_CHOICE_FIELDS:
+			if row['field_type'] in MULTI_CHOICE_FIELDS:
 				# Get all of the specified default selected values (as a list, even if one element)
 				field_kwargs['initial'] = (
 					field_kwargs['initial'].split(',')
@@ -443,19 +469,23 @@ def _create_form(form, title=None, description=None):
 				# Remove whitespace so the user can use spaces
 				field_kwargs['initial'] = [element.strip() for element in field_kwargs['initial']]
 			
-		#-----Additional logic for field types GO HERE----
-		#efif row.field_map == CharField (example)
-
 		# Instantiate the widget that this field will use
-		widget = field_map['widget'](attrs=field_attrs, **field_map['widget_kwargs'])
+		if field_map.has_key('widget'):
+			field_kwargs['widget'] = field_map['widget'](attrs=field_attrs, **field_map['widget_kwargs'])
 		
 		# Add this field, including any widgets and additional arguments
 		# (initial, label, required, help_text, etc)
-		fields[form_field_name] = field_map['class'](widget=widget, **field_kwargs)
+		final_fields[form_field_name] = field_map['class'](**field_kwargs)
 	
+#	I don't think we need this anymore
+#
+#	for key in final_fields:
+#		setattr(DataFormClass, key, final_fields[key])
+#	
+
 	attrs = {
-		'declared_fields' : fields,
-		'base_fields' : fields,
+		'declared_fields' : final_fields,
+		'base_fields' : final_fields,
 		'meta' : meta,
 		'slug' : slug,
 	}
@@ -472,9 +502,6 @@ def _create_form(form, title=None, description=None):
 	
 	# Return a class object of this form with all attributes
 	DataFormClass = type(form_class_title, (BaseDataForm,), attrs)
-	
-	for key in fields:
-		setattr(DataFormClass, key, fields[key])
 	
 	return DataFormClass
 
@@ -555,20 +582,23 @@ def get_bindings(form):
 	
 	bindings = Binding.objects.select_related('parent_field__slug').filter(data_form=form)
 	
-	data = {}
+	data = []
 	
 	for binding in bindings:
-		if binding.parent_field:
-			value = _field_for_form(name=binding.parent_field.slug, form=form.slug)
-		elif binding.parent_choice:
-			# TODO: implement me
-			value = False
-			pass
-		#	value = _field_for_form(name=binding.choice_field.slug, form=form.slug)
 		
-		if value:
-			key = _field_for_form(name=binding.child.slug, form=form.slug)
-			data[key] = value
+		child = _field_for_form(name=binding.child.slug, form=form.slug)
+		
+		if binding.parent_field:
+			# We're bound to a parent field itself (like a checkbox)
+			parent = _field_for_form(name=binding.parent_field.slug, form=form.slug)
+			data.append((parent, child))
+		elif binding.parent_choice:
+			# We're bound to a specific choice in some field (like a <option> in select)
+			parent = _field_for_form(name=binding.parent_choice.field.slug, form=form.slug)
+			parent_choice = binding.parent_choice.choice.value
+			data.append((parent, parent_choice, child))
+		else:
+			raise FieldError("One of { parent_field, parent_choice } is required on every Binding object.")
 		
 	return data
 

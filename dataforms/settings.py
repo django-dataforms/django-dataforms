@@ -28,7 +28,6 @@ FIELD_MAPPINGS = {}
 if hasattr(settings, 'FIELD_MAPPINGS'):
 	FIELD_MAPPINGS = settings.FIELD_MAPPINGS
 	
-# Make sure to specify a 'widget' for every FIELD_MAPPING entry
 FIELD_MAPPINGS.update( {
 	'TextInput' : { 'class': 'django.forms.CharField', 'widget': 'django.forms.TextInput' },
 	'Textarea' : { 'class': 'django.forms.CharField', 'widget': 'django.forms.Textarea' },
@@ -40,12 +39,16 @@ FIELD_MAPPINGS.update( {
 	'DateField' : { 'class': 'django.forms.DateField', 'widget': 'django.contrib.admin.widgets.AdminDateWidget' },
 	'CheckboxInput' : { 'class': 'django.forms.BooleanField', 'widget' : 'django.forms.CheckboxInput' },
 	'CheckboxSelectMultiple' : { 'class': 'django.forms.MultipleChoiceField', 'widget' : 'django.forms.CheckboxSelectMultiple' },
+	'HiddenInput' : { 'class': 'django.forms.Field', 'widget' : 'django.forms.HiddenInput' },
 } )
 
 # Process the field mappings and import any modules specified by string name
 for key in FIELD_MAPPINGS:
 	# Replace the string arguments with the actual modules or classes
 	for sub_key in ('class', 'widget'):
+		if not FIELD_MAPPINGS[key].has_key(sub_key):
+			continue
+		
 		value = FIELD_MAPPINGS[key][sub_key]
 		
 		if isinstance(value, str) or isinstance(value, unicode):
@@ -80,8 +83,9 @@ ADMIN_SORT_JS = getattr(settings, "ADMIN_SORT_JS",
 	(
 	'https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',
 	'https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js',
-	'scripts/jquery.adminmenusort.js',
+	'%s/scripts/jquery.adminmenusort.js' % settings.MEDIA_URL,
 	)
 )
 
 FIELD_TYPE_CHOICES = tuple([(field,field) for field in FIELD_MAPPINGS])
+HIDDEN_BINDINGS_SLUG = getattr(settings, "HIDDEN_BINDINGS_SLUG", "js_dataform_bindings")

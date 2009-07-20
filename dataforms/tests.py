@@ -69,7 +69,7 @@ class FormsTestCase(CustomTestCase):
 		self.assertRaises(AttributeError, getattr, form, 'submission')
 		
 		# Validate the form to populate cleaned_data for the save function
-		self.assertEqual(form.is_valid(), True)
+		self.assertTrue(form.is_valid())
 		
 		# Try saving the form
 		form.save()
@@ -94,7 +94,7 @@ class FormsTestCase(CustomTestCase):
 		collection = forms.create_collection(request, collection="test-collection", submission="myCollection")
 		
 		# Validate the form to populate cleaned_data for the save function
-		self.assertEqual(collection.is_valid(), True)
+		self.assertTrue(collection.is_valid())
 		
 		# Try saving the form
 		collection.save()
