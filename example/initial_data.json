@@ -7,14 +7,14 @@
 },
  {"pk": 1,
  "model": "dataforms.collectiondataform",
- "fields": {"section": "A",
+ "fields": {"section": 1,
  "data_form": 1,
  "order": 1,
  "collection": 1}
 },
  {"pk": 2,
  "model": "dataforms.collectiondataform",
- "fields": {"section": "A",
+ "fields": {"section": 1,
  "data_form": 2,
  "order": 2,
  "collection": 1}
@@ -319,4 +319,8 @@
  "model": "dataforms.choice",
  "fields": {"value": "cpp",
  "title": "C++"}
+},
+ {"pk": 1,
+ "model": "dataforms.section",
+ "fields": {"title": "A"}
 }]
