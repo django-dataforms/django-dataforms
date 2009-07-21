@@ -9,8 +9,16 @@ function doBinding(parent, child, choice, effectTime){
 	var effectTime = typeof(effectTime) != 'undefined' ? effectTime : 500;
 	var choice = typeof(choice) != 'undefined' ? choice : -1;
 	
-//	if (!boundArea.length)
-//		return
+	if (!boundArea.length && console && console.log) {
+		console.log("Could do binding because boundArea was empty.")
+		console.log("Parent:")
+		console.log(parent)
+		console.log("Child:")
+		console.log(child)
+		return;
+	} else if (!boundArea.length) {
+		return;
+	}
 	
 	// This fixes subelements like multiple checkboxes
 	if (boundArea.attr("tagName").toLowerCase() == "label") {
@@ -25,7 +33,7 @@ function doBinding(parent, child, choice, effectTime){
 	// We can't just do slideToggle because this slide is going to be called
 	// once for every subelement bound to the parent, where slideDown and
 	// slideUp mask this behavior because they can be called multiple times
-	if (parent.attr("checked") || parent.val() == choice) {
+	if (parent.attr("checked") || (parent.parent().find("input:checked").length && parent.val() == choice)) {
 		boundArea.slideDown(effectTime);
 	} else {
 		boundArea.slideUp(effectTime);
@@ -40,6 +48,7 @@ $(function() {
 	for (var i = 0; i < bindings.length; i++) {
 		var parent = $("#id_" + bindings[i][0]);
 		var choiceVal = undefined;
+		var success = true;
 		
 		if (bindings[i].length == 2) {
 			// Simple binding (like a single checkbox).
@@ -69,25 +78,35 @@ $(function() {
 				if (elementName == "select") {
 					// Select element
 					setBinding(parent, child, choiceVal);
+					if (console && console.log){
+						console.log("Adding binding for " + "#id_" + bindings[i][0] + " --> " + "#id_" + bindings[i][2])
+					}
 				} else if (elementName == "input" && parent[0].type == "radio") {
 					// Radio buttons
-					setBinding(parent, child);
+					setBinding(parent, child, choiceVal);
+					if (console && console.log){
+						console.log("Adding binding for " + "#id_" + bindings[i][0] + " --> " + "#id_" + bindings[i][2])
+					}
 				} else {
 					if (console && console.log){
 						console.log(parent);
 						console.log(child);
 					}
-					alert("Choice bindings for " + elementName + " elements has not been implemented.")
+					success = false;
+					alert("Choice bindings for " + elementName + " elements has not been implemented.");
 				}
 			} else {
 				if (console && console.log){
-					console.log("Couldn't find parent " + "#id_" + bindings[i][0])
+					success = false;
+					console.log("Couldn't find parent " + "#id_" + bindings[i][0]);
 				}
 			}
 		}
 		
 		// Hide/show all bound fields default state
-		doBinding(parent, child, choiceVal, 0);
+		if (success) {
+			doBinding(parent, child, choiceVal, 0);
+		}
 	}
 	
 });
