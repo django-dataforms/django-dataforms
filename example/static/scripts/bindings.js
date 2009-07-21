@@ -9,6 +9,9 @@ function doBinding(parent, child, choice, effectTime){
 	var effectTime = typeof(effectTime) != 'undefined' ? effectTime : 500;
 	var choice = typeof(choice) != 'undefined' ? choice : -1;
 	
+//	if (!boundArea.length)
+//		return
+	
 	// This fixes subelements like multiple checkboxes
 	if (boundArea.attr("tagName").toLowerCase() == "label") {
 		switch (boundArea.parent().attr("tagName").toLowerCase()){
@@ -49,8 +52,11 @@ $(function() {
 			// Choice binding (like a dropdown)
 			// (parent, choice value, child)
 			
-			var child = $("#id_" + bindings[i][2]);
 			var choiceVal = bindings[i][1];
+			var child = $("#id_" + bindings[i][2]);
+			if (!child.length){
+				child = $("input[name='"+ bindings[i][2]+"']").slice(0,1);
+			}
 			
 			var parent = $("#id_" + bindings[i][0]);
 			if (!parent.length){
