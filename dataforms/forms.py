@@ -505,6 +505,8 @@ def _create_form(form, title=None, description=None):
 	
 	return DataFormClass
 
+# FIXME - Select related and _set calls are not working 
+# correctly.  They are executing 50 or so queries per request.
 def get_answers(submission, for_form=False):
 	"""
 	Get the answers for a submission.
@@ -531,6 +533,7 @@ def get_answers(submission, for_form=False):
 		submission = Submission.objects.get(slug=submission)
 	
 	# FIXME: Is this selected related working?
+	# ANSWER:  NO!  It is not!  28+ queries per execution!
 	answers = Answer.objects.select_related('field', 'answerchoice_set', 'answertext_set', 'answernumber_set').filter(submission=submission)
 	
 	# For every answer, do some magic and get it into our data dictionary
@@ -566,6 +569,7 @@ def get_answers(submission, for_form=False):
 		else:
 			# STORAGE MODEL: AnswerText
 			try:
+				#FIXME: Too many queries!  Over 28+ here as well.
 				data[answer_key] = answer.answertext_set.get().text
 			except AnswerText.DoesNotExist:
 				# Is this the right thing to do here? Just don't set it if it the answer doesn't exist
