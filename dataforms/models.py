@@ -38,7 +38,8 @@ class Section(models.Model):
 	Model that gives a section to a DataForm within a Collection
 	"""
 	title = models.CharField(verbose_name=_('section'), max_length=255, null=False, blank=False)
-	
+	slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
+		
 	def __unicode__(self):
 		return self.title
 

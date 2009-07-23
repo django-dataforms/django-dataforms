@@ -146,7 +146,7 @@ class BaseCollection(object):
 		Set the visible section whose forms will be returned
 		when using array indexing.
 		"""
-		
+
 		if section is None:
 			self.form_existence = [True for form in self.forms]
 		else:
@@ -253,7 +253,7 @@ def create_collection(request, collection, submission):
 	
 	# Get the sections from the many-to-many, and then make the elements unique (a set)
 	collection_m2m = CollectionDataForm.objects.filter(collection=collection)
-	sections = list(set([row.section.title for row in collection_m2m]))
+	sections = list(set([row.section.slug for row in collection_m2m]))
 
 	# Initialize a list to contain all the form classes
 	form_list = []
@@ -261,7 +261,7 @@ def create_collection(request, collection, submission):
 	# Populate the list
 	for form in forms:
 		# Hmm...is this evil?
-		section = collection_bridge.get(data_form=form).section.title
+		section = collection_bridge.get(data_form=form).section.slug
 		
 		form_list.append(create_form(request, form=form, submission=submission, section=section))
 	
