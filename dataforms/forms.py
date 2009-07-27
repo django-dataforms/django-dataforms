@@ -22,6 +22,11 @@ from .settings import (FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS
 from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice, AnswerText, AnswerNumber, CollectionDataForm, Binding
 
 class BaseDataForm(forms.BaseForm):
+	def is_valid(self):
+		# Delete the hidden bindings field before we process, because it should never be handled
+		_remove_bindings_field(self)
+		return super(BaseDataForm, self).is_valid()
+	
 	def save(self):
 		"""	
 		Saves the validated, cleaned form data. If a submission already exists,
@@ -48,11 +53,6 @@ class BaseDataForm(forms.BaseForm):
 			# IE, the first form saved in a collection will create the submission
 			# but all other forms will still not have self.submission
 			self.submission, was_created = Submission.objects.get_or_create(slug=self.submission_slug)
-		
-		# Delete the hidden bindings field before we process, because it should never be handled
-		hidden_bindings_field_slug = _field_for_form(name=HIDDEN_BINDINGS_SLUG, form=self.meta['slug'])
-		if self.fields.has_key(hidden_bindings_field_slug):
-			del self.fields[hidden_bindings_field_slug]
 		
 		for key in self.fields.keys():
 			# Mangle the key into the DB form, then get the right Field
@@ -217,6 +217,15 @@ class BaseCollection(object):
 			if not form.is_valid():
 				return False
 		return True
+	
+def _remove_bindings_field(form):
+	"""
+	Delete the hidden bindings field before we process, because it should never be handled
+	"""
+	
+	hidden_bindings_field_slug = _field_for_form(name=HIDDEN_BINDINGS_SLUG, form=form.meta['slug'])
+	if form.fields.has_key(hidden_bindings_field_slug):
+		del form.fields[hidden_bindings_field_slug]
 
 def create_collection(request, collection, submission):
 	"""
@@ -560,7 +569,7 @@ def get_answers(submission, for_form=False):
 			# STORAGE MODEL: AnswerNumber
 			try:
 				data[answer_key] = answer.answernumber_set.get().number
-			except AnswerText.DoesNotExist:
+			except AnswerNumber.DoesNotExist:
 				# Is this the right thing to do here? Just don't set it if it the answer doesn't exist
 				pass
 		elif answer.field.field_type in MULTI_NUMBER_FIELDS:

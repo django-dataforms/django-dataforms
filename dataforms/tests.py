@@ -69,7 +69,10 @@ class FormsTestCase(CustomTestCase):
 		self.assertRaises(AttributeError, getattr, form, 'submission')
 		
 		# Validate the form to populate cleaned_data for the save function
-		self.assertTrue(form.is_valid())
+		form.is_valid()
+		
+		if form.errors:
+			self.fail(form.errors)
 		
 		# Try saving the form
 		form.save()
