@@ -33,7 +33,9 @@ function doBinding(parent, child, choice, effectTime){
 	// We can't just do slideToggle because this slide is going to be called
 	// once for every subelement bound to the parent, where slideDown and
 	// slideUp mask this behavior because they can be called multiple times
-	if (parent.attr("checked") || (parent.parent().find("input:checked").length && parent.val() == choice)) {
+	if (parent.attr("checked")
+		|| (parent.parent().find("input:checked").length && parent.val() == choice)
+		|| (parent.parent().find("select").length && parent.val() == choice)) {
 		boundArea.slideDown(effectTime);
 	} else {
 		boundArea.slideUp(effectTime);
@@ -79,13 +81,13 @@ $(function() {
 					// Select element
 					setBinding(parent, child, choiceVal);
 					if (console && console.log){
-						console.log("Adding binding for " + "#id_" + bindings[i][0] + " --> " + "#id_" + bindings[i][2])
+						console.log("Adding select binding for " + "#id_" + bindings[i][0] + " --> " + "#id_" + bindings[i][2])
 					}
 				} else if (elementName == "input" && parent[0].type == "radio") {
 					// Radio buttons
 					setBinding(parent, child, choiceVal);
 					if (console && console.log){
-						console.log("Adding binding for " + "#id_" + bindings[i][0] + " --> " + "#id_" + bindings[i][2])
+						console.log("Adding radio binding for " + "#id_" + bindings[i][0] + " --> " + "#id_" + bindings[i][2])
 					}
 				} else {
 					if (console && console.log){
