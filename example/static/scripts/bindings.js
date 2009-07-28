@@ -46,7 +46,14 @@
 	$(function() {
 	
 		// Create the binding event handlers
-		bindings = JSON.parse($("input[type='hidden'][name*='js_dataform_bindings']").val());
+		// FIXME: .val() is going to pull the first one's value, so this code doesn't
+		// work for multiple forms present on one page that all need bindings.
+		var bindings_js = $("input[type='hidden'][name*='js_dataform_bindings']").val()
+
+		if (!bindings_js)
+			return;
+
+		var bindings = JSON.parse(bindings_js);
 	
 		for (var i = 0; i < bindings.length; i++) {
 			var parent = $("#id_" + bindings[i][0]);
