@@ -19,7 +19,7 @@ from django.template.defaultfilters import safe, force_escape
 
 from .settings import (FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS,
 				FIELD_DELIMITER, SINGLE_NUMBER_FIELDS, MULTI_NUMBER_FIELDS, NUMBER_FIELDS, HIDDEN_BINDINGS_SLUG)
-from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice, AnswerText, AnswerNumber, CollectionDataForm, Binding
+from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice, AnswerText, AnswerNumber, CollectionDataForm, Binding, Section
 
 class BaseDataForm(forms.BaseForm):
 	def is_valid(self):
@@ -156,11 +156,11 @@ class BaseCollection(object):
 			raise SectionDoesNotExist(section)
 		
 		# Set the indexes
-		self._section = self.sections.index(section) if section else 0
+		self._section = [row.slug for row in self.sections].index(section) if section else 0
 		self._next_section = self._section+1 if self._section+1 < len(self.sections) else None
 		self._prev_section = self._section-1 if self._section-1 >= 0 else None
 		
-		# Set the names
+		# Set the objects
 		self.section = self.sections[self._section]
 		self.next_section = self.sections[self._next_section] if self._next_section else None
 		self.prev_section = self.sections[self._prev_section] if self._prev_section else None
@@ -261,8 +261,7 @@ def create_collection(request, collection, submission):
 	)
 	
 	# Get the sections from the many-to-many, and then make the elements unique (a set)
-	collection_m2m = CollectionDataForm.objects.filter(collection=collection)
-	sections = list(set([row.section.slug for row in collection_m2m]))
+	sections = Section.objects.filter(collectiondataform__collection=collection).distinct()
 
 	# Initialize a list to contain all the form classes
 	form_list = []
