@@ -68,7 +68,9 @@ class BaseDataForm(forms.BaseForm):
 				# STORAGE MODEL: AnswerChoice
 				
 				# Delete all previous choices
-				answer.answerchoice_set = []
+				# See note below about this deletion
+				for answer_choice in AnswerChoice.objects.filter(answer=answer):
+					answer_choice.delete()
 				
 				# If string, wrap as a list because the for-loop below assumes a list
 				if isinstance(self.cleaned_data[key], unicode) or isinstance(self.cleaned_data[key], str):
@@ -77,10 +79,7 @@ class BaseDataForm(forms.BaseForm):
 				# Add the selected choices
 				choices = Choice.objects.filter(value__in=self.cleaned_data[key])
 				for choice in choices:
-					AnswerChoice.objects.create(
-						choice=choice,
-						answer=answer
-					)
+					AnswerChoice.objects.create(answer=answer, choice=choice)
 			elif field.field_type in SINGLE_NUMBER_FIELDS:
 				# STORAGE MODEL: AnswerNumber
 				# Pseudo-foreign key storage
@@ -88,7 +87,9 @@ class BaseDataForm(forms.BaseForm):
 				assert len(self.cleaned_data[key]) == 1
 				
 				# Delete all previous numbers
-				answer.answernumber_set = []
+				# See note below about this deletion
+				for answer_num in AnswerNumber.objects.filter(answer=answer):
+					answer_num.delete()
 				
 				AnswerNumber.objects.create(answer=answer, number=self.cleaned_data[key][0])
 				
@@ -97,10 +98,18 @@ class BaseDataForm(forms.BaseForm):
 				# Pseudo-many-to-many storage
 				
 				# Delete all previous numbers
-				answer.answernumber_set = []
+				# RelatedManagers do not have a clear() method to delete all many-to-many
+				# relations, so we need to do something different.
+				#
+				# This does not work (but is also silent):
+				# answer.answernumber_set = []
+				#
+				# So, how about this. Is there a better way to do it though?
+				for answer_num in AnswerNumber.objects.filter(answer=answer):
+					answer_num.delete()
 				
 				for num in self.cleaned_data[key]:
-					AnswerNumber.objects.create(answer=answer, number=num)
+					answer.answernumber_set.create(number=num)
 			else:
 				# STORAGE MODEL: AnswerText
 				# Single answer with text content
@@ -113,10 +122,11 @@ class BaseDataForm(forms.BaseForm):
 					AnswerText.objects.create(answer=answer, text=content)
 				else:
 					# Update old text answer
-					answer.answertext_set.get().text = content 
-					
-			answer.save()
+					answer_text = answer.answertext_set.get()
+					answer_text.text = content
+					answer_text.save() 
 				
+			answer.save()
 
 class BaseCollection(object):
 	"""
