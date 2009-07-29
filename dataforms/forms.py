@@ -146,6 +146,9 @@ class BaseCollection(object):
 		Set the visible section whose forms will be returned
 		when using array indexing.
 		"""
+		
+		if isinstance(section, Section):
+			section = section.slug
 
 		if section is None:
 			self.form_existence = [True for form in self.forms]
