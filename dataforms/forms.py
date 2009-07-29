@@ -79,7 +79,7 @@ class BaseDataForm(forms.BaseForm):
 				# Add the selected choices
 				choices = Choice.objects.filter(value__in=self.cleaned_data[key])
 				for choice in choices:
-					AnswerChoice.objects.create(answer=answer, choice=choice)
+					answer.answerchoice_set.create(choice=choice)
 			elif field.field_type in SINGLE_NUMBER_FIELDS:
 				# STORAGE MODEL: AnswerNumber
 				# Pseudo-foreign key storage
@@ -91,7 +91,7 @@ class BaseDataForm(forms.BaseForm):
 				for answer_num in AnswerNumber.objects.filter(answer=answer):
 					answer_num.delete()
 				
-				AnswerNumber.objects.create(answer=answer, number=self.cleaned_data[key][0])
+				answer.answernumber_set.create(number=self.cleaned_data[key][0])
 				
 			elif field.field_type in MULTI_NUMBER_FIELDS:
 				# STORAGE MODEL: AnswerNumber
@@ -119,10 +119,16 @@ class BaseDataForm(forms.BaseForm):
 				
 				if was_created:
 					# Create new answer text
-					AnswerText.objects.create(answer=answer, text=content)
+					answer.answertext_set.create(text=content)
 				else:
 					# Update old text answer
-					answer_text = answer.answertext_set.get()
+					try:
+						answer_text = answer.answertext_set.get()
+					except AnswerText.DoesNotExist:
+						# This shouldn't happen, there should always be AnswerText when
+						# the answer exists, but we might as well fix it and not error.
+						answer_text = answer.answertext_set.create(text=content)
+						
 					answer_text.text = content
 					answer_text.save() 
 				
