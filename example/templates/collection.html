@@ -10,11 +10,15 @@
 			    	<h2>{{ form.meta.title }}</h2>
 			    	<h2>{{ form.meta.description }}</h2>
 				    {% for field in form %}
-			        <div class="form-row">
-			            {{ field.errors }}
-			            {{ field.label_tag }}
-			            {{ field }}
-			        </div>
+					    {% if not field.is_hidden %}
+					        <div class="form-row">
+					            {{ field.errors }}
+					            {{ field.label_tag }}
+					            {{ field }}
+					        </div>
+					    {% else %}
+				            {{ field }}
+					    {% endif %}
 				    {% endfor %}
 			    {% endfor %}
 			    

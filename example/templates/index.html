@@ -6,7 +6,17 @@
 			<p>This form has been dynamically created from a database definition. See the <a href="{% url form_collection %}">form collection</a> demo.<p>
 			
 			<form action="." method="post" accept-charset="utf-8">
-				{{ form.as_p }}
+				{% for field in form %}
+					{% if not field.is_hidden %}
+						<div class="form-row">
+							{{ field.errors }}
+							{{ field.label_tag }}
+							{{ field }}
+						</div>
+					{% else %}
+						{{ field }}
+					{% endif %}
+				{% endfor %}
 				<p><input type="submit" value="Submit"></p>
 			</form>
 		</div>
