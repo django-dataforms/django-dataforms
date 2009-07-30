@@ -82,8 +82,8 @@ class Field(models.Model):
 
 	choices = models.ManyToManyField('Choice', through='FieldChoice')
 	field_type = models.CharField(verbose_name=_('field type key'), max_length=255, choices=FIELD_TYPE_CHOICES)
-	slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
 	label = models.TextField(verbose_name=_('field label'))
+	slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
 	help_text = models.TextField(verbose_name=_('field help text'), blank=True)
 	initial = models.TextField(verbose_name=_('initial value of the field'), blank=True)
 	arguments = models.CharField(verbose_name=_('additional arguments'), help_text="A JSON dictionary of keyword arguments.", blank=True, max_length=255)

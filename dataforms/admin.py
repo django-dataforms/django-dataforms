@@ -60,6 +60,7 @@ class DataFormAdmin(admin.ModelAdmin):
 		js = ADMIN_SORT_JS
 
 class FieldAdmin(admin.ModelAdmin):
+	prepopulated_fields = {'slug': ('label',)}
 	list_select_related = True
 	list_filter = ('field_type', 'visible', 'required',)
 	list_display_links = ('label',)
