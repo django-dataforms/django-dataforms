@@ -10,13 +10,13 @@ def index(request):
 	"""
 	A demo page to show a form dynamically generated from the database. 
 	"""
-	
+
 	form = create_form(request=request, form="personal-information", submission="myForm")
-	
+
 	if request.method == "POST":
 		if form.is_valid():
 			form.save()
-	
+
 	return render_to_response("index.html", { 'form':form }, RequestContext(request))
 
 def form_collection(request):
@@ -25,8 +25,8 @@ def form_collection(request):
 	"""
 
 	collection = create_collection(request=request, collection="test-collection", submission="myCollection")
-	
-	collection.set_section("A")
+
+	collection.set_section("a")
 
 	if request.method == "POST":
 		if collection.is_valid():

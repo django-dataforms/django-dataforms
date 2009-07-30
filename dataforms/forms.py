@@ -532,18 +532,16 @@ def _create_form(form, title=None, description=None):
 	
 	return DataFormClass
 
-# FIXME - Select related and _set calls are not working 
-# correctly.  They are executing 50 or so queries per request.
 def get_answers(submission, for_form=False):
 	"""
 	Get the answers for a submission.
-	
+
 	This function intentionally does not return the answers in the same
 	form as request.POST data will have submitted them (ie, every element
 	wrapped as a list). This is because this function is meant to provide
 	data that can be instantly consumed by some `FormClass(data=data)`
 	instantiation, as done by create_form.
-	
+
 	:param submission: A Submission object or slug
 	:param for_form: whether or not these answers should be made unique for
 		use on a form, ie. if every field slug should be prepended with
@@ -552,56 +550,38 @@ def get_answers(submission, for_form=False):
 		to be True when used the keys will be used as form element names. 
 	:return: a dictionary of answers
 	"""
-	
+
 	data = defaultdict(list)
-	
+
 	# Slightly evil, do type checking to see if submission is a Submission object or string
 	if isinstance(submission, str):
-		submission = Submission.objects.get(slug=submission)
-	
+		submission = Submission.objects.get(slug=submission).id
+	if isinstance(submission, Submission):
+		submission = submission.id
+
 	# FIXME: Is this selected related working?
 	# ANSWER:  NO!  It is not!  28+ queries per execution!
-	answers = Answer.objects.select_related('field', 'answerchoice_set', 'answertext_set', 'answernumber_set').filter(submission=submission)
-	
+	answers = Answer.objects.get_answer_data(submission)
+
 	# For every answer, do some magic and get it into our data dictionary
 	for answer in answers:
-		
 		# Refactors the answer field name to be globally unique (so
 		# that a field can be in multiple forms in the same POST)
 		if for_form:
-			answer_key = _field_for_form(name=str(answer.field.slug), form=answer.data_form.slug)
+			answer_key = _field_for_form(name=str(answer['field_slug']), form=answer['dataform_slug'])
 		else:
-			answer_key = str(answer.field.slug) 
-		
-		if answer.field.field_type in MULTI_CHOICE_FIELDS:
-			# STORAGE MODEL: AnswerChoice
-			data[answer_key] += [answer_choice.choice.value for answer_choice in answer.answerchoice_set.all()]
-		elif answer.field.field_type in SINGLE_CHOICE_FIELDS:
-			# STORAGE MODEL: AnswerChoice
-			try:
-				data[answer_key] = [answer_choice.choice.value for answer_choice in answer.answerchoice_set.all()][0]
-			except IndexError:
-				# If we couldn't find a choice relation, just use the DB default
-				pass
-		elif answer.field.field_type in SINGLE_NUMBER_FIELDS:
-			# STORAGE MODEL: AnswerNumber
-			try:
-				data[answer_key] = answer.answernumber_set.get().number
-			except AnswerNumber.DoesNotExist:
-				# Is this the right thing to do here? Just don't set it if it the answer doesn't exist
-				pass
-		elif answer.field.field_type in MULTI_NUMBER_FIELDS:
-			# STORAGE MODEL: AnswerNumber
-			data[answer_key] = [answer_number.number for answer_number in answer.answernumber_set.all()]
+			answer_key = str(answer['field_slug'])
+
+		# If there isn't an answer (answer['content'] is [None, None...]) then don't include
+		if answer['content'] and True not in [(True if item is not None else False) for item in answer['content']]:
+			continue
+
+		if answer['field_type'] in MULTI_CHOICE_FIELDS + MULTI_NUMBER_FIELDS:
+			data[answer_key] = answer['content']
 		else:
-			# STORAGE MODEL: AnswerText
-			try:
-				#FIXME: Too many queries!  Over 28+ here as well.
-				data[answer_key] = answer.answertext_set.get().text
-			except AnswerText.DoesNotExist:
-				# Is this the right thing to do here? Just don't set it if it the answer doesn't exist
-				pass
-			
+			# SINGLE_CHOICE_FIELDS + SINGLE_NUMBER_FIELDS + text fields
+			data[answer_key] = answer['content'][0]
+
 	return dict(data)
 
 def get_bindings(form):

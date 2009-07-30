@@ -7,42 +7,42 @@ from .models import Submission, Answer
 from .settings import BOOLEAN_FIELDS, MULTI_CHOICE_FIELDS, SINGLE_CHOICE_FIELDS
 
 class RequestFactory(Client):
-    """
-    Class that lets you create mock Request objects for use in testing.
-    
-    Usage::
-    
-	    rf = RequestFactory()
-	    get_request = rf.get('/hello/')
-	    post_request = rf.post('/submit/', {'foo': 'bar'})
-    
-    This class re-uses the django.test.client.Client interface, docs here:
-    http://www.djangoproject.com/documentation/testing/#the-test-client
-    
-    Once you have a request object you can pass it to any view function, 
-    just as if that view had been hooked up using a URLconf.
-    
-    Original From: http://www.djangosnippets.org/snippets/963/
-    
-    """
-    def request(self, **request):
-        """
-        Similar to parent class, but returns the request object as soon as it
-        has created it.
-        """
-        environ = {
-            'HTTP_COOKIE': self.cookies,
-            'PATH_INFO': '/',
-            'QUERY_STRING': '',
-            'REQUEST_METHOD': 'GET',
-            'SCRIPT_NAME': '',
-            'SERVER_NAME': 'testserver',
-            'SERVER_PORT': 80,
-            'SERVER_PROTOCOL': 'HTTP/1.1',
-        }
-        environ.update(self.defaults)
-        environ.update(request)
-        return WSGIRequest(environ)
+	"""
+	Class that lets you create mock Request objects for use in testing.
+	
+	Usage::
+	
+		rf = RequestFactory()
+		get_request = rf.get('/hello/')
+		post_request = rf.post('/submit/', {'foo': 'bar'})
+	
+	This class re-uses the django.test.client.Client interface, docs here:
+	http://www.djangoproject.com/documentation/testing/#the-test-client
+	
+	Once you have a request object you can pass it to any view function, 
+	just as if that view had been hooked up using a URLconf.
+	
+	Original From: http://www.djangosnippets.org/snippets/963/
+	
+	"""
+	def request(self, **request):
+		"""
+		Similar to parent class, but returns the request object as soon as it
+		has created it.
+		"""
+		environ = {
+			'HTTP_COOKIE': self.cookies,
+			'PATH_INFO': '/',
+			'QUERY_STRING': '',
+			'REQUEST_METHOD': 'GET',
+			'SCRIPT_NAME': '',
+			'SERVER_NAME': 'testserver',
+			'SERVER_PORT': 80,
+			'SERVER_PROTOCOL': 'HTTP/1.1',
+		}
+		environ.update(self.defaults)
+		environ.update(request)
+		return WSGIRequest(environ)
 
 class CustomTestCase(TestCase):
 	def assertValidSave(self, data, submission):
@@ -90,7 +90,10 @@ class CustomTestCase(TestCase):
 		# Wrap them as lists
 		for form_name, field_name in field_names:
 			form_field_name = _field_for_form(name=field_name, form=form_name)
-			answers_to_compare[form_field_name] = [answers_to_compare[form_field_name]]
+			try:
+				answers_to_compare[form_field_name] = [answers_to_compare[form_field_name]]
+			except:
+				self.fail("It looks like get_answers() might be borked. '%s' was supposed to exist here (in answers_to_compare), but doesn't. Perhaps a certain storage mechanism in the save() function is not working properly?" % form_field_name)
 		
 		# ------ 3 ------
 		# Actually compare the submitted data to the DB data
