@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from reversion.admin import VersionAdmin
 
 from .settings import ADMIN_SORT_JS
 from .models import Collection, CollectionDataForm, DataForm, DataFormField, Field, Binding, FieldChoice, Choice, Answer, Submission, AnswerText, AnswerChoice, AnswerNumber, Section
@@ -8,7 +9,7 @@ from .models import Collection, CollectionDataForm, DataForm, DataFormField, Fie
 class FieldAdminForm(forms.ModelForm):
 	class Meta:
 		model = Field
-
+		
 	def clean_label(self):
 		data = self.cleaned_data['label']
 
@@ -32,7 +33,7 @@ class FieldInline(admin.StackedInline):
 class BindingInline(admin.StackedInline):
 	model = Binding
 	extra = 1
-
+	
 class AnswerChoiceInline(admin.StackedInline):
 	model = AnswerChoice
 	extra = 1
@@ -46,8 +47,8 @@ class AnswerNumberInline(admin.StackedInline):
 # ModelAdmin Classes
 class CollectionAdmin(admin.ModelAdmin):
 	prepopulated_fields = {'slug': ('title',)}
-	inlines = [DataFormInline, ]
-
+	inlines = [DataFormInline,]
+	
 	class Media:
 		js = ADMIN_SORT_JS
 
@@ -55,12 +56,11 @@ class DataFormAdmin(admin.ModelAdmin):
 	prepopulated_fields = {'slug': ('title',)}
 	list_display = ('__unicode__', 'visible',)
 	inlines = [FieldInline]
-
+	
 	class Media:
 		js = ADMIN_SORT_JS
 
 class FieldAdmin(admin.ModelAdmin):
-	prepopulated_fields = {'slug': ('label',)}
 	list_select_related = True
 	list_filter = ('field_type', 'visible', 'required',)
 	list_display_links = ('label',)
@@ -70,21 +70,28 @@ class FieldAdmin(admin.ModelAdmin):
 	inlines = [ChoiceInline, FieldInline]
 	save_as = True
 	form = FieldAdminForm
-
+	
 	class Media:
 		js = ADMIN_SORT_JS
-
+		
 class BindingAdmin(admin.ModelAdmin):
-	list_display = ('data_form', 'parent_field', 'parent_choice', 'child',)
-	list_filter = ('data_form',)
-	list_editable = ('parent_field', 'parent_choice', 'child',)
-
-class AnswerAdmin(admin.ModelAdmin):
+	list_display = ('parent_field', 'parent_choice', 'child',)
+		
+class AnswerAdmin(VersionAdmin):
 	list_display = ('submission', 'field', 'last_modified',)
 	inlines = [AnswerTextInline, AnswerNumberInline, AnswerChoiceInline]
 	list_select_related = True
 
-class SubmissionAdmin(admin.ModelAdmin):
+class AnswerChoiceAdmin(VersionAdmin):
+	pass
+
+class AnswerTextAdmin(VersionAdmin):
+	pass
+
+class AnswerNumberAdmin(VersionAdmin):
+	pass
+
+class SubmissionAdmin(VersionAdmin):
 	list_display = ('__unicode__', 'last_modified',)
 	search_fields = ('slug',)
 	list_select_related = True
@@ -95,12 +102,15 @@ class ChoiceAdmin(admin.ModelAdmin):
 
 class SectionAdmin(admin.ModelAdmin):
 	list_display = ('title',)
-
+	
 admin.site.register(Section, SectionAdmin)
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(DataForm, DataFormAdmin)
 admin.site.register(Field, FieldAdmin)
 admin.site.register(Binding, BindingAdmin)
 admin.site.register(Answer, AnswerAdmin)
+admin.site.register(AnswerChoice, AnswerChoiceAdmin)
+admin.site.register(AnswerText, AnswerTextAdmin)
+admin.site.register(AnswerNumber, AnswerNumberAdmin)
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(Choice, ChoiceAdmin)
