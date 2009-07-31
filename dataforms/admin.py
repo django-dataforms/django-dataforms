@@ -1,6 +1,10 @@
 from django import forms
 from django.contrib import admin
-from reversion.admin import VersionAdmin
+
+try:
+	from reversion.admin import VersionAdmin as BaseAdminClass
+except ImportError:
+	from django.contrib.admin import ModelAdmin as BaseAdminClass
 
 from .settings import ADMIN_SORT_JS
 from .models import Collection, CollectionDataForm, DataForm, DataFormField, Field, Binding, FieldChoice, Choice, Answer, Submission, AnswerText, AnswerChoice, AnswerNumber, Section
@@ -77,21 +81,21 @@ class FieldAdmin(admin.ModelAdmin):
 class BindingAdmin(admin.ModelAdmin):
 	list_display = ('parent_field', 'parent_choice', 'child',)
 		
-class AnswerAdmin(VersionAdmin):
+class AnswerAdmin(BaseAdminClass):
 	list_display = ('submission', 'field', 'last_modified',)
 	inlines = [AnswerTextInline, AnswerNumberInline, AnswerChoiceInline]
 	list_select_related = True
 
-class AnswerChoiceAdmin(VersionAdmin):
+class AnswerChoiceAdmin(BaseAdminClass):
 	pass
 
-class AnswerTextAdmin(VersionAdmin):
+class AnswerTextAdmin(BaseAdminClass):
 	pass
 
-class AnswerNumberAdmin(VersionAdmin):
+class AnswerNumberAdmin(BaseAdminClass):
 	pass
 
-class SubmissionAdmin(VersionAdmin):
+class SubmissionAdmin(BaseAdminClass):
 	list_display = ('__unicode__', 'last_modified',)
 	search_fields = ('slug',)
 	list_select_related = True

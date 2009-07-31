@@ -93,3 +93,7 @@ INSTALLED_APPS = (
 try: __import__("django_extensions")
 except ImportError: pass
 else: INSTALLED_APPS += ("django_extensions",)
+
+try: __import__("reversion")
+except ImportError: pass
+else: INSTALLED_APPS += ("reversion",)
