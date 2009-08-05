@@ -12,6 +12,7 @@ except ImportError: validation = None
 
 from collections import defaultdict
 from django import forms
+from django.forms.forms import BoundField
 from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
 from django.core.exceptions import FieldError
@@ -22,6 +23,17 @@ from .settings import (FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS
 from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice, AnswerText, AnswerNumber, CollectionDataForm, Binding, Section
 
 class BaseDataForm(forms.BaseForm):
+	def __init__(self, *args, **kwargs):
+		super(BaseDataForm, self).__init__(*args, **kwargs)
+		self.__generate_bound_fields()
+	
+	def __generate_bound_fields(self):
+		self.bound_fields = SortedDict([(name, BoundField(self, field, name)) for name, field in self.fields.items()])
+	
+	def __iter__(self):
+		for name in self.bound_fields:
+			yield self.bound_fields[name]
+	
 	def is_valid(self):
 		# Delete the hidden bindings field before we process, because it should never be handled
 		_remove_bindings_field(self)
@@ -167,11 +179,11 @@ class BaseCollection(object):
 			section = section.slug
 
 		if section is None:
-			self.form_existence = [True for form in self.forms]
+			self.__form_existence = [True for form in self.forms]
 		else:
-			self.form_existence = [True if form.section == section else False for form in self.forms]
+			self.__form_existence = [True if form.section == section else False for form in self.forms]
 			
-		if True not in self.form_existence:
+		if True not in self.__form_existence:
 			raise SectionDoesNotExist(section)
 		
 		# Set the indexes
@@ -181,8 +193,8 @@ class BaseCollection(object):
 		
 		# Set the objects
 		self.section = self.sections[self._section]
-		self.next_section = self.sections[self._next_section] if self._next_section else None
-		self.prev_section = self.sections[self._prev_section] if self._prev_section else None
+		self.next_section = self.sections[self._next_section] if self._next_section is not None else None
+		self.prev_section = self.sections[self._prev_section] if self._prev_section is not None else None
 		
 	def __getitem__(self, arg):
 		"""
@@ -192,10 +204,10 @@ class BaseCollection(object):
 		"""
 		
 		# The true index to the form the user is asking for is the normal index
-		# into self.forms, but excluding forms masked out by form_existence[] == False
+		# into self.forms, but excluding forms masked out by __form_existence[] == False
 		fake_index = -1
 		for i in range(0, len(self.forms)+1):
-			if self.form_existence[i]:
+			if self.__form_existence[i]:
 				fake_index +=1
 			if fake_index == arg:
 				return self.forms[i]
@@ -204,6 +216,7 @@ class BaseCollection(object):
 		"""
 		Make a new collection with the given subset of forms
 		"""
+		
 		
 		return BaseCollection(
 			title=self.title,
@@ -217,7 +230,7 @@ class BaseCollection(object):
 		:return: the number of contained forms (that are visible)
 		"""
 		
-		return len([truth for truth in self.form_existence if truth])
+		return len([truth for truth in self.__form_existence if truth])
 		
 	def save(self):
 		"""
@@ -366,7 +379,7 @@ def create_form(request, form, submission, title=None, description=None, section
 		form.submission_slug = submission_slug
 		
 	form.section = section
-		
+	
 	return form
 
 def _create_form(form, title=None, description=None):
@@ -457,7 +470,7 @@ def _create_form(form, title=None, description=None):
 			field_kwargs['initial'] = row['initial']
 		if row.has_key('required'):
 			field_kwargs['required'] = row['required']
-		
+			
 		additional_field_kwargs = {}
 		if row.has_key('arguments') and row['arguments'].strip():
 			# Parse any additional field arguments as JSON and include them in field_kwargs
@@ -474,6 +487,7 @@ def _create_form(form, title=None, description=None):
 #		if bindings.has_key(form_field_name):
 #			field_attrs['rel'] = "id_%s" % bindings[form_field_name]
 #		
+
 		# Get the choices for single and multiple choice fields 
 		if row['field_type'] in CHOICE_FIELDS:
 			choices = ()
@@ -504,12 +518,6 @@ def _create_form(form, title=None, description=None):
 		# (initial, label, required, help_text, etc)
 		final_fields[form_field_name] = field_map['class'](**field_kwargs)
 	
-#	I don't think we need this anymore
-#
-#	for key in final_fields:
-#		setattr(DataFormClass, key, final_fields[key])
-#	
-
 	attrs = {
 		'declared_fields' : final_fields,
 		'base_fields' : final_fields,
@@ -630,12 +638,22 @@ def _field_for_form(name, form):
 	"""
 	return "%s%s%s" % (form, FIELD_DELIMITER, name)
 
-def _field_for_db(name):
+def _field_for_db(name, packed_return=False):
 	"""
-	Take a form from POST data and get it back to its DB-capable name
-	id_form-name--field-name --> field-name 
+	Take a form from POST data and get it back to its DB-capable field and form name
+	"id_form-name--field-name" --> "field-name"
+	"id_form-name--field-name" --> "form-name", "field-name"
+	
+	:arg packed_return: whether or not to return a tuple of
+		(form_name, field_name), or just the field_name
 	"""
-	return name[name.find(FIELD_DELIMITER)+len(FIELD_DELIMITER):]
+	
+	names = name.split(FIELD_DELIMITER)
+	
+	if packed_return:
+		return (names[0][len("id_") if "id_" in names[0] else 0:], names[1])
+	else:
+		return names[1]
 
 # Custom dataform exception classes
 class RequiredArgument(Exception):
