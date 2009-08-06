@@ -31,6 +31,12 @@ class BaseDataForm(forms.BaseForm):
 		self.bound_fields = SortedDict([(name, BoundField(self, field, name)) for name, field in self.fields.items()])
 	
 	def __iter__(self):
+		"""
+		Overload of the BaseForm iteration to maintain a persistent set of bound_fields.
+		This allows us to inject attributes in to the fields and these attributes will
+		persist the next time that the form is iterated over.
+		"""
+		
 		for name in self.bound_fields:
 			yield self.bound_fields[name]
 	
@@ -411,8 +417,8 @@ def _create_form(form, title=None, description=None):
 		raise DataForm.DoesNotExist('DataForm %s does not exist. Make sure the slug name is correct and the form is visible.' % slug)
 	
 	# Set the title and/or the description from the DB (but only if it wasn't given)
-	meta['title'] = form.title if not title else title
-	meta['description'] = form.description if not description else description
+	meta['title'] = safe(form.title if not title else title)
+	meta['description'] = safe(form.description if not description else description)
 	meta['slug'] = form.slug
 		
 	# Get all the fields
@@ -463,9 +469,9 @@ def _create_form(form, title=None, description=None):
 		field_attrs = {}
 		
 		if row.has_key('label'):
-			field_kwargs['label'] = row['label']
+			field_kwargs['label'] = safe(row['label'])
 		if row.has_key('help_text'):
-			field_kwargs['help_text'] = row['help_text']
+			field_kwargs['help_text'] = safe(row['help_text'])
 		if row.has_key('initial'):
 			field_kwargs['initial'] = row['initial']
 		if row.has_key('required'):
