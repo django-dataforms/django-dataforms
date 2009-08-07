@@ -91,7 +91,7 @@ class BaseDataForm(forms.BaseForm):
 					answer_choice.delete()
 				
 				# If string, wrap as a list because the for-loop below assumes a list
-				if isinstance(self.cleaned_data[key], unicode) or isinstance(self.cleaned_data[key], str):
+				if isinstance(self.cleaned_data[key], str) or isinstance(self.cleaned_data[key], unicode):
 					self.cleaned_data[key] = [self.cleaned_data[key]]
 				
 				# Add the selected choices
@@ -277,7 +277,7 @@ def create_collection(request, collection, submission):
 	"""
 	
 	# Slightly evil, do type checking to see if submission is a Submission object or string
-	if isinstance(collection, str):
+	if isinstance(collection, str) or isinstance(collection, unicode):
 		# Get the queryset for the form collection to pass in our dictionary
 		try:
 			collection = Collection.objects.get(visible=True, slug=collection)
@@ -346,7 +346,7 @@ def create_form(request, form, submission, title=None, description=None, section
 	"""
 	
 	# Slightly evil, do type checking to see if submission is a Submission object or string
-	if isinstance(submission, str):
+	if isinstance(submission, str) or isinstance(submission, unicode):
 		submission_slug = submission
 		
 		try:
@@ -403,7 +403,7 @@ def _create_form(form, title=None, description=None):
 	"""
 	
 	meta = {}
-	slug = form if isinstance(form, str) else form.slug
+	slug = form if isinstance(form, str) or isinstance(form, unicode) else form.slug
 	final_fields = SortedDict()
 	choices_dict = defaultdict(tuple)
 	
@@ -568,7 +568,7 @@ def get_answers(submission, for_form=False):
 	data = defaultdict(list)
 
 	# Slightly evil, do type checking to see if submission is a Submission object or string
-	if isinstance(submission, str):
+	if isinstance(submission, str) or isinstance(submission, unicode):
 		submission = Submission.objects.get(slug=submission).id
 	if isinstance(submission, Submission):
 		submission = submission.id
