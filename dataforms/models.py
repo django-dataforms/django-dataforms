@@ -219,8 +219,6 @@ class Answer(models.Model):
 	data_form = models.ForeignKey('DataForm', null=False, blank=False)
 	field = models.ForeignKey('Field', null=False, blank=False)
 
-	last_modified = models.DateTimeField(verbose_name=_('last modified'), auto_now=True)
-
 	def __unicode__(self):
 		return str(self.field)
 
