@@ -10,7 +10,7 @@ function doBinding(parent, child, choice, effectTime){
 	var choice = typeof(choice) != 'undefined' ? choice : -1;
 	
 	if (!boundArea.length && window.console && window.console.log && window.console.error) {
-		console.error("Could do binding because boundArea was empty.")
+		console.error("Couldn't do binding because boundArea was empty.")
 		console.log("Parent:")
 		console.log(parent)
 		console.log("Child:")
@@ -66,6 +66,10 @@ function setBindings() {
 				// (parent, child)
 				
 				var child = $("#id_" + bindings[i][1]);
+				if (!child.length){
+					child = $("input[name='"+ bindings[i][1]+"']").slice(0,1);
+				}
+				
 				setBinding(parent, child);
 				
 			} else if (bindings[i].length == 3) {
@@ -88,16 +92,16 @@ function setBindings() {
 					
 					if (elementName == "select") {
 						// Select element
-						setBinding(parent, child, choiceVal);
 						if (window.console && window.console.log){
 							console.log("Adding select binding for " + "#id_" + bindings[i][0] + " --> " + "#id_" + bindings[i][2])
 						}
+						setBinding(parent, child, choiceVal);
 					} else if (elementName == "input" && parent[0].type == "radio") {
 						// Radio buttons
-						setBinding(parent, child, choiceVal);
 						if (window.console && window.console.log){
 							console.log("Adding radio binding for " + "#id_" + bindings[i][0] + " --> " + "#id_" + bindings[i][2])
 						}
+						setBinding(parent, child, choiceVal);
 					} else {
 						if (window.console && window.console.log){
 							console.log(parent);
