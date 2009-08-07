@@ -299,8 +299,21 @@ def create_collection(request, collection, submission):
 	)
 	
 	# Get the sections from the many-to-many, and then make the elements unique (a set)
-	sections = Section.objects.filter(collectiondataform__collection=collection).distinct()
+	non_unique_sections = Section.objects.order_by("collectiondataform__order").filter(collectiondataform__collection=collection).distinct()
 
+	# Force the query to evaluate
+	non_unique_sections = list(non_unique_sections)
+
+	# OK, this is evil. We have to manually remove duplicates that exists in the Section queryset.
+	# See here for why mixing order_by and distinct returns duplicates.
+	# http://docs.djangoproject.com/en/dev/ref/models/querysets/#distinct
+	#
+	# Also, using list(set(non_unique_sections)) does not work. :)
+	sections = []
+	for section in non_unique_sections:
+		if section not in sections:
+			sections.append(section)
+	
 	# Initialize a list to contain all the form classes
 	form_list = []
 	
