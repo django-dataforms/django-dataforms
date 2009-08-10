@@ -161,7 +161,7 @@ class AnswerText(models.Model):
 	text = models.TextField(verbose_name=_('content'), null=False, blank=False)
 
 	def __unicode__(self):
-		return str(" - ".join([str(self.answer), self.text]))
+		return str(" - ".join([str(self.answer), str(self.text)]))
 
 class AnswerNumber(models.Model):
 	"""
