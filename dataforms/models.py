@@ -30,7 +30,7 @@ class CollectionDataForm(models.Model):
 
 	class Meta:
 		unique_together = ('collection', 'data_form')
-		ordering = ['section', 'order', ]
+		ordering = ['order',]
 
 	def __unicode__(self):
 		return u'%s in %s' % (self.collection, self.data_form)
@@ -129,7 +129,7 @@ class Choice(models.Model):
 	value = models.CharField(verbose_name=_('choice value'), max_length=255)
 
 	def __unicode__(self):
-		return self.title
+		return str(self.title)
 
 class Submission(models.Model):
 	"""

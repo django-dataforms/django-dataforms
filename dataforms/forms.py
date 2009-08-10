@@ -304,11 +304,12 @@ def create_collection(request, collection, submission):
 	# Force the query to evaluate
 	non_unique_sections = list(non_unique_sections)
 
-	# OK, this is evil. We have to manually remove duplicates that exists in the Section queryset.
+	# OK, this is evil. We have to manually remove duplicates that exist in the Section queryset.
 	# See here for why mixing order_by and distinct returns duplicates.
+	#
 	# http://docs.djangoproject.com/en/dev/ref/models/querysets/#distinct
 	#
-	# Also, using list(set(non_unique_sections)) does not work. :)
+	# Also, using list(set(non_unique_sections)) does not work, unfortunately.
 	sections = []
 	for section in non_unique_sections:
 		if section not in sections:
