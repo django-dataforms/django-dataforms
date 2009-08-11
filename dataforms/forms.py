@@ -146,11 +146,10 @@ class BaseDataForm(forms.BaseForm):
 						# This shouldn't happen, there should always be AnswerText when
 						# the answer exists, but we might as well fix it and not error.
 						answer_text = answer.answertext_set.create(text=content)
-						
-					answer_text.text = content
-					answer_text.save() 
-				
-			answer.save()
+					
+					if answer_text.text != content:
+						answer_text.text = content
+						answer_text.save() 
 
 class BaseCollection(object):
 	"""
