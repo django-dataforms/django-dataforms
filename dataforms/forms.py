@@ -529,12 +529,12 @@ def _create_form(form, title=None, description=None, readonly=False):
 				)
 				# Remove whitespace so the user can use spaces
 				field_kwargs['initial'] = [element.strip() for element in field_kwargs['initial']]
-			
+				
 			if readonly:
 				field_attrs['disabled'] = "disabled"
 				
 		if readonly and row['field_type'] == "CheckboxInput":
-				field_attrs['disabled'] = "disabled"
+			field_attrs['disabled'] = "disabled"
 			
 		# Instantiate the widget that this field will use
 		if field_map.has_key('widget'):
@@ -542,7 +542,9 @@ def _create_form(form, title=None, description=None, readonly=False):
 		
 		# Add this field, including any widgets and additional arguments
 		# (initial, label, required, help_text, etc)
-		final_fields[form_field_name] = field_map['class'](**field_kwargs)
+		final_field = field_map['class'](**field_kwargs)
+		final_field.is_checkbox = (row['field_type'] == 'CheckboxInput')
+		final_fields[form_field_name] = final_field
 			
 	attrs = {
 		'declared_fields' : final_fields,
