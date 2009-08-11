@@ -60,7 +60,7 @@ class BaseDataForm(forms.BaseForm):
 		#
 		# Specifically:
 		#  * All the get_or_create() functions could become creates if we delete all answers
-		#    that we are about to update.
+		#	that we are about to update.
 		#  * Is there any way to batch INSERTs in Django's ORM?
 		
 		# FIXME: check if cleaned_data exists and throw an error informing the user
@@ -254,7 +254,7 @@ class BaseCollection(object):
 			if not form.is_valid():
 				return False
 		return True
-	
+
 def _remove_bindings_field(form):
 	"""
 	Delete the hidden bindings field before we process, because it should never be handled
@@ -264,7 +264,7 @@ def _remove_bindings_field(form):
 	if form.fields.has_key(hidden_bindings_field_slug):
 		del form.fields[hidden_bindings_field_slug]
 
-def create_collection(request, collection, submission):
+def create_collection(request, collection, submission, readonly=False):
 	"""
 	Based on a form collection slug, create a list of form objects.
 	
@@ -322,7 +322,7 @@ def create_collection(request, collection, submission):
 		# Hmm...is this evil?
 		section = collection_bridge.get(data_form=form).section.slug
 		
-		form_list.append(create_form(request, form=form, submission=submission, section=section))
+		form_list.append(create_form(request, form=form, submission=submission, section=section, readonly=readonly))
 	
 	# Pass our collection info and our form list to the dictionary
 	collection = BaseCollection(
@@ -335,7 +335,7 @@ def create_collection(request, collection, submission):
 	
 	return collection
 
-def create_form(request, form, submission, title=None, description=None, section=None):
+def create_form(request, form, submission, title=None, description=None, section=None, readonly=False):
 	"""
 	Instantiate and return a dynamic form object, optionally already populated from an
 	already submitted form.
@@ -373,7 +373,7 @@ def create_form(request, form, submission, title=None, description=None, section
 	data = get_answers(submission=submission, for_form=True)
 	
 	# Create our form class
-	FormClass = _create_form(form=form, title=title, description=description)
+	FormClass = _create_form(form=form, title=title, description=description, readonly=readonly)
 	
 	# Create the actual form instance, from the dynamic form class
 	if request.method == 'POST':
@@ -390,7 +390,6 @@ def create_form(request, form, submission, title=None, description=None, section
 		# This creates an unbound form object.
 		form = FormClass(initial=(data if data else None))
 		
-	
 	# Now that we have an instantiated form object, let's add our custom attributes
 	if submission:
 		form.submission = submission
@@ -401,7 +400,7 @@ def create_form(request, form, submission, title=None, description=None, section
 	
 	return form
 
-def _create_form(form, title=None, description=None):
+def _create_form(form, title=None, description=None, readonly=False):
 	"""
 	Creates a form class object.
 
@@ -452,15 +451,15 @@ def _create_form(form, title=None, description=None):
 		).order_by('order')
 	)
 
-	# Get the bindings for use in the Field Loop
-	bindings = get_bindings(form=form)
-	
 	fields = list(field_qs.values())
 	
 	# We originally were setting the "rel" attr on the field objects to do the bindings,
 	# but this only works for checkboxes and other top-level field types. It does not work
 	# with sub-options (like elements of a drop down) because Django does not yet support
 	# (as of v1.0) extra attributes on <option> elements on Select widgets. So, instead:
+	
+	# Get the bindings for use in the Field Loop
+	bindings = get_bindings(form=form)
 	
 	# Add a hidden field used for passing information to the JavaScript bindings function
 	fields.append({
@@ -506,6 +505,8 @@ def _create_form(form, title=None, description=None):
 #		if bindings.has_key(form_field_name):
 #			field_attrs['rel'] = "id_%s" % bindings[form_field_name]
 #		
+		if readonly:
+			field_attrs['readonly'] = "readonly"
 
 		# Get the choices for single and multiple choice fields 
 		if row['field_type'] in CHOICE_FIELDS:
@@ -529,6 +530,12 @@ def _create_form(form, title=None, description=None):
 				# Remove whitespace so the user can use spaces
 				field_kwargs['initial'] = [element.strip() for element in field_kwargs['initial']]
 			
+			if readonly:
+				field_attrs['disabled'] = "disabled"
+				
+		if readonly and row['field_type'] == "CheckboxInput":
+				field_attrs['disabled'] = "disabled"
+			
 		# Instantiate the widget that this field will use
 		if field_map.has_key('widget'):
 			field_kwargs['widget'] = field_map['widget'](attrs=field_attrs, **field_map['widget_kwargs'])
@@ -536,7 +543,7 @@ def _create_form(form, title=None, description=None):
 		# Add this field, including any widgets and additional arguments
 		# (initial, label, required, help_text, etc)
 		final_fields[form_field_name] = field_map['class'](**field_kwargs)
-	
+			
 	attrs = {
 		'declared_fields' : final_fields,
 		'base_fields' : final_fields,
@@ -680,4 +687,3 @@ class RequiredArgument(Exception):
 
 class SectionDoesNotExist(Exception):
 	pass
-
