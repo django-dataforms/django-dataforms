@@ -449,7 +449,7 @@ def _create_form(form, title=None, description=None):
 		FieldChoice.objects.select_related('choice', 'field').filter(
 			field__dataformfield__data_form__slug=slug,
 			field__visible=True
-		).order_by('field__dataformfield__order')
+		).order_by('order')
 	)
 
 	# Get the bindings for use in the Field Loop
