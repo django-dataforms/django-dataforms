@@ -81,7 +81,7 @@ class FieldAdmin(admin.ModelAdmin):
 class BindingAdmin(admin.ModelAdmin):
 	list_display = ('parent_field', 'parent_choice', 'child',)
 		
-class AnswerAdmin(BaseAdminClass):
+class AnswerAdmin(admin.ModelAdmin):
 	list_display = ('submission', 'field', )
 	inlines = [AnswerTextInline, AnswerNumberInline, AnswerChoiceInline]
 	list_select_related = True
