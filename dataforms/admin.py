@@ -87,16 +87,16 @@ class AnswerAdmin(admin.ModelAdmin):
 	list_select_related = True
 
 class AnswerChoiceAdmin(BaseAdminClass):
-	pass
+	list_display = ('id', 'answer', 'choice')
 
 class AnswerTextAdmin(BaseAdminClass):
-	pass
+	list_display = ('id', 'answer', 'text')
 
 class AnswerNumberAdmin(BaseAdminClass):
-	pass
+	list_display = ('id', 'answer', 'number')
 
 class SubmissionAdmin(BaseAdminClass):
-	list_display = ('__unicode__', 'last_modified',)
+	list_display = ('id', '__unicode__', 'last_modified',)
 	search_fields = ('slug',)
 	list_select_related = True
 
