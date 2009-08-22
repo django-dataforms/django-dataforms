@@ -109,7 +109,7 @@ class BaseDataForm(forms.BaseForm):
 				for answer_num in AnswerNumber.objects.filter(answer=answer):
 					answer_num.delete()
 				
-				answer.answernumber_set.create(number=self.cleaned_data[key][0])
+				answer.answernumber_set.create(num=self.cleaned_data[key][0])
 				
 			elif field.field_type in MULTI_NUMBER_FIELDS:
 				# STORAGE MODEL: AnswerNumber
@@ -127,7 +127,7 @@ class BaseDataForm(forms.BaseForm):
 					answer_num.delete()
 				
 				for num in self.cleaned_data[key]:
-					answer.answernumber_set.create(number=num)
+					answer.answernumber_set.create(num=num)
 			else:
 				# STORAGE MODEL: AnswerText
 				# Single answer with text content

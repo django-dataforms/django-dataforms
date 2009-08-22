@@ -93,7 +93,7 @@ class AnswerTextAdmin(BaseAdminClass):
 	list_display = ('id', 'answer', 'text')
 
 class AnswerNumberAdmin(BaseAdminClass):
-	list_display = ('id', 'answer', 'number')
+	list_display = ('id', 'answer', 'num')
 
 class SubmissionAdmin(BaseAdminClass):
 	list_display = ('id', '__unicode__', 'last_modified',)

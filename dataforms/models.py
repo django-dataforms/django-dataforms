@@ -168,10 +168,14 @@ class AnswerNumber(models.Model):
 	Stores the data for an answer that text
 	"""
 	answer = models.ForeignKey('Answer', null=False, blank=False)
-	number = models.IntegerField(verbose_name=_('number'), null=False, blank=False)
+	
+	# This used to be named "number", but that breaks when using an Oracle
+	# database backend because "number" is a reserved word.
+	# http://code.djangoproject.com/ticket/4140
+	num = models.IntegerField(verbose_name=_('num'), null=False, blank=False)
 
 	def __unicode__(self):
-		return str(" - ".join([str(self.answer), str(self.number)]))
+		return str(" - ".join([str(self.answer), str(self.num)]))
 
 class AnswerManager(models.Manager):
 	"""(Protocol manager description)"""
@@ -179,7 +183,7 @@ class AnswerManager(models.Manager):
 
 		cursor = connection.cursor()
 		query = """
-			SELECT a.id, df.slug AS dataform_slug, f.slug AS field_slug, f.field_type, c.value AS choice_value, an.number, at.text
+			SELECT a.id, df.slug AS dataform_slug, f.slug AS field_slug, f.field_type, c.value AS choice_value, an.num, at.text
 			FROM dataforms_answer AS a 
 				INNER JOIN dataforms_field AS f ON (a.field_id = f.id)
 				INNER JOIN dataforms_dataform AS df ON (a.data_form_id = df.id)
@@ -193,7 +197,7 @@ class AnswerManager(models.Manager):
 		cursor.execute(query, [submission])
 
 		# Make sure this stays in sync with the above query columns
-		qkeys = ['id', 'dataform_slug', 'field_slug', 'field_type', 'choice_value', 'number', 'text']
+		qkeys = ['id', 'dataform_slug', 'field_slug', 'field_type', 'choice_value', 'num', 'text']
 		rows = cursor.fetchall()
 
 		data = {}
