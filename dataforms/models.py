@@ -184,15 +184,14 @@ class AnswerManager(models.Manager):
 		cursor = connection.cursor()
 		query = """
 			SELECT a.id, df.slug AS dataform_slug, f.slug AS field_slug, f.field_type, c.value AS choice_value, an.num, at.text
-			FROM dataforms_answer AS a 
-				INNER JOIN dataforms_field AS f ON (a.field_id = f.id)
-				INNER JOIN dataforms_dataform AS df ON (a.data_form_id = df.id)
-				LEFT JOIN dataforms_answerchoice AS ac ON (a.id = ac.answer_id)
-					LEFT JOIN dataforms_choice AS c ON (ac.choice_id = c.id)
-				LEFT JOIN dataforms_answernumber AS an ON (a.id = an.answer_id)
-				LEFT JOIN dataforms_answertext AS at ON (a.id = at.answer_id)
+			FROM dataforms_answer a
+				INNER JOIN dataforms_field f ON (a.field_id = f.id)
+				INNER JOIN dataforms_dataform df ON (a.data_form_id = df.id)
+				LEFT JOIN dataforms_answerchoice ac ON (a.id = ac.answer_id)
+				LEFT JOIN dataforms_choice c ON (ac.choice_id = c.id)
+				LEFT JOIN dataforms_answernumber an ON (a.id = an.answer_id)
+				LEFT JOIN dataforms_answertext at ON (a.id = at.answer_id)
 			WHERE a.submission_id = %s
-			
 		"""
 		cursor.execute(query, [submission])
 
