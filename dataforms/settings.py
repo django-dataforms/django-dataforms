@@ -31,16 +31,17 @@ if hasattr(settings, 'FIELD_MAPPINGS'):
 FIELD_MAPPINGS.update( {
 	'TextInput' : { 'class': 'django.forms.CharField', 'widget': 'django.forms.TextInput' },
 	'Textarea' : { 'class': 'django.forms.CharField', 'widget': 'django.forms.Textarea' },
-	'Select' : { 'class': 'django.forms.ChoiceField', 'widget' : 'django.forms.Select' },
-	'SelectMultiple' : { 'class': 'django.forms.MultipleChoiceField', 'widget' : 'django.forms.SelectMultiple' },
-	'RadioSelect' : { 'class': 'django.forms.ChoiceField', 'widget' : 'django.forms.RadioSelect' },
-	'Password' : { 'class': 'django.forms.CharField', 'widget' : 'django.forms.PasswordInput' },
-	'Email' : { 'class': 'django.forms.EmailField', 'widget' : 'django.forms.TextInput' },
+	'Select' : { 'class': 'django.forms.ChoiceField', 'widget': 'django.forms.Select' },
+	'SelectMultiple' : { 'class': 'django.forms.MultipleChoiceField', 'widget': 'django.forms.SelectMultiple' },
+	'RadioSelect' : { 'class': 'django.forms.ChoiceField', 'widget': 'django.forms.RadioSelect' },
+	'Password' : { 'class': 'django.forms.CharField', 'widget': 'django.forms.PasswordInput' },
+	'Email' : { 'class': 'django.forms.EmailField', 'widget': 'django.forms.TextInput' },
 	'DateField' : { 'class': 'django.forms.DateField', 'widget': 'django.forms.TextInput' },
-	'CheckboxInput' : { 'class': 'django.forms.BooleanField', 'widget' : 'django.forms.CheckboxInput' },
-	'CheckboxSelectMultiple' : { 'class': 'django.forms.MultipleChoiceField', 'widget' : 'django.forms.CheckboxSelectMultiple' },
-	'HiddenInput' : { 'class': 'django.forms.Field', 'widget' : 'django.forms.HiddenInput' },
-	'FileInput' : {'class': 'django.forms.FileField', 'widget' : 'django.forms.FileInput' },
+	'CheckboxInput' : { 'class': 'django.forms.BooleanField', 'widget': 'django.forms.CheckboxInput' },
+	'CheckboxSelectMultiple': { 'class': 'django.forms.MultipleChoiceField', 'widget': 'django.forms.CheckboxSelectMultiple' },
+	'HiddenInput' : { 'class': 'django.forms.Field', 'widget': 'django.forms.HiddenInput' },
+	'FileInput' : { 'class': 'django.forms.FileField', 'widget': 'django.forms.FileInput' },
+	'Note' : { 'class': 'django.forms.CharField', 'widget': 'dataforms.widgets.NoteWidget' },    
 } )
 
 MAX_UPLOAD_SIZE = getattr(settings, "MAX_UPLOAD_SIZE", 10485760)
