@@ -12,9 +12,9 @@ def index(request):
 	"""
 
 	form = create_form(request=request, form="personal-information", submission="myForm")
-
 	if request.method == "POST":
 		if form.is_valid():
+			
 			form.save()
 
 	return render_to_response("index.html", { 'form':form }, RequestContext(request))

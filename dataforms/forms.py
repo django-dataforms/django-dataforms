@@ -10,6 +10,7 @@ http://code.google.com/p/django-dataforms/wiki/GettingStarted
 try: import validation
 except ImportError: validation = None
 
+from file_handler import handle_upload
 from collections import defaultdict
 from django import forms
 from django.forms.forms import BoundField
@@ -26,6 +27,19 @@ class BaseDataForm(forms.BaseForm):
 	def __init__(self, *args, **kwargs):
 		super(BaseDataForm, self).__init__(*args, **kwargs)
 		self.__generate_bound_fields()
+		
+	def __getattr__(self, name):
+		if 'clean_' in name:
+			# Remove the form-name__ from clean_form-name__textbox
+			# and make all dashes underscores (so that clean_some_field_slug will be called)
+			validation_func_name = name.replace("".join([self.slug, FIELD_DELIMITER]), "").replace("-", "_")
+			
+			# Have to use dir() here instead of hasattr because hasattr calls getattr and catches exceptions :)
+			if validation_func_name not in dir(self):
+				raise AttributeError(validation_func_name)
+			return getattr(self, validation_func_name)
+		else:
+			raise AttributeError("%s doesn't exist in %s" % (name, repr(self)))
 	
 	def __generate_bound_fields(self):
 		self.bound_fields = SortedDict([(name, BoundField(self, field, name)) for name, field in self.fields.items()])
@@ -132,8 +146,11 @@ class BaseDataForm(forms.BaseForm):
 				# STORAGE MODEL: AnswerText
 				# Single answer with text content
 				
-				# Leave this conditional check here. It makes single checkboxes work. 
-				content = self.cleaned_data[key] if self.cleaned_data[key] else ''
+				if field.field_type == "FileInput":
+					content = handle_upload(self.files, key)
+				else:
+					# Leave this conditional check here. It makes single checkboxes work. 
+					content = self.cleaned_data[key] if self.cleaned_data[key] else ''
 				
 				if was_created:
 					# Create new answer text
@@ -374,7 +391,7 @@ def create_form(request, form, submission, title=None, description=None, section
 	
 	# Create our form class
 	FormClass = _create_form(form=form, title=title, description=description, readonly=readonly)
-	
+
 	# Create the actual form instance, from the dynamic form class
 	if request.method == 'POST':
 		# We assume here that we don't need to overlay the POST data on top of the database
@@ -418,6 +435,12 @@ def _create_form(form, title=None, description=None, readonly=False):
 	slug = form if isinstance(form, str) or isinstance(form, unicode) else form.slug
 	final_fields = SortedDict()
 	choices_dict = defaultdict(tuple)
+	attrs = {
+		'declared_fields' : final_fields,
+		'base_fields' : final_fields,
+		'meta' : meta,
+		'slug' : slug,
+	}
 	
 	# Parse the slug and create a class title
 	form_class_title = create_form_class_title(slug)
@@ -546,23 +569,16 @@ def _create_form(form, title=None, description=None, readonly=False):
 		final_field.is_checkbox = (row['field_type'] == 'CheckboxInput')
 		final_fields[form_field_name] = final_field
 			
-	attrs = {
-		'declared_fields' : final_fields,
-		'base_fields' : final_fields,
-		'meta' : meta,
-		'slug' : slug,
-	}
-	
 	# Grab the dynamic validation function from validation.py
 	if validation:
-		validate = getattr(validation, form_class_title)
-
-		# Pull the "clean_" functions from the validation
-		# for this form and inject them into the form object
-		for attr_name in dir(validate):
-			if attr_name.startswith('clean'):
-				attrs[attr_name] = getattr(validate, attr_name)
-	
+		validate = getattr(validation, form_class_title, None)
+		
+		if validate:
+			# Pull the "clean_" functions from the validation
+			# for this form and inject them into the form object
+			for attr_name in dir(validate):
+				if attr_name.startswith('clean'):
+					attrs[attr_name] = getattr(validate, attr_name)
 	# Return a class object of this form with all attributes
 	DataFormClass = type(form_class_title, (BaseDataForm,), attrs)
 	

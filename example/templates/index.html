@@ -4,8 +4,8 @@
 		<div id="name" style="margin: 30px;">
 			<h1>Form sample</h1>
 			<p>This form has been dynamically created from a database definition. See the <a href="{% url form_collection %}">form collection</a> demo.<p>
-			
-			<form action="." method="post" accept-charset="utf-8">
+			{% if form.non_field_errors %}<ul class="errorlist">{{ form.non_field_errors.as_ul }}</ul>{% endif %}
+			<form action="." method="post" accept-charset="utf-8" enctype="multipart/form-data">
 				{% for field in form %}
 					{% if not field.is_hidden %}
 						<div class="form-row">
