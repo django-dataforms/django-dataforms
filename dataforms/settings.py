@@ -40,7 +40,7 @@ FIELD_MAPPINGS.update( {
 	'CheckboxInput' : { 'class': 'django.forms.BooleanField', 'widget': 'django.forms.CheckboxInput' },
 	'CheckboxSelectMultiple': { 'class': 'django.forms.MultipleChoiceField', 'widget': 'django.forms.CheckboxSelectMultiple' },
 	'HiddenInput' : { 'class': 'django.forms.Field', 'widget': 'django.forms.HiddenInput' },
-	'FileInput' : { 'class': 'django.forms.FileField', 'widget': 'django.forms.FileInput' },
+	'FileInput' : { 'class': 'django.forms.FileField', 'widget': 'dataforms.widgets.FileWidget' },
 	'Note' : { 'class': 'django.forms.CharField', 'widget': 'dataforms.widgets.NoteWidget' },    
 } )
 
