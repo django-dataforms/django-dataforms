@@ -2,6 +2,8 @@ function setBindings() {
 	// Create the binding event handlers
 	var many_bindings_js = $("input[type='hidden'][name*='js_dataform_bindings']");
 	var bindings_js = '';
+	var bindings;
+	var bindingParent;
 	
 	for (var j=0; j < many_bindings_js.length; j++) {
 		bindings_js = many_bindings_js[j].value;
@@ -9,70 +11,109 @@ function setBindings() {
 		if (!bindings_js)
 			continue;
 		
-		//var bindings = JSON.parse(bindings_js);
-		var bindings = [
-		                // Single checkbox
-		                {
-		                	"parents" : [["personal-information__checkbox"]],
-		                	"children" : ["personal-information__dropdown"]
-		                },
-		                // Single dropdown with choice of "Yes"
-		                {
-		                	"parents" : [[["personal-information__dropdown", "yes"]]],
-		                	"children" : ["personal-information__date"]
-		                },
-		                // Dropdown with choice of "Yes" OR Checkbox checked
-		                {
-		                	"parents" : [[["personal-information__dropdown", "yes"]], ["personal-information__checkbox"]],
-		                	"children" : ["personal-information__checkbox"]
-		                }
-		                ];
-		                
+		bindings = JSON.parse(bindings_js);
 		
-		// Ready, go.
 		for (var k=0; k < bindings.length; k++) {
-			$(parent).data("parents", bindings[k]['parents']);
-			$(parent).data("children", bindings[k]['children']);
-			$(parent).change(doBinding());
+			var parents = bindings[k]['parents'];
+			for (var i=0; i < parents.length; i++) {
+				for (var j=0; j < parents[i].length; j++) {
+					bindingParent = smartGetElement(parents[i][j]);
+					
+					// Replace the original string with the actual DOM element 
+					if (typeof parents[i][j] == "object") {
+						parents[i][j][0] = bindingParent;
+					} else {
+						parents[i][j] = bindingParent;
+					}
+					
+					bindingParent.data("parents", bindings[k]['parents']);
+					bindingParent.data("children", bindings[k]['children']);
+					
+					// Set event handler
+					bindingParent.change(doBinding);
+					// Trigger the event handler to set the initial state
+					bindingParent.change();
+				}
+			}
+			var children = bindings[k]['children'];
+			for (var i=0; i < children.length; i++) {
+				child = smartGetElement(children[i]);
+				children[i] = child.closest(".form-row");
+			}
 		}
 	}
+}
+
+function smartGetElement(name) {
+	if (typeof name == "object") {
+		// We're on a list (parent with choice)
+		bindingParent = $("input[name='"+name[0]+"'], select[name='"+name[0]+"']");
+		name = bindingParent;
+	} else {
+		// We're on a string (direct parent)
+		bindingParent = $("#id_"+name);
+		name = bindingParent;
+	}
+	
+	return bindingParent;
 }
 
 function doBinding() {
-	parents = $(this).data('parents');
+	var parents = $(this).data('parents');
+	var children = $(this).data('children');
 	
-	truth = isTruth(parents);
+	var truth = hasAllTruth(parents);
 	
-	if(truth){
+	if (truth){
 		// show
-		parents.slideDown();
-		parents.show();
+		for (var i=0; i<children.length; i++){
+			$(children[i]).slideDown();
+		}
 	} else {
 		// hide
-		parents.slideUp();
-		parents.hide();
+		for (var i=0; i<children.length; i++){
+			$(children[i]).slideUp();
+		}
 	}
 }
 
-function isTruth(listOfParents) {
+function hasSingleTruth(element) {
+	var choice = null;
+	if (element.length > 1) {
+		// We're on a list (parent with choice)
+		choice = element[1];
+		element = element[0];
+	}
 	
-	for(var i=0; i < listOfParents; i++) {
-		parentSet = listOfParents[i];
+	var tagName = element.attr("type");
+	
+	if (
+	(tagName == "checkbox" && element.attr("checked"))
+	|| (tagName == "select-multiple" && element.val() == choice)
+	|| (tagName == "radio" && element.filter(":checked").val() == choice)) {
+		// FIXME add && choice in element.val()
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function hasAllTruth(listOfParents) {
+	for(var i=0; i < listOfParents.length; i++) {
+		var parentSet = listOfParents[i];
 		
-		tempTruth = false;
+		// Assume we have all truth
+		var tempTruth = true;
 		
-		for(var x=0; x < parentSet; x++){
-			parent = parentSet[x];
+		for(var x=0; x < parentSet.length; x++){
+			var parent = parentSet[x];
 			
-			if(parent.length){
-				//select,option,buttons
-				if ($(parent).val() != choice)
-					tempTruth = true;
-			}
+			// Make sure I always had truth before
+			tempTruth = hasSingleTruth(parent) && tempTruth;
 		}
 		
 		if(tempTruth)
-			return true
+			return true;
 	}
 	return false;
 }
