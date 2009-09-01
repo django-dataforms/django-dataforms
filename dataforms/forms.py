@@ -643,27 +643,57 @@ def get_bindings(form):
 	:return: a dictionary of child_field_name-->parent_bound_field_name
 	"""
 	
-	bindings = Binding.objects.select_related('parent_field__slug').filter(data_form=form)
+	if isinstance(form, str) or isinstance(form, unicode):
+		form = DataForm.objects.get(slug=form)
+		
+		
+	# FIXME select_related
+	bindings = Binding.objects.filter(data_form=form)
 	
 	data = []
+		
+#	[
+#    // Single checkbox
+#    {
+#    	"parents" : [["personal-information__checkbox"]],
+#    	"children" : ["personal-information__dropdown"]
+#    },
+#    // Single dropdown with choice of "Yes"
+#    {
+#    	"parents" : [[["personal-information__dropdown", "yes"]]],
+#    	"children" : ["personal-information__date"]
+#    },
+#    // Dropdown with choice of "Yes" OR Checkbox checked
+#    {
+#    	"parents" : [[["personal-information__dropdown", "yes"]], ["personal-information__checkbox"]],
+#    	"children" : ["personal-information__checkbox"]
+#    }
+#    ];
 	
+	progenyRelations = defaultdict(list)
 	for binding in bindings:
 		
-		child = _field_for_form(name=binding.child.slug, form=form.slug)
+		progeny = binding.children.all()
+		parent_fields = binding.parent_fields.all()
+		parent_choices = binding.parent_choices.all()
 		
-		if binding.parent_field:
-			# We're bound to a parent field itself (like a checkbox)
-			parent = _field_for_form(name=binding.parent_field.slug, form=form.slug)
-			data.append((parent, child))
-		elif binding.parent_choice:
-			# We're bound to a specific choice in some field (like a <option> in select)
-			parent = _field_for_form(name=binding.parent_choice.field.slug, form=form.slug)
-			parent_choice = binding.parent_choice.choice.value
-			data.append((parent, parent_choice, child))
-		else:
-			raise FieldError("One of { parent_field, parent_choice } is required on every Binding object.")
+		children_slugs = [_field_for_form(name=child.slug, form=form.slug) for child in progeny]
+		parent_slugs = [_field_for_form(name=parent.slug, form=form.slug) for parent in parent_fields]
 		
-	return data
+		for parent in parent_choices:
+			parent_slugs.append([_field_for_form(name=parent.field.slug, form=form.slug), parent.choice.value])
+			
+		progenyRelations[tuple(children_slugs)] += [parent_slugs]
+		
+	# Transform progenyRelations
+	final = []
+	for relation in progenyRelations:
+		final.append({
+			"parents" : progenyRelations[relation],
+			"children" : list(relation)
+		})
+		
+	return final
 
 def create_form_class_title(slug):
 	"""

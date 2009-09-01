@@ -1,326 +1,517 @@
-[{"pk": 1,
- "model": "dataforms.collection",
- "fields": {"visible": true,
- "slug": "test-collection",
- "description": "",
- "title": "Test Collection"}
-},
- {"pk": 1,
- "model": "dataforms.collectiondataform",
- "fields": {"section": 1,
- "data_form": 1,
- "order": 1,
- "collection": 1}
-},
- {"pk": 2,
- "model": "dataforms.collectiondataform",
- "fields": {"section": 1,
- "data_form": 2,
- "order": 2,
- "collection": 1}
-},
- {"pk": 1,
- "model": "dataforms.dataform",
- "fields": {"visible": true,
- "slug": "personal-information",
- "description": "",
- "title": "Personal Information"}
-},
- {"pk": 2,
- "model": "dataforms.dataform",
- "fields": {"visible": true,
- "slug": "form-field-dupes",
- "description": "",
- "title": "Form with Field Dupes"}
-},
- {"pk": 5,
- "model": "dataforms.dataformfield",
- "fields": {"field": 5,
- "data_form": 1,
- "order": 1}
-},
- {"pk": 11,
- "model": "dataforms.dataformfield",
- "fields": {"field": 2,
- "data_form": 2,
- "order": 1}
-},
- {"pk": 7,
- "model": "dataforms.dataformfield",
- "fields": {"field": 7,
- "data_form": 1,
- "order": 2}
-},
- {"pk": 12,
- "model": "dataforms.dataformfield",
- "fields": {"field": 6,
- "data_form": 2,
- "order": 2}
-},
- {"pk": 1,
- "model": "dataforms.dataformfield",
- "fields": {"field": 1,
- "data_form": 1,
- "order": 3}
-},
- {"pk": 13,
- "model": "dataforms.dataformfield",
- "fields": {"field": 4,
- "data_form": 2,
- "order": 3}
-},
- {"pk": 2,
- "model": "dataforms.dataformfield",
- "fields": {"field": 2,
- "data_form": 1,
- "order": 4}
-},
- {"pk": 8,
- "model": "dataforms.dataformfield",
- "fields": {"field": 8,
- "data_form": 1,
- "order": 5}
-},
- {"pk": 9,
- "model": "dataforms.dataformfield",
- "fields": {"field": 10,
- "data_form": 1,
- "order": 6}
-},
- {"pk": 10,
- "model": "dataforms.dataformfield",
- "fields": {"field": 9,
- "data_form": 1,
- "order": 7}
-},
- {"pk": 3,
- "model": "dataforms.dataformfield",
- "fields": {"field": 3,
- "data_form": 1,
- "order": 8}
-},
- {"pk": 4,
- "model": "dataforms.dataformfield",
- "fields": {"field": 4,
- "data_form": 1,
- "order": 9}
-},
- {"pk": 6,
- "model": "dataforms.dataformfield",
- "fields": {"field": 6,
- "data_form": 1,
- "order": 10}
-},
- {"pk": 1,
- "model": "dataforms.field",
- "fields": {"field_type": "DateField",
- "required": true,
- "initial": "",
- "label": "Date",
- "visible": true,
- "arguments": "",
- "help_text": "",
- "slug": "date"}
-},
- {"pk": 2,
- "model": "dataforms.field",
- "fields": {"field_type": "Textarea",
- "required": true,
- "initial": "This is an example title",
- "label": "Title",
- "visible": true,
- "arguments": "",
- "help_text": "",
- "slug": "title"}
-},
- {"pk": 3,
- "model": "dataforms.field",
- "fields": {"field_type": "RadioSelect",
- "required": true,
- "initial": "",
- "label": "Does P=NP ?",
- "visible": true,
- "arguments": "",
- "help_text": "",
- "slug": "p-np"}
-},
- {"pk": 4,
- "model": "dataforms.field",
- "fields": {"field_type": "SelectMultiple",
- "required": true,
- "initial": "python, cpp",
- "label": "Your Languages",
- "visible": true,
- "arguments": "",
- "help_text": "",
- "slug": "languages"}
-},
- {"pk": 5,
- "model": "dataforms.field",
- "fields": {"field_type": "CheckboxInput",
- "required": false,
- "initial": "",
- "label": "Checkbox",
- "visible": true,
- "arguments": "",
- "help_text": "No choices can be tied to a single checkbox input\u2014it's just yes or no.",
- "slug": "checkbox"}
-},
- {"pk": 6,
- "model": "dataforms.field",
- "fields": {"field_type": "CheckboxSelectMultiple",
- "required": false,
- "initial": "python, java",
- "label": "Multiple checkboxes",
- "visible": true,
- "arguments": "",
- "help_text": "",
- "slug": "checkboxes-multiple"}
-},
- {"pk": 7,
- "model": "dataforms.field",
- "fields": {"field_type": "Select",
- "required": true,
- "initial": "no",
- "label": "Drop down",
- "visible": true,
- "arguments": "",
- "help_text": "",
- "slug": "dropdown"}
-},
- {"pk": 8,
- "model": "dataforms.field",
- "fields": {"field_type": "Password",
- "required": true,
- "initial": "ya, Password!",
- "label": "Tell me your password",
- "visible": true,
- "arguments": "",
- "help_text": "",
- "slug": "password"}
-},
- {"pk": 9,
- "model": "dataforms.field",
- "fields": {"field_type": "Email",
- "required": true,
- "initial": "email@example.com",
- "label": "Tell me your email",
- "visible": true,
- "arguments": "",
- "help_text": "",
- "slug": "email"}
-},
- {"pk": 10,
- "model": "dataforms.field",
- "fields": {"field_type": "TextInput",
- "required": true,
- "initial": "",
- "label": "Textbox",
- "visible": true,
- "arguments": "",
- "help_text": "",
- "slug": "textbox"}
-},
- {"pk": 1,
- "model": "dataforms.binding",
- "fields": {"data_form": 1,
- "parent_field": 5,
- "child": 7,
- "parent_choice": null}
-},
- {"pk": 2,
- "model": "dataforms.binding",
- "fields": {"data_form": 1,
- "parent_field": null,
- "child": 1,
- "parent_choice": 14}
-},
- {"pk": 1,
- "model": "dataforms.fieldchoice",
- "fields": {"field": 3,
- "order": 1,
- "choice": 1}
-},
- {"pk": 2,
- "model": "dataforms.fieldchoice",
- "fields": {"field": 3,
- "order": 2,
- "choice": 2}
-},
- {"pk": 3,
- "model": "dataforms.fieldchoice",
- "fields": {"field": 4,
- "order": 1,
- "choice": 3}
-},
- {"pk": 4,
- "model": "dataforms.fieldchoice",
- "fields": {"field": 4,
- "order": 2,
- "choice": 4}
-},
- {"pk": 5,
- "model": "dataforms.fieldchoice",
- "fields": {"field": 4,
- "order": 3,
- "choice": 5}
-},
- {"pk": 11,
- "model": "dataforms.fieldchoice",
- "fields": {"field": 6,
- "order": 1,
- "choice": 3}
-},
- {"pk": 12,
- "model": "dataforms.fieldchoice",
- "fields": {"field": 6,
- "order": 2,
- "choice": 4}
-},
- {"pk": 13,
- "model": "dataforms.fieldchoice",
- "fields": {"field": 6,
- "order": 3,
- "choice": 5}
-},
- {"pk": 14,
- "model": "dataforms.fieldchoice",
- "fields": {"field": 7,
- "order": 1,
- "choice": 1}
-},
- {"pk": 15,
- "model": "dataforms.fieldchoice",
- "fields": {"field": 7,
- "order": 2,
- "choice": 2}
-},
- {"pk": 1,
- "model": "dataforms.choice",
- "fields": {"value": "yes",
- "title": "Yes"}
-},
- {"pk": 2,
- "model": "dataforms.choice",
- "fields": {"value": "no",
- "title": "No"}
-},
- {"pk": 3,
- "model": "dataforms.choice",
- "fields": {"value": "python",
- "title": "Python"}
-},
- {"pk": 4,
- "model": "dataforms.choice",
- "fields": {"value": "java",
- "title": "Java"}
-},
- {"pk": 5,
- "model": "dataforms.choice",
- "fields": {"value": "cpp",
- "title": "C++"}
-},
- {"pk": 1,
- "model": "dataforms.section",
- "fields": {"title": "A", "slug": "a"}
-}]
+[
+ {
+  "pk": 1, 
+  "model": "dataforms.collection", 
+  "fields": {
+   "visible": true, 
+   "slug": "test-collection", 
+   "description": "", 
+   "title": "Test Collection"
+  }
+ }, 
+ {
+  "pk": 1, 
+  "model": "dataforms.collectiondataform", 
+  "fields": {
+   "section": 1, 
+   "data_form": 1, 
+   "order": 1, 
+   "collection": 1
+  }
+ }, 
+ {
+  "pk": 2, 
+  "model": "dataforms.collectiondataform", 
+  "fields": {
+   "section": 1, 
+   "data_form": 2, 
+   "order": 2, 
+   "collection": 1
+  }
+ }, 
+ {
+  "pk": 1, 
+  "model": "dataforms.section", 
+  "fields": {
+   "slug": "a", 
+   "title": "A"
+  }
+ }, 
+ {
+  "pk": 1, 
+  "model": "dataforms.dataform", 
+  "fields": {
+   "visible": true, 
+   "slug": "personal-information", 
+   "description": "", 
+   "title": "Personal Information"
+  }
+ }, 
+ {
+  "pk": 2, 
+  "model": "dataforms.dataform", 
+  "fields": {
+   "visible": true, 
+   "slug": "form-field-dupes", 
+   "description": "", 
+   "title": "Form with Field Dupes"
+  }
+ }, 
+ {
+  "pk": 5, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 5, 
+   "data_form": 1, 
+   "order": 1
+  }
+ }, 
+ {
+  "pk": 11, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 2, 
+   "data_form": 2, 
+   "order": 1
+  }
+ }, 
+ {
+  "pk": 7, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 7, 
+   "data_form": 1, 
+   "order": 2
+  }
+ }, 
+ {
+  "pk": 12, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 6, 
+   "data_form": 2, 
+   "order": 2
+  }
+ }, 
+ {
+  "pk": 1, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 1, 
+   "data_form": 1, 
+   "order": 3
+  }
+ }, 
+ {
+  "pk": 13, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 4, 
+   "data_form": 2, 
+   "order": 3
+  }
+ }, 
+ {
+  "pk": 2, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 2, 
+   "data_form": 1, 
+   "order": 4
+  }
+ }, 
+ {
+  "pk": 8, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 8, 
+   "data_form": 1, 
+   "order": 5
+  }
+ }, 
+ {
+  "pk": 9, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 10, 
+   "data_form": 1, 
+   "order": 6
+  }
+ }, 
+ {
+  "pk": 10, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 9, 
+   "data_form": 1, 
+   "order": 7
+  }
+ }, 
+ {
+  "pk": 3, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 3, 
+   "data_form": 1, 
+   "order": 8
+  }
+ }, 
+ {
+  "pk": 4, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 4, 
+   "data_form": 1, 
+   "order": 9
+  }
+ }, 
+ {
+  "pk": 6, 
+  "model": "dataforms.dataformfield", 
+  "fields": {
+   "field": 6, 
+   "data_form": 1, 
+   "order": 10
+  }
+ }, 
+ {
+  "pk": 1, 
+  "model": "dataforms.field", 
+  "fields": {
+   "field_type": "DateField", 
+   "required": true, 
+   "initial": "", 
+   "label": "Date", 
+   "visible": true, 
+   "arguments": "", 
+   "help_text": "", 
+   "slug": "date"
+  }
+ }, 
+ {
+  "pk": 2, 
+  "model": "dataforms.field", 
+  "fields": {
+   "field_type": "Textarea", 
+   "required": true, 
+   "initial": "This is an example title", 
+   "label": "Title", 
+   "visible": true, 
+   "arguments": "", 
+   "help_text": "", 
+   "slug": "title"
+  }
+ }, 
+ {
+  "pk": 3, 
+  "model": "dataforms.field", 
+  "fields": {
+   "field_type": "RadioSelect", 
+   "required": true, 
+   "initial": "", 
+   "label": "Does P=NP ?", 
+   "visible": true, 
+   "arguments": "", 
+   "help_text": "", 
+   "slug": "p-np"
+  }
+ }, 
+ {
+  "pk": 4, 
+  "model": "dataforms.field", 
+  "fields": {
+   "field_type": "SelectMultiple", 
+   "required": true, 
+   "initial": "python, cpp", 
+   "label": "Your Languages", 
+   "visible": true, 
+   "arguments": "", 
+   "help_text": "", 
+   "slug": "languages"
+  }
+ }, 
+ {
+  "pk": 5, 
+  "model": "dataforms.field", 
+  "fields": {
+   "field_type": "CheckboxInput", 
+   "required": false, 
+   "initial": "", 
+   "label": "Checkbox", 
+   "visible": true, 
+   "arguments": "", 
+   "help_text": "No choices can be tied to a single checkbox input\u2014it's just yes or no.", 
+   "slug": "checkbox"
+  }
+ }, 
+ {
+  "pk": 6, 
+  "model": "dataforms.field", 
+  "fields": {
+   "field_type": "CheckboxSelectMultiple", 
+   "required": false, 
+   "initial": "python, java", 
+   "label": "Multiple checkboxes", 
+   "visible": true, 
+   "arguments": "", 
+   "help_text": "", 
+   "slug": "checkboxes-multiple"
+  }
+ }, 
+ {
+  "pk": 7, 
+  "model": "dataforms.field", 
+  "fields": {
+   "field_type": "Select", 
+   "required": true, 
+   "initial": "no", 
+   "label": "Drop down", 
+   "visible": true, 
+   "arguments": "", 
+   "help_text": "", 
+   "slug": "dropdown"
+  }
+ }, 
+ {
+  "pk": 8, 
+  "model": "dataforms.field", 
+  "fields": {
+   "field_type": "Password", 
+   "required": true, 
+   "initial": "ya, Password!", 
+   "label": "Tell me your password", 
+   "visible": true, 
+   "arguments": "", 
+   "help_text": "", 
+   "slug": "password"
+  }
+ }, 
+ {
+  "pk": 9, 
+  "model": "dataforms.field", 
+  "fields": {
+   "field_type": "Email", 
+   "required": true, 
+   "initial": "email@example.com", 
+   "label": "Tell me your email", 
+   "visible": true, 
+   "arguments": "", 
+   "help_text": "", 
+   "slug": "email"
+  }
+ }, 
+ {
+  "pk": 10, 
+  "model": "dataforms.field", 
+  "fields": {
+   "field_type": "TextInput", 
+   "required": true, 
+   "initial": "", 
+   "label": "Textbox", 
+   "visible": true, 
+   "arguments": "", 
+   "help_text": "", 
+   "slug": "textbox"
+  }
+ }, 
+ {
+  "pk": 1, 
+  "model": "dataforms.binding", 
+  "fields": {
+   "data_form": 1
+  }
+ }, 
+ {
+  "pk": 2, 
+  "model": "dataforms.binding", 
+  "fields": {
+   "data_form": 1
+  }
+ }, 
+ {
+  "pk": 1, 
+  "model": "dataforms.parentfield", 
+  "fields": {
+   "parent_field": 5, 
+   "binding": 1
+  }
+ }, 
+ {
+  "pk": 1, 
+  "model": "dataforms.parentfieldchoice", 
+  "fields": {
+   "field_choice": 1, 
+   "binding": 1
+  }
+ }, 
+ {
+  "pk": 2, 
+  "model": "dataforms.parentfieldchoice", 
+  "fields": {
+   "field_choice": 3, 
+   "binding": 2
+  }
+ }, 
+ {
+  "pk": 1, 
+  "model": "dataforms.childfield", 
+  "fields": {
+   "field": 1, 
+   "binding": 1
+  }
+ }, 
+ {
+  "pk": 2, 
+  "model": "dataforms.childfield", 
+  "fields": {
+   "field": 9, 
+   "binding": 1
+  }
+ }, 
+ {
+  "pk": 3, 
+  "model": "dataforms.childfield", 
+  "fields": {
+   "field": 1, 
+   "binding": 2
+  }
+ }, 
+ {
+  "pk": 4, 
+  "model": "dataforms.childfield", 
+  "fields": {
+   "field": 9, 
+   "binding": 2
+  }
+ }, 
+ {
+  "pk": 1, 
+  "model": "dataforms.fieldchoice", 
+  "fields": {
+   "field": 3, 
+   "order": 1, 
+   "choice": 1
+  }
+ }, 
+ {
+  "pk": 2, 
+  "model": "dataforms.fieldchoice", 
+  "fields": {
+   "field": 3, 
+   "order": 2, 
+   "choice": 2
+  }
+ }, 
+ {
+  "pk": 3, 
+  "model": "dataforms.fieldchoice", 
+  "fields": {
+   "field": 4, 
+   "order": 1, 
+   "choice": 3
+  }
+ }, 
+ {
+  "pk": 4, 
+  "model": "dataforms.fieldchoice", 
+  "fields": {
+   "field": 4, 
+   "order": 2, 
+   "choice": 4
+  }
+ }, 
+ {
+  "pk": 5, 
+  "model": "dataforms.fieldchoice", 
+  "fields": {
+   "field": 4, 
+   "order": 3, 
+   "choice": 5
+  }
+ }, 
+ {
+  "pk": 11, 
+  "model": "dataforms.fieldchoice", 
+  "fields": {
+   "field": 6, 
+   "order": 1, 
+   "choice": 3
+  }
+ }, 
+ {
+  "pk": 12, 
+  "model": "dataforms.fieldchoice", 
+  "fields": {
+   "field": 6, 
+   "order": 2, 
+   "choice": 4
+  }
+ }, 
+ {
+  "pk": 13, 
+  "model": "dataforms.fieldchoice", 
+  "fields": {
+   "field": 6, 
+   "order": 3, 
+   "choice": 5
+  }
+ }, 
+ {
+  "pk": 14, 
+  "model": "dataforms.fieldchoice", 
+  "fields": {
+   "field": 7, 
+   "order": 1, 
+   "choice": 1
+  }
+ }, 
+ {
+  "pk": 15, 
+  "model": "dataforms.fieldchoice", 
+  "fields": {
+   "field": 7, 
+   "order": 2, 
+   "choice": 2
+  }
+ }, 
+ {
+  "pk": 1, 
+  "model": "dataforms.choice", 
+  "fields": {
+   "value": "yes", 
+   "title": "Yes"
+  }
+ }, 
+ {
+  "pk": 2, 
+  "model": "dataforms.choice", 
+  "fields": {
+   "value": "no", 
+   "title": "No"
+  }
+ }, 
+ {
+  "pk": 3, 
+  "model": "dataforms.choice", 
+  "fields": {
+   "value": "python", 
+   "title": "Python"
+  }
+ }, 
+ {
+  "pk": 4, 
+  "model": "dataforms.choice", 
+  "fields": {
+   "value": "java", 
+   "title": "Java"
+  }
+ }, 
+ {
+  "pk": 5, 
+  "model": "dataforms.choice", 
+  "fields": {
+   "value": "cpp", 
+   "title": "C++"
+  }
+ }
+]
