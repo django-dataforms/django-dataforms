@@ -31,14 +31,13 @@ function setBindings() {
 					
 					// Set event handler
 					bindingParent.change(doBinding);
-					// Trigger the event handler to set the initial state
-					bindingParent.change();
 				}
 			}
 			var children = bindings[k]['children'];
 			for (var i=0; i < children.length; i++) {
 				child = smartGetElement(children[i]);
 				children[i] = child.closest(".form-row");
+				$(children[i]).hide();
 			}
 		}
 	}
@@ -48,11 +47,13 @@ function smartGetElement(name) {
 	if (typeof name == "object") {
 		// We're on a list (parent with choice)
 		bindingParent = $("input[name='"+name[0]+"'], select[name='"+name[0]+"']");
-		name = bindingParent;
 	} else {
 		// We're on a string (direct parent)
 		bindingParent = $("#id_"+name);
-		name = bindingParent;
+		if (!bindingParent.length) {
+			// If we didn't find an element #id_ directly, look for a label with for=id_name
+			bindingParent = $("label[for='id_"+name+"']");
+		}
 	}
 	
 	return bindingParent;
@@ -62,9 +63,7 @@ function doBinding() {
 	var parents = $(this).data('parents');
 	var children = $(this).data('children');
 	
-	var truth = hasAllTruth(parents);
-	
-	if (truth){
+	if (hasAllTruth(parents)){
 		// show
 		for (var i=0; i<children.length; i++){
 			$(children[i]).slideDown();
