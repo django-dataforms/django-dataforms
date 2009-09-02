@@ -1,52 +1,9 @@
-function setBinding(parent, child, choice, effectTime) {
-	parent.change(function() {
-		doBinding(parent, child, choice, effectTime);
-	});
-}
-
-function doBinding(parent, child, choice, effectTime){
-	var boundArea = child.parent()
-	var effectTime = typeof(effectTime) != 'undefined' ? effectTime : 500;
-	var choice = typeof(choice) != 'undefined' ? choice : -1;
-	
-	if (!boundArea.length && window.console && window.console.log && window.console.error) {
-		console.error("Couldn't do binding because boundArea was empty.")
-		console.log("Parent:")
-		console.log(parent)
-		console.log("Child:")
-		console.log(child)
-		return;
-	} else if (!boundArea.length) {
-		return;
-	}
-	
-	// This fixes subelements like multiple checkboxes
-	if (boundArea.attr("tagName").toLowerCase() == "label") {
-		switch (boundArea.parent().attr("tagName").toLowerCase()){
-		case "li":
-			boundArea = boundArea.parent().parent().parent()
-			break;
-		}
-	}
-	
-	// We can't just do slideToggle because this slide is going to be called
-	// once for every subelement bound to the parent, where slideDown and
-	// slideUp mask this behavior because they can be called multiple times
-	if (parent.attr("checked")
-		|| (parent.parent().find("input:checked").length && parent.val() == choice)
-		|| (parent.parent().find("select").length && parent.val() == choice)) {
-		boundArea.slideDown(effectTime);
-		boundArea.show();
-	} else {
-		boundArea.slideUp(effectTime);
-		boundArea.hide();
-	}
-}
-
 function setBindings() {
 	// Create the binding event handlers
 	var many_bindings_js = $("input[type='hidden'][name*='js_dataform_bindings']");
 	var bindings_js = '';
+	var bindings;
+	var bindingParent;
 	
 	for (var j=0; j < many_bindings_js.length; j++) {
 		bindings_js = many_bindings_js[j].value;
@@ -54,78 +11,110 @@ function setBindings() {
 		if (!bindings_js)
 			continue;
 		
-		var bindings = JSON.parse(bindings_js);
+		bindings = JSON.parse(bindings_js);
 		
-		for (var i = 0; i < bindings.length; i++) {
-			var parent = $("#id_" + bindings[i][0]);
-			var choiceVal = undefined;
-			var success = true;
-			
-			if (bindings[i].length == 2) {
-				// Simple binding (like a single checkbox).
-				// (parent, child)
-				
-				var child = $("#id_" + bindings[i][1]);
-				if (!child.length){
-					child = $("input[name='"+ bindings[i][1]+"']").slice(0,1);
-				}
-				
-				setBinding(parent, child);
-				
-			} else if (bindings[i].length == 3) {
-				// Choice binding (like a dropdown)
-				// (parent, choice value, child)
-				
-				var choiceVal = bindings[i][1];
-				var child = $("#id_" + bindings[i][2]);
-				if (!child.length){
-					child = $("input[name='"+ bindings[i][2]+"']").slice(0,1);
-				}
-				
-				var parent = $("#id_" + bindings[i][0]);
-				if (!parent.length){
-					parent = $("input[name='"+ bindings[i][0]+"'][value='"+choiceVal+"']");
-				}
-				
-				if (parent.length) {
-					var elementName = parent[0].tagName.toLowerCase();
+		for (var k=0; k < bindings.length; k++) {
+			var parents = bindings[k]['parents'];
+			for (var i=0; i < parents.length; i++) {
+				for (var j=0; j < parents[i].length; j++) {
+					bindingParent = smartGetElement(parents[i][j]);
 					
-					if (elementName == "select") {
-						// Select element
-						if (window.console && window.console.log){
-							console.log("Adding select binding for " + "#id_" + bindings[i][0] + " --> " + "#id_" + bindings[i][2])
-						}
-						setBinding(parent, child, choiceVal);
-					} else if (elementName == "input" && parent[0].type == "radio") {
-						// Radio buttons
-						if (window.console && window.console.log){
-							console.log("Adding radio binding for " + "#id_" + bindings[i][0] + " --> " + "#id_" + bindings[i][2])
-						}
-						setBinding(parent, child, choiceVal);
+					// Replace the original string with the actual DOM element 
+					if (typeof parents[i][j] == "object") {
+						parents[i][j][0] = bindingParent;
 					} else {
-						if (window.console && window.console.log){
-							console.log(parent);
-							console.log(child);
-						}
-						success = false;
-						if (window.console && window.console.error){
-							console.error("Choice bindings for " + elementName + " elements has not been implemented.")
-						}
+						parents[i][j] = bindingParent;
 					}
-				} else {
-					success = false;
-					if (window.console && window.console.error){
-						console.error("Couldn't find parent " + "#id_" + bindings[i][0])
-					}
+					
+					bindingParent.data("parents", bindings[k]['parents']);
+					bindingParent.data("children", bindings[k]['children']);
+					
+					// Set event handler
+					bindingParent.change(doBinding);
 				}
 			}
-			
-			// Hide/show all bound fields default state
-			if (success) {
-				doBinding(parent, child, choiceVal, 0);
+			var children = bindings[k]['children'];
+			for (var i=0; i < children.length; i++) {
+				child = smartGetElement(children[i]);
+				children[i] = child.closest(".form-row");
+				$(children[i]).hide();
 			}
 		}
 	}
+}
+
+function smartGetElement(name) {
+	if (typeof name == "object") {
+		// We're on a list (parent with choice)
+		bindingParent = $("input[name='"+name[0]+"'], select[name='"+name[0]+"']");
+	} else {
+		// We're on a string (direct parent)
+		bindingParent = $("#id_"+name);
+		if (!bindingParent.length) {
+			// If we didn't find an element #id_ directly, look for a label with for=id_name
+			bindingParent = $("label[for='id_"+name+"']");
+		}
+	}
+	
+	return bindingParent;
+}
+
+function doBinding() {
+	var parents = $(this).data('parents');
+	var children = $(this).data('children');
+	
+	if (hasAllTruth(parents)){
+		// show
+		for (var i=0; i<children.length; i++){
+			$(children[i]).slideDown();
+		}
+	} else {
+		// hide
+		for (var i=0; i<children.length; i++){
+			$(children[i]).slideUp();
+		}
+	}
+}
+
+function hasSingleTruth(element) {
+	var choice = null;
+	if (element.length > 1) {
+		// We're on a list (parent with choice)
+		choice = element[1];
+		element = element[0];
+	}
+	
+	var tagName = element.attr("type");
+	
+	if (
+	(tagName == "checkbox" && element.attr("checked"))
+	|| (tagName == "select-multiple" && element.val() == choice)
+	|| (tagName == "radio" && element.filter(":checked").val() == choice)) {
+		// FIXME add && choice in element.val()
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function hasAllTruth(listOfParents) {
+	for(var i=0; i < listOfParents.length; i++) {
+		var parentSet = listOfParents[i];
+		
+		// Assume we have all truth
+		var tempTruth = true;
+		
+		for(var x=0; x < parentSet.length; x++){
+			var parent = parentSet[x];
+			
+			// Make sure I always had truth before
+			tempTruth = hasSingleTruth(parent) && tempTruth;
+		}
+		
+		if(tempTruth)
+			return true;
+	}
+	return false;
 }
 
 $(function() {

@@ -89,20 +89,27 @@ class Field(models.Model):
 	arguments = models.CharField(verbose_name=_('additional arguments'), help_text="A JSON dictionary of keyword arguments.", blank=True, max_length=255)
 	required = models.BooleanField(verbose_name=_('field is required'), default=False)
 	visible = models.BooleanField(verbose_name=_('field is visible'), default=True)
-	bindings = models.ManyToManyField('self', symmetrical=False, through="Binding")
 
 	def __unicode__(self):
 		return self.slug
 
 class Binding(models.Model):
-	"""
-	Recursive model bridge for Field
-	"""
-
 	data_form = models.ForeignKey('DataForm', null=False, blank=False)
-	parent_field = models.ForeignKey('Field', related_name="bindingparent_set", help_text="Leave blank if a choice is selected", null=True, blank=True)
-	parent_choice = models.ForeignKey('FieldChoice', help_text="Leave blank if a parent is selected", null=True, blank=True)
-	child = models.ForeignKey('Field', related_name="bindingchild_set", null=False, blank=False)
+	parent_fields = models.ManyToManyField('Field', related_name='fields_set', through='ParentField')
+	parent_choices = models.ManyToManyField('FieldChoice', related_name='choices_set', through='ParentFieldChoice')
+	children = models.ManyToManyField('Field', through='ChildField')
+
+class ParentField(models.Model):
+	binding = models.ForeignKey('Binding')
+	parent_field = models.ForeignKey('Field', help_text="Leave blank if a choice is selected", null=False, blank=False)
+	
+class ParentFieldChoice(models.Model):
+	binding = models.ForeignKey('Binding')
+	field_choice = models.ForeignKey('FieldChoice', help_text="Leave blank if a parent is selected", null=False, blank=False)
+	
+class ChildField(models.Model):
+	binding = models.ForeignKey('Binding')
+	field = models.ForeignKey('Field', null=False, blank=False)
 
 class FieldChoice(models.Model):
 	""" 

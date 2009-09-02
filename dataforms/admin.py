@@ -7,7 +7,10 @@ except ImportError:
 	from django.contrib.admin import ModelAdmin as BaseAdminClass
 
 from .settings import ADMIN_SORT_JS
-from .models import Collection, CollectionDataForm, DataForm, DataFormField, Field, Binding, FieldChoice, Choice, Answer, Submission, AnswerText, AnswerChoice, AnswerNumber, Section
+from .models import (Collection, CollectionDataForm, DataForm, DataFormField,
+					 Field, Binding, FieldChoice, Choice, Answer, Submission,
+					 AnswerText, AnswerChoice, AnswerNumber, Section, ParentField,
+					 ParentFieldChoice, ChildField)
 
 # Admin Forms
 class FieldAdminForm(forms.ModelForm):
@@ -36,6 +39,18 @@ class FieldInline(admin.StackedInline):
 
 class BindingInline(admin.StackedInline):
 	model = Binding
+	extra = 1
+	
+class ParentFieldInline(admin.StackedInline):
+	model = ParentField
+	extra = 1
+	
+class ParentFieldChoiceInline(admin.StackedInline):
+	model = ParentFieldChoice
+	extra = 1
+	
+class ChildFieldInline(admin.StackedInline):
+	model = ChildField
 	extra = 1
 	
 class AnswerChoiceInline(admin.StackedInline):
@@ -79,7 +94,11 @@ class FieldAdmin(admin.ModelAdmin):
 		js = ADMIN_SORT_JS
 		
 class BindingAdmin(admin.ModelAdmin):
-	list_display = ('parent_field', 'parent_choice', 'child',)
+	list_display = ('data_form',)
+	inlines = [ParentFieldInline, ParentFieldChoiceInline, ChildFieldInline]
+	
+	class Media:
+		js = ADMIN_SORT_JS
 		
 class AnswerAdmin(admin.ModelAdmin):
 	list_display = ('submission', 'field', )
