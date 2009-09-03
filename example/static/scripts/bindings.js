@@ -52,7 +52,7 @@ function smartGetElement(name) {
 		bindingParent = $("#id_"+name);
 		if (!bindingParent.length) {
 			// If we didn't find an element #id_ directly, look for a label with for=id_name
-			bindingParent = $("label[for='id_"+name+"']");
+			bindingParent = $("label[for*='id_"+name+"']");
 		}
 	}
 	
