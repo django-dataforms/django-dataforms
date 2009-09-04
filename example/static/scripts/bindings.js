@@ -26,8 +26,11 @@ function setBindings() {
 						parents[i][j] = bindingParent;
 					}
 					
-					bindingParent.data("parents", bindings[k]['parents']);
-					bindingParent.data("children", bindings[k]['children']);
+					if (!bindingParent.data("bindings")) {
+						bindingParent.data("bindings", []);
+					}
+					
+					bindingParent.data("bindings").push(bindings[k]);
 					
 					// Set event handler
 					bindingParent.change(doBinding);
@@ -60,18 +63,24 @@ function smartGetElement(name) {
 }
 
 function doBinding() {
-	var parents = $(this).data('parents');
-	var children = $(this).data('children');
+	var parents;
+	var children;
+	var bindings = $(this).data("bindings");
 	
-	if (hasAllTruth(parents)){
-		// show
-		for (var i=0; i<children.length; i++){
-			$(children[i]).slideDown();
-		}
-	} else {
-		// hide
-		for (var i=0; i<children.length; i++){
-			$(children[i]).slideUp();
+	for (var b=0; b < bindings.length; b++) {
+		parents = bindings[b]['parents'];
+		children = bindings[b]['children'];
+		
+		if (hasAllTruth(parents)){
+			// show
+			for (var i=0; i<children.length; i++){
+				$(children[i]).slideDown();
+			}
+		} else {
+			// hide
+			for (var i=0; i<children.length; i++){
+				$(children[i]).slideUp();
+			}
 		}
 	}
 }
