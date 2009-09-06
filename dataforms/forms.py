@@ -16,10 +16,9 @@ from django import forms
 from django.forms.forms import BoundField
 from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
-from django.core.exceptions import FieldError
 from django.template.defaultfilters import safe, force_escape
 
-from .settings import (FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS,
+from .settings import (FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS, UPLOAD_FIELDS,
 				FIELD_DELIMITER, SINGLE_NUMBER_FIELDS, MULTI_NUMBER_FIELDS, NUMBER_FIELDS, HIDDEN_BINDINGS_SLUG)
 from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice, AnswerText, AnswerNumber, CollectionDataForm, Binding, Section
 
@@ -55,8 +54,7 @@ class BaseDataForm(forms.BaseForm):
 			yield self.bound_fields[name]
 	
 	def is_valid(self):
-		# Delete the hidden bindings field before we process, because it should never be handled
-		_remove_bindings_field(self)
+		_remove_extraneous_fields(self)
 		return super(BaseDataForm, self).is_valid()
 	
 	def save(self):
@@ -77,19 +75,19 @@ class BaseDataForm(forms.BaseForm):
 		#	that we are about to update.
 		#  * Is there any way to batch INSERTs in Django's ORM?
 		
-		# FIXME: check if cleaned_data exists and throw an error informing the user
-		# they need to call is_valid() before calling this save function.
+		if not hasattr(self, "cleaned_data"):
+			raise LookupError("The is_valid() method must be called before saving a form")
 		
 		if not hasattr(self, "submission"):
-			# This needs to be get_or_create (not just create) for form collections
-			# IE, the first form saved in a collection will create the submission
+			# This needs to be get_or_create (not just create) for form collections.
+			# The first form saved in a collection will create the submission
 			# but all other forms will still not have self.submission
 			self.submission, was_created = Submission.objects.get_or_create(slug=self.submission_slug)
 		
 		for key in self.fields.keys():
 			# Mangle the key into the DB form, then get the right Field
 			field = Field.objects.get(slug=_field_for_db(key))
-			
+				
 			answer, was_created = Answer.objects.get_or_create(
 				submission=self.submission,
 				field=field,
@@ -146,8 +144,14 @@ class BaseDataForm(forms.BaseForm):
 				# STORAGE MODEL: AnswerText
 				# Single answer with text content
 				
-				if field.field_type == "FileInput":
-					content = handle_upload(self.files, key)
+				if field.field_type in UPLOAD_FIELDS:
+					# We assume that validation of required-ness has already been handled,
+					# so only handle the file upload if a file was selected.
+					if key in self.files:
+						content = handle_upload(self.files, key)
+					else:
+						# Don't modify what's in the DB if nothing was submitted
+						continue
 				else:
 					# Leave this conditional check here. It makes single checkboxes work. 
 					content = self.cleaned_data[key] if self.cleaned_data[key] else ''
@@ -272,14 +276,31 @@ class BaseCollection(object):
 				return False
 		return True
 
-def _remove_bindings_field(form):
+def _remove_extraneous_fields(form):
 	"""
-	Delete the hidden bindings field before we process, because it should never be handled
+	Delete extraneous fields that should not be included in form processing.
+	This includes hidden bindings fields and any note fields.
 	"""
 	
-	hidden_bindings_field_slug = _field_for_form(name=HIDDEN_BINDINGS_SLUG, form=form.meta['slug'])
-	if form.fields.has_key(hidden_bindings_field_slug):
-		del form.fields[hidden_bindings_field_slug]
+	keys = []
+
+	# Get Note and FileInput fields
+	fields = Field.objects.filter(dataform__slug=form.meta['slug'], field_type__in=("Note",)+UPLOAD_FIELDS)
+	
+	# Bindings fields
+	keys.append(_field_for_form(name=HIDDEN_BINDINGS_SLUG, form=form.meta['slug']))
+	# Note fields
+	keys += [_field_for_form(name=field.slug, form=form.meta['slug']) for field in fields if field.field_type == "Note"]
+	
+	for key in keys:
+		if form.fields.has_key(key):
+			del form.fields[key]
+			
+	# Blank file upload fields
+	upload_keys = [_field_for_form(name=field.slug, form=form.meta['slug']) for field in fields if field.field_type in UPLOAD_FIELDS]
+	for key in upload_keys:
+		if form.data.has_key(key) and form.fields.has_key(key) and not form.data[key].strip():
+			del form.fields[key]
 
 def create_collection(request, collection, submission, readonly=False):
 	"""
@@ -398,6 +419,10 @@ def create_form(request, form, submission, title=None, description=None, section
 		# data because the initial form, before POST, will contain the database defaults and so
 		# the resulting POST data will (in normal cases) originate from database defaults already.
 		
+		# FIXME: if the POST request has a blank value for a file upload (ie. the user
+		# did not upload a new document), the resulting page will not show the existing file.
+		# if FormClass.meta['_upload_field_slugs']:
+			
 		# This creates a bound form object.
 		form = FormClass(data=request.POST, files=request.FILES)
 	else:
@@ -455,6 +480,7 @@ def _create_form(form, title=None, description=None, readonly=False):
 	meta['title'] = safe(form.title if not title else title)
 	meta['description'] = safe(form.description if not description else description)
 	meta['slug'] = form.slug
+	meta['_upload_field_slugs'] = []
 		
 	# Get all the fields
 	try:
@@ -493,7 +519,7 @@ def _create_form(form, title=None, description=None, readonly=False):
 	
 	# Populate our choices dictionary
 	for row in choices_qs:
-		choices_dict[row.field.pk] += (row.choice.value, row.choice.title),
+		choices_dict[row.field.pk] += (row.choice.value, safe(row.choice.title)),
 		
 	# ----- Field Loop -----
 	# Populate our fields dictionary for this form
@@ -523,13 +549,9 @@ def _create_form(form, title=None, description=None, readonly=False):
 		field_kwargs.update(additional_field_kwargs)
 		
 		field_map = FIELD_MAPPINGS[row['field_type']]
-#		
-#		# Set the rel attribute if this field is bound to a parent so the JavaScript can know the relation
-#		if bindings.has_key(form_field_name):
-#			field_attrs['rel'] = "id_%s" % bindings[form_field_name]
-#		
+
 		if readonly:
-			field_attrs['readonly'] = "readonly"
+			field_attrs['readonly'] = 'readonly'
 
 		# Get the choices for single and multiple choice fields 
 		if row['field_type'] in CHOICE_FIELDS:
@@ -555,6 +577,9 @@ def _create_form(form, title=None, description=None, readonly=False):
 				
 			if readonly:
 				field_attrs['disabled'] = "disabled"
+		elif row['field_type'] in UPLOAD_FIELDS:
+			# I'm an upload type, so keep track of all upload file slugs
+			meta['_upload_field_slugs'].append(form_field_name)
 				
 		if readonly and row['field_type'] == "CheckboxInput":
 			field_attrs['disabled'] = "disabled"
@@ -584,7 +609,7 @@ def _create_form(form, title=None, description=None, readonly=False):
 	
 	return DataFormClass
 
-def get_answers(submission, for_form=False):
+def get_answers(submission, for_form=False, field=None):
 	"""
 	Get the answers for a submission.
 
@@ -610,10 +635,10 @@ def get_answers(submission, for_form=False):
 		submission = Submission.objects.get(slug=submission).id
 	if isinstance(submission, Submission):
 		submission = submission.id
+	if isinstance(field, Field):
+		field = field.slug
 
-	# FIXME: Is this selected related working?
-	# ANSWER:  NO!  It is not!  28+ queries per execution!
-	answers = Answer.objects.get_answer_data(submission)
+	answers = Answer.objects.get_answer_data(submission=submission, field_slug=field)
 
 	# For every answer, do some magic and get it into our data dictionary
 	for answer in answers:

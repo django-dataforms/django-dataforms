@@ -6,7 +6,7 @@ This module provides unit tests to ensure integrity and consistency
 of the django-dataforms code.
 
 These tests are expected to be run from the `example` directory
-and are dependent on the example fixture. 
+and are DEPENDENT on the example fixture.
 
 Usage::
 
@@ -20,22 +20,32 @@ from .models import DataForm, Submission
 from .test_helpers import RequestFactory, CustomTestCase
 rf = RequestFactory()
 
+
+# You can see sample POST data by dumping request.POST before is_valid is called in the view.
+# Make sure, if you are changing testing fields, that you update the main initial_data.json fixture.
 TEST_FORM_POST_DATA = {
-	u'personal-information__textbox': [u'asdf'],
-	u'personal-information__checkboxes-multiple': [u'python', u'java'],
-	u'personal-information__password': [u'new password!'],
-	u'personal-information__languages': [u'java', u'cpp'],
-	u'personal-information__p-np': [u'no'],
-	u'personal-information__email': [u'newemail@example.com'],
-	u'personal-information__dropdown': [u'no'],
-	u'personal-information__title': [u'new title'],
-	u'personal-information__date': [u'2012-09-11'],
+	u'personal-information__profession': [u'programmer'],
+	u'personal-information__has-flag': [u'no'],
+	u'personal-information__languages': [u'python', u'other'],
+	u'personal-information__other-languages': [u'mips'],
+	#u'personal-information__single-binding-note': [u''], 		# Won't exist in POST
+	#u'personal-information__compound-binding-note': [u''],		# Won't exist in POST
+	#u'personal-information__other-field-types-note': [u''],	# Won't exist in POST
+	u'personal-information__favorite-language': [u'python'],
+	u'personal-information__import-antigravity': [u'1'],		# Single checkbox checked = u'1'. Unchecked will not exist.
+	u'personal-information__also-heard-of': [u'not-a-chance'],
+	u'personal-information__birthday': [u'2011-10-09'],
+	u'personal-information__email': [u'test@example.com'],
+	u'personal-information__password': [u'n3wPassw0rd!'],
+	#u'personal-information__profile-photo': [u''],				# NotImplemented
+	u'personal-information__select-multiple': [u'pick-me-too'],
+	u'personal-information__biography' : [u'Not much to say'],
 }
 
 TEST_COLLECTION_POST_DATA = {
-	u'form-field-dupes__title': [u'This is an example second title'],
-	u'form-field-dupes__checkboxes-multiple': [u'java', u'cpp'], 
-	u'form-field-dupes__languages': [u'python', u'java'],
+	u'form-field-dupes__profession': ['conquistador'],
+	u'form-field-dupes__has-flag': [u'yes'],
+	u'personal-information__select-multiple': [u'no-choose-me', u'im-all-alone'],
 }
 TEST_COLLECTION_POST_DATA.update(TEST_FORM_POST_DATA)
 
@@ -70,7 +80,6 @@ class FormsTestCase(CustomTestCase):
 		
 		# Validate the form to populate cleaned_data for the save function
 		form.is_valid()
-		
 		if form.errors:
 			self.fail(form.errors)
 		
@@ -83,6 +92,9 @@ class FormsTestCase(CustomTestCase):
 		# Test creation of another bound form tied to a existing Submission
 		request = rf.get('/')
 		form = forms.create_form(request, form="personal-information", submission="myForm")
+		
+		# TODO: test saving again with different POST data --
+		# to verify that edits of submissions work
 		
 	def testCreateUnboundCollection(self):
 		request = rf.get('/')
@@ -125,7 +137,8 @@ class FormsTestCase(CustomTestCase):
 		# Test getting answers the submission from the tests fixture using a string arg
 		answers = forms.get_answers(submission="testSubmission")
 		
-		# Just make sure it's not empty (could do more I guess)
+		# Just make sure it's not empty.
+		# FIXME: actually compare data against `tests` fixture
 		# FIXME: should verify that answers come back WITHOUT form name prepended
 		# (ie. default argument to get_answers of for_form=False) 
 		self.assertTrue(answers)

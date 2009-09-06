@@ -4,6 +4,8 @@ function setBindings() {
 	var bindings_js = '';
 	var bindings;
 	var bindingParent;
+	var parents;
+	var children;
 	
 	for (var j=0; j < many_bindings_js.length; j++) {
 		bindings_js = many_bindings_js[j].value;
@@ -14,7 +16,9 @@ function setBindings() {
 		bindings = JSON.parse(bindings_js);
 		
 		for (var k=0; k < bindings.length; k++) {
-			var parents = bindings[k]['parents'];
+			
+			// Parents
+			parents = bindings[k]['parents'];
 			for (var i=0; i < parents.length; i++) {
 				for (var j=0; j < parents[i].length; j++) {
 					bindingParent = smartGetElement(parents[i][j]);
@@ -36,11 +40,17 @@ function setBindings() {
 					bindingParent.change(doBinding);
 				}
 			}
-			var children = bindings[k]['children'];
+			
+			// Children
+			children = bindings[k]['children'];
 			for (var i=0; i < children.length; i++) {
-				child = smartGetElement(children[i]);
+				var child = smartGetElement(children[i]);
 				children[i] = child.closest(".form-row");
-				$(children[i]).hide();
+				
+				// Evaluate initial parent states and hide children if needed
+				if (!hasAllTruth(parents)) {
+					$(children[i]).hide();
+				}
 			}
 		}
 	}
@@ -96,8 +106,8 @@ function hasSingleTruth(element) {
 	var tagName = element.attr("type");
 	
 	if (
-	(tagName == "checkbox" && element.attr("checked"))
-	|| (tagName == "select-multiple" && element.val() == choice)
+	(tagName == "checkbox" && (element.length == 1 && element.attr("checked") || element.filter("input[value='"+choice+"']").attr("checked")))
+	|| ((tagName == "select-one" || tagName == "select-multiple") && element.val() == choice)
 	|| (tagName == "radio" && element.filter(":checked").val() == choice)) {
 		// FIXME add && choice in element.val()
 		return true;

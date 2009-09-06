@@ -186,10 +186,10 @@ class AnswerNumber(models.Model):
 
 class AnswerManager(models.Manager):
 	"""(Protocol manager description)"""
-	def get_answer_data(self, submission):
+	def get_answer_data(self, submission, field_slug=None):
 
 		cursor = connection.cursor()
-		query = """
+		query = ["""
 			SELECT a.id, df.slug AS dataform_slug, f.slug AS field_slug, f.field_type, c.value AS choice_value, an.num, at.text
 			FROM dataforms_answer a
 				INNER JOIN dataforms_field f ON (a.field_id = f.id)
@@ -199,8 +199,14 @@ class AnswerManager(models.Manager):
 				LEFT JOIN dataforms_answernumber an ON (a.id = an.answer_id)
 				LEFT JOIN dataforms_answertext at ON (a.id = at.answer_id)
 			WHERE a.submission_id = %s
-		"""
-		cursor.execute(query, [submission])
+		"""]
+		args = [submission]
+		
+		if field_slug is not None:
+			query.append(" AND field_slug = %s")
+			args.append(field_slug)
+			
+		cursor.execute("".join(query), args)
 
 		# Make sure this stays in sync with the above query columns
 		qkeys = ['id', 'dataform_slug', 'field_slug', 'field_type', 'choice_value', 'num', 'text']
@@ -213,7 +219,7 @@ class AnswerManager(models.Manager):
 			if not data.has_key(key):
 				data[key] = dict(izip(qkeys, row))
 				data[key]['content'] = []
-
+				
 			content_items = row[4:]
 			inner_item = (content_items[0] if content_items[0] else content_items[1] if content_items[1] else content_items[2])
 			data[key]['content'].append(inner_item)

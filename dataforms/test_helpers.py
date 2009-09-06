@@ -4,7 +4,7 @@ from django.db.models import Q
 
 from .forms import _field_for_form, get_answers # kind of breaking low coupling here
 from .models import Submission, Answer
-from .settings import BOOLEAN_FIELDS, MULTI_CHOICE_FIELDS, SINGLE_CHOICE_FIELDS
+from .settings import BOOLEAN_FIELDS, MULTI_CHOICE_FIELDS, UPLOAD_FIELDS
 
 class RequestFactory(Client):
 	"""
@@ -45,6 +45,21 @@ class RequestFactory(Client):
 		return WSGIRequest(environ)
 
 class CustomTestCase(TestCase):
+	def assertDictionaryEqual(self, dict1, dict2):
+		"""
+		Just a nicer way to see out dictionary differences
+		"""
+		
+		messages = []
+		
+		for key in dict1:
+			if not dict2.has_key(key):
+				messages.append("Not present in second dictionary: %s" % key)
+			elif dict1[key] != dict2[key]:
+				messages.append("%s not equal: %s != %s" % (key, repr(dict1[key]), repr(dict2[key])))
+				
+		return self.fail("\n" + "\n".join(messages)) if messages else None
+	
 	def assertValidSave(self, data, submission):
 		"""
 		Asserts that data from a POST request was saved correctly in the DB.
@@ -58,11 +73,12 @@ class CustomTestCase(TestCase):
 		# Slightly evil, do type checking to see if submission is a Submission object or string
 		if isinstance(submission, str):
 			submission = Submission.objects.get(slug=submission)
-		answers_to_compare = get_answers(submission=submission, for_form=True)
+		answers_from_db = get_answers(submission=submission, for_form=True)
 		
 		# ------ 1 ------
 		# This fixes the fact that a POST request will not have a checkbox key,
-		# but the DB _will_ contain a blank string for a checkbox false value.
+		# but the DB _will_ contain a blank string for a checkbox false value
+		# and a 1
 		
 		# Get the boolean field answers
 		answers = Answer.objects.select_related('field').filter(
@@ -71,19 +87,26 @@ class CustomTestCase(TestCase):
 		)
 		boolean_field_names = [(answer.data_form.slug, answer.field.slug) for answer in answers]
 		
-		# For every boolean field, remove these from the DB answers because
+		# For boolean fields that aren't checked, remove these from the DB answers because
 		# they will not exist in the form POST
 		for form_name, field_name in boolean_field_names:
-			del answers_to_compare[_field_for_form(name=field_name, form=form_name)]
+			key = _field_for_form(name=field_name, form=form_name)
+			if data.has_key(key) and not data[key]:
+				# Checkbox was not checked, delete element containing blank string in DB returned answers
+				del answers_from_db[key]
+			elif data.has_key(key) and data[key]:
+				# Checkbox was checked, so DB has "1" and post has "[1]" ... make these "equal" for testing
+				answers_from_db[key] = [answers_from_db[key]]
 			
 		# ------ 2 ------
 		# This fixes the fact that each request.POST element will be a list
 		# and that won't be true from get_answers
 		
 		# Get all Answers that won't be lists
+		# FIXME: excluding upload fields here. Once testing is implemented, remove this.
 		answers = Answer.objects.select_related('field').filter(
 			submission=submission
-		).exclude(Q(field__field_type__in=MULTI_CHOICE_FIELDS)	| Q(field__field_type__in=BOOLEAN_FIELDS))
+		).exclude(Q(field__field_type__in=MULTI_CHOICE_FIELDS+BOOLEAN_FIELDS+UPLOAD_FIELDS))
 		
 		field_names = [(answer.data_form.slug, answer.field.slug) for answer in answers]
 		
@@ -91,13 +114,13 @@ class CustomTestCase(TestCase):
 		for form_name, field_name in field_names:
 			form_field_name = _field_for_form(name=field_name, form=form_name)
 			try:
-				answers_to_compare[form_field_name] = [answers_to_compare[form_field_name]]
-			except:
-				self.fail("It looks like get_answers() might be borked. '%s' was supposed to exist here (in answers_to_compare), but doesn't. Perhaps a certain storage mechanism in the save() function is not working properly?" % form_field_name)
+				answers_from_db[form_field_name] = [answers_from_db[form_field_name]]
+			except KeyError:
+				self.fail("It looks like get_answers() (or saving) might be borked. '%s' was supposed to exist in answers_from_db, but doesn't. Perhaps a certain storage mechanism in the save() function is not working properly? Or you messed with the fields and haven't updated TEST_FORM_POST_DATA?" % form_field_name)
 		
 		# ------ 3 ------
 		# Actually compare the submitted data to the DB data
-		self.assertEqual(data, answers_to_compare)
+		self.assertDictionaryEqual(data, answers_from_db)
 		
 			
 		

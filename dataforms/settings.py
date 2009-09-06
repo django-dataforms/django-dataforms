@@ -69,6 +69,7 @@ for key in FIELD_MAPPINGS:
 		# Initialize all field-mappings that don't have a 'widget_kwargs' key
 		FIELD_MAPPINGS[key]['widget_kwargs'] = {}
 
+UPLOAD_FIELDS = getattr(settings, "UPLOAD_FIELDS", ()) + ('FileInput',)
 BOOLEAN_FIELDS = getattr(settings, "BOOLEAN_FIELDS", ()) + ('CheckboxInput',)
 SINGLE_CHOICE_FIELDS = getattr(settings, "SINGLE_CHOICE_FIELDS", ()) + ('Select', 'RadioSelect')
 MULTI_CHOICE_FIELDS = getattr(settings, "MULTI_CHOICE_FIELDS", ()) + ('SelectMultiple', 'CheckboxSelectMultiple')

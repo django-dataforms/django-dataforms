@@ -1,32 +1,207 @@
-[{"pk": 1, "model": "dataforms.submission", "fields": {"slug": "testSubmission", "collection": null}}, 
-{"pk": 1, "model": "dataforms.answerchoice", "fields": {"answer": 2, "choice": 1}}, 
-{"pk": 2, "model": "dataforms.answerchoice", "fields": {"answer": 8, "choice": 2}}, 
-{"pk": 3, "model": "dataforms.answerchoice", "fields": {"answer": 9, "choice": 4}}, 
-{"pk": 4, "model": "dataforms.answerchoice", "fields": {"answer": 9, "choice": 5}}, 
-{"pk": 5, "model": "dataforms.answerchoice", "fields": {"answer": 10, "choice": 3}}, 
-{"pk": 6, "model": "dataforms.answerchoice", "fields": {"answer": 10, "choice": 4}}, 
-{"pk": 7, "model": "dataforms.answerchoice", "fields": {"answer": 12, "choice": 4}}, 
-{"pk": 8, "model": "dataforms.answerchoice", "fields": {"answer": 12, "choice": 5}}, 
-{"pk": 9, "model": "dataforms.answerchoice", "fields": {"answer": 13, "choice": 3}}, 
-{"pk": 10, "model": "dataforms.answerchoice", "fields": {"answer": 13, "choice": 4}}, 
-{"pk": 1, "model": "dataforms.answertext", "fields": {"answer": 1, "text": "1"}}, 
-{"pk": 2, "model": "dataforms.answertext", "fields": {"answer": 3, "text": "2012-09-11"}}, 
-{"pk": 3, "model": "dataforms.answertext", "fields": {"answer": 4, "text": "new title"}}, 
-{"pk": 4, "model": "dataforms.answertext", "fields": {"answer": 5, "text": "new password!"}}, 
-{"pk": 5, "model": "dataforms.answertext", "fields": {"answer": 6, "text": "asdf"}}, 
-{"pk": 6, "model": "dataforms.answertext", "fields": {"answer": 7, "text": "newemail@example.com"}}, 
-{"pk": 7, "model": "dataforms.answertext", "fields": {"answer": 11, "text": "This is an example second title"}}, 
-{"pk": 1, "model": "dataforms.answer", "fields": {"field": 5, "data_form": 1, "submission": 1}}, 
-{"pk": 2, "model": "dataforms.answer", "fields": {"field": 7, "data_form": 1, "submission": 1}}, 
-{"pk": 3, "model": "dataforms.answer", "fields": {"field": 1, "data_form": 1, "submission": 1}}, 
-{"pk": 4, "model": "dataforms.answer", "fields": {"field": 2, "data_form": 1, "submission": 1}}, 
-{"pk": 5, "model": "dataforms.answer", "fields": {"field": 8, "data_form": 1, "submission": 1}}, 
-{"pk": 6, "model": "dataforms.answer", "fields": {"field": 10, "data_form": 1, "submission": 1}}, 
-{"pk": 7, "model": "dataforms.answer", "fields": {"field": 9, "data_form": 1, "submission": 1}}, 
-{"pk": 8, "model": "dataforms.answer", "fields": {"field": 3, "data_form": 1, "submission": 1}}, 
-{"pk": 9, "model": "dataforms.answer", "fields": {"field": 4, "data_form": 1, "submission": 1}}, 
-{"pk": 10, "model": "dataforms.answer", "fields": {"field": 6, "data_form": 1, "submission": 1}}, 
-{"pk": 11, "model": "dataforms.answer", "fields": {"field": 2, "data_form": 2, "submission": 1}}, 
-{"pk": 12, "model": "dataforms.answer", "fields": {"field": 6, "data_form": 2, "submission": 1}}, 
-{"pk": 13, "model": "dataforms.answer", "fields": {"field": 4, "data_form": 2, "submission": 1}}
+[
+  {
+    "pk": 1, 
+    "model": "dataforms.submission", 
+    "fields": {
+      "last_modified": "2009-09-04 23:38:31", 
+      "slug": "testSubmission", 
+      "collection": null
+    }
+  }, 
+  {
+    "pk": 1, 
+    "model": "dataforms.answerchoice", 
+    "fields": {
+      "answer": 1, 
+      "choice": 7
+    }
+  }, 
+  {
+    "pk": 2, 
+    "model": "dataforms.answerchoice", 
+    "fields": {
+      "answer": 2, 
+      "choice": 2
+    }
+  }, 
+  {
+    "pk": 3, 
+    "model": "dataforms.answerchoice", 
+    "fields": {
+      "answer": 5, 
+      "choice": 3
+    }
+  }, 
+  {
+    "pk": 4, 
+    "model": "dataforms.answerchoice", 
+    "fields": {
+      "answer": 7, 
+      "choice": 9
+    }
+  }, 
+  {
+    "pk": 5, 
+    "model": "dataforms.answerchoice", 
+    "fields": {
+      "answer": 11, 
+      "choice": 12
+    }
+  }, 
+  {
+    "pk": 1, 
+    "model": "dataforms.answertext", 
+    "fields": {
+      "answer": 4, 
+      "text": ""
+    }
+  }, 
+  {
+    "pk": 2, 
+    "model": "dataforms.answertext", 
+    "fields": {
+      "answer": 6, 
+      "text": "1"
+    }
+  }, 
+  {
+    "pk": 3, 
+    "model": "dataforms.answertext", 
+    "fields": {
+      "answer": 8, 
+      "text": "2009-09-09"
+    }
+  }, 
+  {
+    "pk": 4, 
+    "model": "dataforms.answertext", 
+    "fields": {
+      "answer": 9, 
+      "text": "test@example.com"
+    }
+  }, 
+  {
+    "pk": 5, 
+    "model": "dataforms.answertext", 
+    "fields": {
+      "answer": 10, 
+      "text": "password123"
+    }
+  }, 
+  {
+    "pk": 6, 
+    "model": "dataforms.answertext", 
+    "fields": {
+      "answer": 12, 
+      "text": "Blah blah blah"
+    }
+  }, 
+  {
+    "pk": 1, 
+    "model": "dataforms.answer", 
+    "fields": {
+      "field": 1, 
+      "data_form": 1, 
+      "submission": 1
+    }
+  }, 
+  {
+    "pk": 2, 
+    "model": "dataforms.answer", 
+    "fields": {
+      "field": 2, 
+      "data_form": 1, 
+      "submission": 1
+    }
+  }, 
+  {
+    "pk": 3, 
+    "model": "dataforms.answer", 
+    "fields": {
+      "field": 3, 
+      "data_form": 1, 
+      "submission": 1
+    }
+  }, 
+  {
+    "pk": 4, 
+    "model": "dataforms.answer", 
+    "fields": {
+      "field": 4, 
+      "data_form": 1, 
+      "submission": 1
+    }
+  }, 
+  {
+    "pk": 5, 
+    "model": "dataforms.answer", 
+    "fields": {
+      "field": 7, 
+      "data_form": 1, 
+      "submission": 1
+    }
+  }, 
+  {
+    "pk": 6, 
+    "model": "dataforms.answer", 
+    "fields": {
+      "field": 8, 
+      "data_form": 1, 
+      "submission": 1
+    }
+  }, 
+  {
+    "pk": 7, 
+    "model": "dataforms.answer", 
+    "fields": {
+      "field": 9, 
+      "data_form": 1, 
+      "submission": 1
+    }
+  }, 
+  {
+    "pk": 8, 
+    "model": "dataforms.answer", 
+    "fields": {
+      "field": 11, 
+      "data_form": 1, 
+      "submission": 1
+    }
+  }, 
+  {
+    "pk": 9, 
+    "model": "dataforms.answer", 
+    "fields": {
+      "field": 12, 
+      "data_form": 1, 
+      "submission": 1
+    }
+  }, 
+  {
+    "pk": 10, 
+    "model": "dataforms.answer", 
+    "fields": {
+      "field": 13, 
+      "data_form": 1, 
+      "submission": 1
+    }
+  }, 
+  {
+    "pk": 11, 
+    "model": "dataforms.answer", 
+    "fields": {
+      "field": 15, 
+      "data_form": 1, 
+      "submission": 1
+    }
+  }, 
+  {
+    "pk": 12, 
+    "model": "dataforms.answer", 
+    "fields": {
+      "field": 16, 
+      "data_form": 1, 
+      "submission": 1
+    }
+  }
 ]

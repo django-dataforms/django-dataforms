@@ -1,10 +1,6 @@
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.http import HttpResponseRedirect, HttpResponseServerError, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotAllowed
-from dataforms.forms import create_form, create_collection, _create_form
-from dataforms.models import Submission, DataForm
-from itertools import chain
-from django.db import connection
+from dataforms.forms import create_form, create_collection
 
 def index(request):
 	"""
@@ -14,7 +10,6 @@ def index(request):
 	form = create_form(request=request, form="personal-information", submission="myForm")
 	if request.method == "POST":
 		if form.is_valid():
-			
 			form.save()
 
 	return render_to_response("index.html", { 'form':form }, RequestContext(request))
