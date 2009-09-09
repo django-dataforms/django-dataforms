@@ -7,8 +7,8 @@ function setBindings() {
 	var parents;
 	var children;
 	
-	for (var j=0; j < many_bindings_js.length; j++) {
-		bindings_js = many_bindings_js[j].value;
+	for (var B=0; B < many_bindings_js.length; B++) {
+		bindings_js = many_bindings_js[B].value;
 		
 		if (!bindings_js)
 			continue;
