@@ -154,7 +154,7 @@ class BaseDataForm(forms.BaseForm):
 						continue
 				else:
 					# Leave this conditional check here. It makes single checkboxes work. 
-					content = self.cleaned_data[key] if self.cleaned_data[key] else ''
+					content = '1' if self.cleaned_data[key] is True else self.cleaned_data[key] if self.cleaned_data[key] else ''
 				
 				if was_created:
 					# Create new answer text
