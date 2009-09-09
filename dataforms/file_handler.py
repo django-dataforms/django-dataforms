@@ -1,9 +1,8 @@
 from django.conf import settings
-from datetime import date
 import os
 
-def handle_upload(files, field_key):
-	upload_dir = date.today().strftime(settings.UPLOAD_PATH)
+def handle_upload(files, field_key, submissionID):
+	upload_dir = settings.UPLOAD_PATH + str(submissionID)
 	upload_full_path = os.path.join(settings.MEDIA_ROOT, upload_dir)
 	
 	if not os.path.exists(upload_full_path):

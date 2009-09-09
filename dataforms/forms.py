@@ -148,7 +148,7 @@ class BaseDataForm(forms.BaseForm):
 					# We assume that validation of required-ness has already been handled,
 					# so only handle the file upload if a file was selected.
 					if key in self.files:
-						content = handle_upload(self.files, key)
+						content = handle_upload(self.files, key, self.submission.id)
 					else:
 						# Don't modify what's in the DB if nothing was submitted
 						continue
@@ -585,6 +585,8 @@ def _create_form(form, title=None, description=None, readonly=False):
 			field_attrs['disabled'] = "disabled"
 			
 		# Instantiate the widget that this field will use
+		# TODO: Possible create logic that passes submissionid to file upload widget to handle file
+		# paths without enforcing a redirect.
 		if field_map.has_key('widget'):
 			field_kwargs['widget'] = field_map['widget'](attrs=field_attrs, **field_map['widget_kwargs'])
 		
