@@ -6,7 +6,6 @@ This is really freakn sweet!
 """
 
 from django import forms
-from dataforms import settings
 
 class BaseValidationForm(object):
 	@staticmethod

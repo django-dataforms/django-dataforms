@@ -53,8 +53,17 @@ class BaseDataForm(forms.BaseForm):
 		for name in self.bound_fields:
 			yield self.bound_fields[name]
 	
-	def is_valid(self):
+	def is_valid(self, check_required=True):
+		"""
+		:arg check_required: Whether or not to check required fields. Default True.
+		"""
+		
 		_remove_extraneous_fields(self)
+		
+		if not check_required:
+			for field in self:
+				field.field.required = False
+			
 		return super(BaseDataForm, self).is_valid()
 	
 	def save(self):
@@ -183,7 +192,7 @@ class BaseCollection(object):
 		collection.next_section
 		collection.prev_section
 	"""
-		
+	
 	def __init__(self, title, description, slug, forms, sections):
 		self.title = str(title)
 		self.description = str(description)
@@ -243,7 +252,6 @@ class BaseCollection(object):
 		Make a new collection with the given subset of forms
 		"""
 		
-		
 		return BaseCollection(
 			title=self.title,
 			description=self.description,
@@ -266,13 +274,13 @@ class BaseCollection(object):
 		for form in self:
 			form.save()
 		
-	def is_valid(self):
+	def is_valid(self, check_required=True):
 		"""
 		Validate all contained forms
 		"""
 		
 		for form in self:
-			if not form.is_valid():
+			if not form.is_valid(check_required=check_required):
 				return False
 		return True
 

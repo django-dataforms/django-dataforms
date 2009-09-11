@@ -10,6 +10,10 @@
 			    {% for form in forms %}
 			    	<h2>{{ form.meta.title }}</h2>
 			    	<h2>{{ form.meta.description }}</h2>
+			    	
+					{% if form.non_field_errors %}
+						{{ form.non_field_errors.as_ul }}
+					{% endif %}
 				    {% for field in form %}
 					    {% if not field.is_hidden %}
 					        <div class="form-row">

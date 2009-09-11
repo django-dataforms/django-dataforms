@@ -7,7 +7,7 @@
 			<strong>See the <a href="{% url form_collection %}">form collection demo</a>.</strong>
 			
 			{% if form.non_field_errors %}
-				<ul class="errorlist">{{ form.non_field_errors.as_ul }}</ul>
+				{{ form.non_field_errors.as_ul }}
 			{% endif %}
 			
 			<form action="." method="post" accept-charset="utf-8" enctype="multipart/form-data">
