@@ -427,10 +427,6 @@ def create_form(request, form, submission, title=None, description=None, section
 		# data because the initial form, before POST, will contain the database defaults and so
 		# the resulting POST data will (in normal cases) originate from database defaults already.
 		
-		# FIXME: if the POST request has a blank value for a file upload (ie. the user
-		# did not upload a new document), the resulting page will not show the existing file.
-		# if FormClass.meta['_upload_field_slugs']:
-			
 		# This creates a bound form object.
 		form = FormClass(data=request.POST, files=request.FILES)
 	else:
@@ -488,7 +484,6 @@ def _create_form(form, title=None, description=None, readonly=False):
 	meta['title'] = safe(form.title if not title else title)
 	meta['description'] = safe(form.description if not description else description)
 	meta['slug'] = form.slug
-	meta['_upload_field_slugs'] = []
 		
 	# Get all the fields
 	try:
@@ -585,9 +580,6 @@ def _create_form(form, title=None, description=None, readonly=False):
 				
 			if readonly:
 				field_attrs['disabled'] = "disabled"
-		elif row['field_type'] in UPLOAD_FIELDS:
-			# I'm an upload type, so keep track of all upload file slugs
-			meta['_upload_field_slugs'].append(form_field_name)
 				
 		if readonly and row['field_type'] == "CheckboxInput":
 			field_attrs['disabled'] = "disabled"
@@ -614,6 +606,7 @@ def _create_form(form, title=None, description=None, readonly=False):
 			for attr_name in dir(validate):
 				if attr_name.startswith('clean'):
 					attrs[attr_name] = getattr(validate, attr_name)
+	
 	# Return a class object of this form with all attributes
 	DataFormClass = type(form_class_title, (BaseDataForm,), attrs)
 	
