@@ -85,7 +85,7 @@ class FieldAdmin(admin.ModelAdmin):
 	list_display_links = ('label',)
 	list_display = ('label', 'slug', 'field_type', 'visible', 'required',)
 	list_editable = ('field_type', 'visible', 'required')
-	search_fields = ('label',)
+	search_fields = ('label','slug')
 	inlines = [ChoiceInline, FieldInline]
 	save_as = True
 	form = FieldAdminForm
@@ -121,7 +121,7 @@ class SubmissionAdmin(BaseAdminClass):
 
 class ChoiceAdmin(admin.ModelAdmin):
 	list_display = ('title', 'value',)
-	search_fields = ('text',)
+	search_fields = ('title','value')
 
 class SectionAdmin(admin.ModelAdmin):
 	list_display = ('title',)
