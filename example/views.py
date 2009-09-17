@@ -1,6 +1,7 @@
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from dataforms.forms import create_form, create_collection
+from django.http import HttpResponseRedirect
 
 def index(request):
 	"""
@@ -11,6 +12,7 @@ def index(request):
 	if request.method == "POST":
 		if form.is_valid():
 			form.save()
+			return HttpResponseRedirect("/") 
 
 	return render_to_response("index.html", { 'form':form }, RequestContext(request))
 
@@ -26,5 +28,6 @@ def form_collection(request):
 	if request.method == "POST":
 		if collection.is_valid():
 			collection.save()
+			return HttpResponseRedirect("/") 
 
 	return render_to_response('collection.html', { 'forms':collection }, RequestContext(request))
