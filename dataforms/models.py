@@ -203,7 +203,7 @@ class AnswerManager(models.Manager):
 		args = [submission]
 		
 		if field_slug is not None:
-			query.append(" AND field_slug = %s")
+			query.append(" AND f.slug = %s")
 			args.append(field_slug)
 			
 		cursor.execute("".join(query), args)
