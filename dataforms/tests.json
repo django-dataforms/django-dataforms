@@ -53,7 +53,7 @@
     "model": "dataforms.answertext", 
     "fields": {
       "answer": 4, 
-      "text": ""
+      "text": "\u2600"
     }
   }, 
   {
@@ -93,7 +93,7 @@
     "model": "dataforms.answertext", 
     "fields": {
       "answer": 12, 
-      "text": "Blah blah blah"
+      "text": "Blah blah blah\u2600"
     }
   }, 
   {

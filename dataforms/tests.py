@@ -16,10 +16,10 @@ Usage::
 """
 
 from . import forms
-from .models import DataForm, Submission
+from .models import DataForm, Submission, AnswerText
 from .test_helpers import RequestFactory, CustomTestCase
+from django import template
 rf = RequestFactory()
-
 
 # You can see sample POST data by dumping request.POST before is_valid is called in the view.
 # Make sure, if you are changing testing fields, that you update the main initial_data.json fixture.
@@ -27,7 +27,7 @@ TEST_FORM_POST_DATA = {
 	u'personal-information__profession': [u'programmer'],
 	u'personal-information__has-flag': [u'no'],
 	u'personal-information__languages': [u'python', u'other'],
-	u'personal-information__other-languages': [u'mips'],
+	u'personal-information__other-languages': [u'mips\u25c6'],
 	#u'personal-information__single-binding-note': [u''], 		# Won't exist in POST
 	#u'personal-information__compound-binding-note': [u''],		# Won't exist in POST
 	#u'personal-information__other-field-types-note': [u''],	# Won't exist in POST
@@ -36,10 +36,10 @@ TEST_FORM_POST_DATA = {
 	u'personal-information__also-heard-of': [u'not-a-chance'],
 	u'personal-information__birthday': [u'2011-10-09'],
 	u'personal-information__email': [u'test@example.com'],
-	u'personal-information__password': [u'n3wPassw0rd!'],
+	u'personal-information__password': [u'n3wPassw0rd!\xbf'],
 	#u'personal-information__profile-photo': [u''],				# NotImplemented
 	u'personal-information__select-multiple': [u'pick-me-too'],
-	u'personal-information__biography' : [u'Not much to say'],
+	u'personal-information__biography' : [u'Not much to say\u2600'],
 }
 
 TEST_COLLECTION_POST_DATA = {
@@ -92,6 +92,20 @@ class FormsTestCase(CustomTestCase):
 		# Test creation of another bound form tied to a existing Submission
 		request = rf.get('/')
 		form = forms.create_form(request, form="personal-information", submission="myForm")
+		
+		# Make sure template rendering doesn't throw errors
+		x = template.Template("{% for field in form %}{{ field }}{% endfor %}")
+		c = template.Context({"form":form})
+		x.render(c)
+		
+		# Ensure Unicode encoding is being returned from models correctly
+		answer_texts = AnswerText.objects.all()
+		
+		for answer_text in answer_texts:
+			try:
+				answer_text.__unicode__()
+			except UnicodeEncodeError:
+				self.fail("UnicodeEncodeError: 'ascii' codec can't encode character... Make sure you are using unicode() in every model's __unicode__() function, NOT str()")
 		
 		# TODO: test saving again with different POST data --
 		# to verify that edits of submissions work
@@ -151,6 +165,14 @@ class FormsTestCase(CustomTestCase):
 		# FIXME: should verify that answers come back WITH form name prepended
 		# (ie. argument to get_answers of for_form=True) 
 		self.assertTrue(answers)
+		
+	def testGetSingleAnswers(self):
+		submission = Submission.objects.get(slug="testSubmission")
+		# Test get_answers on single field
+		lang_answer = forms.get_answers(submission=submission, for_form=False, field="other-languages")
+		bio_answer = forms.get_answers(submission=submission, for_form=False, field="biography")
+		self.assertEqual(lang_answer['other-languages'], u'\u2600')
+		self.assertEqual(bio_answer['biography'], u'Blah blah blah\u2600')
 		
 	def testValidation(self):
 		self.assertEquals(True, True)

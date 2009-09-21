@@ -125,7 +125,7 @@ class FieldChoice(models.Model):
 		ordering = ['field', 'order', ]
 
 	def __unicode__(self):
-		return u'%s - %s' % (self.field, str(self.choice).upper())
+		return u'%s - %s' % (self.field, unicode(self.choice).upper())
 
 class Choice(models.Model):
 	"""
@@ -136,7 +136,7 @@ class Choice(models.Model):
 	value = models.CharField(verbose_name=_('choice value'), max_length=255)
 
 	def __unicode__(self):
-		return str(self.title)
+		return unicode(self.title)
 
 class Submission(models.Model):
 	"""
@@ -148,7 +148,7 @@ class Submission(models.Model):
 	last_modified = models.DateTimeField(verbose_name=_('last modified'), auto_now=True)
 
 	def __unicode__(self):
-		return '%s' % (self.slug)
+		return unicode(self.slug)
 
 class AnswerChoice(models.Model):
 	"""
@@ -158,7 +158,7 @@ class AnswerChoice(models.Model):
 	choice = models.ForeignKey('Choice', null=False, blank=False)
 
 	def __unicode__(self):
-		return str(" - ".join([str(self.answer), str(self.choice)]))
+		return unicode(" - ".join([unicode(self.answer), unicode(self.choice)]))
 
 class AnswerText(models.Model):
 	"""
@@ -168,7 +168,7 @@ class AnswerText(models.Model):
 	text = models.TextField(verbose_name=_('content'), null=False, blank=False)
 
 	def __unicode__(self):
-		return str(" - ".join([str(self.answer), str(self.text)]))
+		return unicode(" - ".join([unicode(self.answer), unicode(self.text)]))
 
 class AnswerNumber(models.Model):
 	"""
@@ -182,7 +182,7 @@ class AnswerNumber(models.Model):
 	num = models.IntegerField(verbose_name=_('num'), null=False, blank=False)
 
 	def __unicode__(self):
-		return str(" - ".join([str(self.answer), str(self.num)]))
+		return unicode(" - ".join([unicode(self.answer), unicode(self.num)]))
 
 class AnswerManager(models.Manager):
 	"""(Protocol manager description)"""
@@ -236,7 +236,6 @@ class Answer(models.Model):
 	field = models.ForeignKey('Field', null=False, blank=False)
 
 	def __unicode__(self):
-		return str(self.field)
+		return unicode(self.field)
 
 	objects = AnswerManager()
-
