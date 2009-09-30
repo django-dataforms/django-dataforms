@@ -17,7 +17,6 @@ class FileWidget(forms.FileInput):
 	def render(self, name, value, attrs=None):
 		output = []
 		output.append(super(FileWidget, self).render(name, value, attrs))
-		print value
 		if value:
 			# FIXME:  Possible figure out a way to dynamically pass widget arguments to create the proper file path.
 			#if hasattr(value, "name"):
