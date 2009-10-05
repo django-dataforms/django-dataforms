@@ -36,7 +36,7 @@ FIELD_MAPPINGS.update( {
 	'RadioSelect' : { 'class': 'django.forms.ChoiceField', 'widget': 'django.forms.RadioSelect' },
 	'Password' : { 'class': 'django.forms.CharField', 'widget': 'django.forms.PasswordInput' },
 	'Email' : { 'class': 'django.forms.EmailField', 'widget': 'django.forms.TextInput' },
-	'DateField' : { 'class': 'django.forms.DateField', 'widget': 'django.forms.DateInput' },
+	'DateField' : { 'class': 'django.forms.DateField', 'widget': 'django.forms.DateTimeInput' },
 	'CheckboxInput' : { 'class': 'django.forms.BooleanField', 'widget': 'django.forms.CheckboxInput' },
 	'CheckboxSelectMultiple': { 'class': 'django.forms.MultipleChoiceField', 'widget': 'django.forms.CheckboxSelectMultiple' },
 	'HiddenInput' : { 'class': 'django.forms.Field', 'widget': 'django.forms.HiddenInput' },
