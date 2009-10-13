@@ -188,7 +188,9 @@ class AnswerManager(models.Manager):
 	"""(Protocol manager description)"""
 	def get_answer_data(self, submission, field_slug=None):
 
+		data = {}
 		cursor = connection.cursor()
+		qkeys = ['id', 'dataform_slug', 'field_slug', 'field_type', 'choice_value', 'num', 'text']
 		query = ["""
 			SELECT a.id, df.slug AS dataform_slug, f.slug AS field_slug, f.field_type, c.value AS choice_value, an.num, at.text
 			FROM dataforms_answer a
@@ -205,24 +207,34 @@ class AnswerManager(models.Manager):
 		if field_slug is not None:
 			query.append(" AND f.slug = %s")
 			args.append(field_slug)
-			
+		
 		cursor.execute("".join(query), args)
-
-		# Make sure this stays in sync with the above query columns
-		qkeys = ['id', 'dataform_slug', 'field_slug', 'field_type', 'choice_value', 'num', 'text']
-		rows = cursor.fetchall()
-
-		data = {}
-
-		for row in rows:
+		
+		row = cursor.fetchone()
+		while row is not None:
 			key = hash(row[:3])
 			if not data.has_key(key):
 				data[key] = dict(izip(qkeys, row))
 				data[key]['content'] = []
-				
+			
+			# Get the last three of the query ['choice_value', 'num', 'text']
 			content_items = row[4:]
-			inner_item = (content_items[0] if content_items[0] else content_items[1] if content_items[1] else content_items[2])
+			
+			# Because of the LEFT JOIN, two of the three will be None.
+			# Choose the one that has content, or return None.
+			inner_item = (
+				# Choice value
+				content_items[0] if content_items[0]
+				# Number
+				else content_items[1] if content_items[1]
+				# Text (forced to evaluate for Oracle LOB objects via unicode())
+				else unicode(content_items[2]) if content_items[2] is not None
+				else None
+			)
 			data[key]['content'].append(inner_item)
+			
+			# Fetch a new row
+			row = cursor.fetchone()
 
 		return data.values()
 
