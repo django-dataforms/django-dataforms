@@ -309,6 +309,14 @@ def _remove_extraneous_fields(form):
 	for key in upload_keys:
 		if form.data.has_key(key) and form.fields.has_key(key) and not form.data[key].strip():
 			del form.fields[key]
+			
+	# Fields that weren't included in the form POST
+	to_delete = []
+	for key in form.fields:
+		if not form.data.has_key(key):
+			to_delete.append(key)
+	for key in to_delete:
+		del form.fields[key]
 
 def create_collection(request, collection, submission, readonly=False):
 	"""
