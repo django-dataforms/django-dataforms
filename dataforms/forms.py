@@ -18,9 +18,13 @@ from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
 from django.template.defaultfilters import safe, force_escape
 
-from .settings import (FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, CHOICE_FIELDS, UPLOAD_FIELDS,
-				FIELD_DELIMITER, SINGLE_NUMBER_FIELDS, MULTI_NUMBER_FIELDS, NUMBER_FIELDS, HIDDEN_BINDINGS_SLUG)
-from .models import DataForm, Collection, Field, FieldChoice, Choice, Answer, Submission, AnswerChoice, AnswerText, AnswerNumber, CollectionDataForm, Binding, Section
+from .settings import (FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS,
+	MULTI_CHOICE_FIELDS, CHOICE_FIELDS, UPLOAD_FIELDS,
+	FIELD_DELIMITER, SINGLE_NUMBER_FIELDS, MULTI_NUMBER_FIELDS,
+	NUMBER_FIELDS, HIDDEN_BINDINGS_SLUG)
+from .models import (DataForm, Collection, Field, FieldChoice,
+	Choice, Answer, Submission, AnswerChoice, AnswerText, AnswerNumber,
+	CollectionDataForm, Binding, Section)
 
 class BaseDataForm(forms.BaseForm):
 	def __init__(self, *args, **kwargs):
@@ -335,7 +339,7 @@ def create_collection(request, collection, submission, readonly=False):
 		try:
 			collection = Collection.objects.get(visible=True, slug=collection)
 		except Collection.DoesNotExist:
-			raise Collection.DoesNotExist('''Collection %s does not exist. Make sure the slug name is correct and the collection is visible.''' % collection)
+			raise Collection.DoesNotExist('Collection %s does not exist. Make sure the slug name is correct and the collection is visible.' % collection)
 	
 	# Get queryset for all the forms that are needed
 	try:
@@ -344,7 +348,7 @@ def create_collection(request, collection, submission, readonly=False):
 				collectiondataform__collection__visible=True
 			).order_by('collectiondataform__order')
 	except DataForm.DoesNotExist:
-		raise DataForm.DoesNotExist('''Data Forms for collection %s	do not exist. Make sure the slug name is correct and the forms are visible.''' % collection)
+		raise DataForm.DoesNotExist('Dataforms for collection %s do not exist. Make sure the slug name is correct and the forms are visible.' % collection)
 	
 	collection_bridge = CollectionDataForm.objects.filter(
 		collection=collection,
@@ -352,7 +356,8 @@ def create_collection(request, collection, submission, readonly=False):
 	)
 	
 	# Get the sections from the many-to-many, and then make the elements unique (a set)
-	non_unique_sections = Section.objects.order_by("collectiondataform__order").filter(collectiondataform__collection=collection).distinct()
+	non_unique_sections = (Section.objects.order_by("collectiondataform__order")
+						.filter(collectiondataform__collection=collection).distinct())
 
 	# Force the query to evaluate
 	non_unique_sections = list(non_unique_sections)
@@ -676,53 +681,60 @@ def get_bindings(form):
 	"""
 	Get the bindings for specific submission
 	
-	:return: a dictionary of child_field_name-->parent_bound_field_name
+	:return: list of dictionaries, where each dictionary is a single binding
+		that may be a simple child to parent binding, up to a compound binding
+		that relates many parents to many children.
+		
+		Example return:
+		[
+		    # Simple binding: a dropdown will show if a single checkbox is checked
+		    {
+		    	"parents" : [["checkbox1"]],
+		    	"children" : ["dropdown"]
+		    },
+		    
+		    # Compound binding: the textarea will be shown if either:
+		    # 1. checkbox1 is checked AND the dropdown choice of "yes" is selected
+		    # 2. OR just checkbox2 is checked
+		    {
+		    	"parents" : [["checkbox1", ["dropdown", "yes"]], ["checkbox2"]],
+		    	"children" : ["textarea"]
+		    },
+		    
+		    # Date field and textarea will be shown if dropdown choice of "Yes" is selected
+		    {
+		    	"parents" : [[["dropdown", "yes"]]],
+		    	"children" : ["date", "textarea"]
+		    }
+	    ];
 	"""
+	
+	data = []
+	final = []
+	progenyRelations = defaultdict(list)
 	
 	if isinstance(form, str) or isinstance(form, unicode):
 		form = DataForm.objects.get(slug=form)
 		
-		
-	# FIXME select_related
 	bindings = Binding.objects.filter(data_form=form)
 	
-	data = []
-		
-#	[
-#    // Single checkbox
-#    {
-#    	"parents" : [["personal-information__checkbox"]],
-#    	"children" : ["personal-information__dropdown"]
-#    },
-#    // Single dropdown with choice of "Yes"
-#    {
-#    	"parents" : [[["personal-information__dropdown", "yes"]]],
-#    	"children" : ["personal-information__date"]
-#    },
-#    // Dropdown with choice of "Yes" OR Checkbox checked
-#    {
-#    	"parents" : [[["personal-information__dropdown", "yes"]], ["personal-information__checkbox"]],
-#    	"children" : ["personal-information__checkbox"]
-#    }
-#    ];
-	
-	progenyRelations = defaultdict(list)
 	for binding in bindings:
-		
 		progeny = binding.children.all()
-		parent_fields = binding.parent_fields.all()
-		parent_choices = binding.parent_choices.all()
-		
 		children_slugs = [_field_for_form(name=child.slug, form=form.slug) for child in progeny]
+		
+		parent_fields = binding.parent_fields.all()
 		parent_slugs = [_field_for_form(name=parent.slug, form=form.slug) for parent in parent_fields]
 		
+		# This used to be done using: binding.parent_choices.all(), but was generating too many
+		# additional queries in the for-loop because ManyToMany fields don't support select_related().
+		# Just traverse the relations manually, so we can join all the tables in one query:
+		parent_choices = FieldChoice.objects.select_related('field', 'choice').filter(parentfieldchoice__binding=binding)
 		for parent in parent_choices:
 			parent_slugs.append([_field_for_form(name=parent.field.slug, form=form.slug), parent.choice.value])
 			
 		progenyRelations[tuple(children_slugs)] += [parent_slugs]
 		
 	# Transform progenyRelations
-	final = []
 	for relation in progenyRelations:
 		final.append({
 			"parents" : progenyRelations[relation],
