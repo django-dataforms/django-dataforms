@@ -59,7 +59,7 @@ function setBindings() {
 function smartGetElement(name) {
 	if (typeof name == "object") {
 		// We're on a list (parent with choice)
-		bindingParent = $("input[name='"+name[0]+"'], select[name='"+name[0]+"']");
+		bindingParent = $("input[name='"+name[0]+"'], select[name='"+name[0]+"'], textarea[name='"+name[0]+"']");
 	} else {
 		// We're on a string (direct parent)
 		bindingParent = $("#id_"+name);
