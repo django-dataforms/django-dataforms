@@ -166,8 +166,16 @@ class BaseDataForm(forms.BaseForm):
 						# Don't modify what's in the DB if nothing was submitted
 						continue
 				else:
-					# Leave this conditional check here. It makes single checkboxes work. 
-					content = '1' if self.cleaned_data[key] is True else self.cleaned_data[key] if self.cleaned_data[key] else ''
+					# Beware the Django pony magic.
+					# These conditional checks are required for single checkboxes to work.
+					# The unicode() type cast is required to fix an Oracle character
+					# code mismatch when saving an integer.
+					content = (
+						'1' if self.cleaned_data[key] is True
+						else unicode(self.cleaned_data[key])
+						if self.cleaned_data[key] is not None and self.cleaned_data[key] is not False
+						else ''
+					)
 				
 				if was_created:
 					# Create new answer text
