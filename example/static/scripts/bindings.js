@@ -29,15 +29,27 @@ function setBindings() {
 					} else {
 						parents[i][j] = bindingParent;
 					}
-					
+                    
+                    // Only set bindings if this element has never had bindings set before
+					if (bindingParent.data("is_final")) {
+						continue;
+					}
+                    
+					// Else: create the set of bindings on this element
 					if (!bindingParent.data("bindings")) {
 						bindingParent.data("bindings", []);
 					}
-					
+                    
+                    // Set each group of compound or single bindings (elements which
+					// are AND'd together). Each group will be OR'd together to evaluate truth.					
 					bindingParent.data("bindings").push(bindings[k]);
 					
 					// Set event handler
 					bindingParent.change(doBinding);
+
+					// Set these elements to never be modified by bindings again
+					bindingParent.data("is_final", true);
+                    
 				}
 			}
 			
@@ -57,19 +69,21 @@ function setBindings() {
 }
 
 function smartGetElement(name) {
+    var bindingElement;
+    
 	if (typeof name == "object") {
 		// We're on a list (parent with choice)
-		bindingParent = $("input[name='"+name[0]+"'], select[name='"+name[0]+"'], textarea[name='"+name[0]+"']");
+		bindingElement = $("input[name='"+name[0]+"'], select[name='"+name[0]+"'], textarea[name='"+name[0]+"']");
 	} else {
 		// We're on a string (direct parent)
-		bindingParent = $("#id_"+name);
-		if (!bindingParent.length) {
+		bindingElement = $("#id_"+name);
+		if (!bindingElement.length) {
 			// If we didn't find an element #id_ directly, look for a label with for=id_name
-			bindingParent = $("label[for*='id_"+name+"']");
+			bindingElement = $("label[for*='id_"+name+"']");
 		}
 	}
 	
-	return bindingParent;
+	return bindingElement;
 }
 
 function doBinding() {
