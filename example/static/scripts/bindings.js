@@ -29,13 +29,12 @@ function setBindings() {
 					} else {
 						parents[i][j] = bindingParent;
 					}
-                    
-                    // Only set bindings if this element has never had bindings set before
-					if (bindingParent.data("is_final")) {
-						continue;
-					}
-                    
-					// Else: create the set of bindings on this element
+					
+					// Create the set of bindings on this element
+					// FIXME: If the exact same binding has already been set before,
+					// it will be set again here. Potential performance hit if
+					// setBindings() is called too many times. 
+					// 
 					if (!bindingParent.data("bindings")) {
 						bindingParent.data("bindings", []);
 					}
@@ -43,13 +42,9 @@ function setBindings() {
                     // Set each group of compound or single bindings (elements which
 					// are AND'd together). Each group will be OR'd together to evaluate truth.					
 					bindingParent.data("bindings").push(bindings[k]);
-					
+
 					// Set event handler
 					bindingParent.change(doBinding);
-
-					// Set these elements to never be modified by bindings again
-					bindingParent.data("is_final", true);
-                    
 				}
 			}
 			
@@ -82,7 +77,6 @@ function smartGetElement(name) {
 			bindingElement = $("label[for*='id_"+name+"']");
 		}
 	}
-	
 	return bindingElement;
 }
 
