@@ -116,6 +116,7 @@ class FieldChoice(models.Model):
 	Model bridge for Field and Choice
 	"""
 
+	# FIXME: Why are these nullable?
 	field = models.ForeignKey('Field', null=True)
 	choice = models.ForeignKey('Choice', null=True)
 	order = models.IntegerField(verbose_name=_('order'), null=True, blank=True)

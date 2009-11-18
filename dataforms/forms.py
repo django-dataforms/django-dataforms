@@ -551,7 +551,8 @@ def _create_form(form, title=None, description=None, readonly=False):
 		form_field_name = _field_for_form(name=row['slug'], form=slug)
 		
 		field_kwargs = {}
-		field_attrs = {}
+		field_map = FIELD_MAPPINGS[row['field_type']]
+		widget_attrs = field_map.get('widget_attrs', {})
 		
 		if row.has_key('label'):
 			field_kwargs['label'] = safe(row['label'])
@@ -571,11 +572,6 @@ def _create_form(form, title=None, description=None, readonly=False):
 		
 		# Update the field arguments with the "additional arguments" JSON in the DB
 		field_kwargs.update(additional_field_kwargs)
-		
-		field_map = FIELD_MAPPINGS[row['field_type']]
-
-		if readonly:
-			field_attrs['readonly'] = 'readonly'
 
 		# Get the choices for single and multiple choice fields 
 		if row['field_type'] in CHOICE_FIELDS:
@@ -600,16 +596,18 @@ def _create_form(form, title=None, description=None, readonly=False):
 				field_kwargs['initial'] = [element.strip() for element in field_kwargs['initial']]
 				
 			if readonly:
-				field_attrs['disabled'] = "disabled"
+				widget_attrs['disabled'] = "disabled"
 				
+		if readonly:
+			widget_attrs['readonly'] = 'readonly'
 		if readonly and row['field_type'] == "CheckboxInput":
-			field_attrs['disabled'] = "disabled"
+			widget_attrs['disabled'] = "disabled"
 			
 		# Instantiate the widget that this field will use
 		# TODO: Possibly create logic that passes submissionid to file upload widget to handle file
 		# paths without enforcing a redirect.
 		if field_map.has_key('widget'):
-			field_kwargs['widget'] = field_map['widget'](attrs=field_attrs, **field_map['widget_kwargs'])
+			field_kwargs['widget'] = field_map['widget'](attrs=widget_attrs, **field_map['widget_kwargs'])
 		
 		# Add this field, including any widgets and additional arguments
 		# (initial, label, required, help_text, etc)
