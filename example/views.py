@@ -28,6 +28,6 @@ def form_collection(request):
 	if request.method == "POST":
 		if collection.is_valid():
 			collection.save()
-			return HttpResponseRedirect("/") 
+			return HttpResponseRedirect("/collection/") 
 
 	return render_to_response('collection.html', { 'forms':collection }, RequestContext(request))

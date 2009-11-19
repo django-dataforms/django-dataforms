@@ -389,8 +389,8 @@ def create_collection(request, collection, submission, readonly=False):
 	for form in forms:
 		# Hmm...is this evil?
 		section = collection_bridge.get(data_form=form).section.slug
-		
-		form_list.append(create_form(request, form=form, submission=submission, section=section, readonly=readonly))
+		temp_form = create_form(request, form=form, submission=submission, section=section, readonly=readonly)
+		form_list.append(temp_form)
 	
 	# Pass our collection info and our form list to the dictionary
 	collection = BaseCollection(
@@ -450,6 +450,7 @@ def create_form(request, form, submission, title=None, description=None, section
 		# the resulting POST data will (in normal cases) originate from database defaults already.
 		
 		# This creates a bound form object.
+		print request.FILES
 		form = FormClass(data=request.POST, files=request.FILES)
 	else:
 		# We populate the initial data of the form from the database answers. Any questions we

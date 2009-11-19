@@ -6,7 +6,7 @@
 			<p>These forms have been dynamically created from database definitions.<p>
 			<strong>See the <a href="{% url index %}">single form demo</a>.</strong>
 			
-			<form action="." method="post">
+			<form action="." method="post" accept-charset="utf-8" enctype="multipart/form-data">
 			    {% for form in forms %}
 			    	<h2>{{ form.meta.title }}</h2>
 			    	<h2>{{ form.meta.description }}</h2>
