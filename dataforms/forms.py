@@ -299,7 +299,8 @@ class BaseCollection(object):
 def _remove_extraneous_fields(form):
 	"""
 	Delete extraneous fields that should not be included in form processing.
-	This includes hidden bindings fields and any note fields.
+	This includes hidden bindings fields, note fields, blank file upload
+	fields, and fields that were not included in the form POST.
 	"""
 	
 	keys = []
@@ -322,10 +323,10 @@ def _remove_extraneous_fields(form):
 		if form.data.has_key(key) and form.fields.has_key(key) and not form.data[key].strip():
 			del form.fields[key]
 			
-	# Fields that weren't included in the form POST
+	# Fields that weren't included in the form POST (ignoring upload fields)
 	to_delete = []
 	for key in form.fields:
-		if not form.data.has_key(key):
+		if not form.data.has_key(key) and key not in upload_keys:
 			to_delete.append(key)
 	for key in to_delete:
 		del form.fields[key]
