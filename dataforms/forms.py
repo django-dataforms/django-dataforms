@@ -127,14 +127,13 @@ class BaseDataForm(forms.BaseForm):
 				# STORAGE MODEL: AnswerNumber
 				# Pseudo-foreign key storage
 				
-				assert len(self.cleaned_data[key]) == 1
 				
 				# Delete all previous numbers
 				# See note below about this deletion
 				for answer_num in AnswerNumber.objects.filter(answer=answer):
 					answer_num.delete()
 				
-				answer.answernumber_set.create(num=self.cleaned_data[key][0])
+				answer.answernumber_set.create(num=self.cleaned_data[key].id)
 				
 			elif field.field_type in MULTI_NUMBER_FIELDS:
 				# STORAGE MODEL: AnswerNumber
