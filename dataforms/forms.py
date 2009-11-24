@@ -127,7 +127,6 @@ class BaseDataForm(forms.BaseForm):
 				# STORAGE MODEL: AnswerNumber
 				# Pseudo-foreign key storage
 				
-				
 				# Delete all previous numbers
 				# See note below about this deletion
 				for answer_num in AnswerNumber.objects.filter(answer=answer):
@@ -449,7 +448,6 @@ def create_form(request, form, submission, title=None, description=None, section
 		# the resulting POST data will (in normal cases) originate from database defaults already.
 		
 		# This creates a bound form object.
-		print request.FILES
 		form = FormClass(data=request.POST, files=request.FILES)
 	else:
 		# We populate the initial data of the form from the database answers. Any questions we
