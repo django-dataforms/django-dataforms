@@ -40,5 +40,5 @@ def upload(request):
 	Handle files uploaded via AjaxUpload
 	"""
 	
-	path = handle_upload(request.FILES, request.FILES.keys()[0])
+	path = handle_upload(files=request.FILES, field_key=request.FILES.keys()[0], folder="1")
 	return HttpResponse(os.path.join(settings.MEDIA_URL, path))

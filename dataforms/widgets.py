@@ -59,8 +59,13 @@ class AjaxSingleFileWidget(forms.TextInput):
 					var button = $('#button_%(name)s');
 					var interval;
 					
+					var upload_url = '/upload/';
+					if (typeof(get_upload_url) != "undefined") {
+						upload_url = get_upload_url();
+					}
+					
 					new AjaxUpload(button, {
-						action: '/upload/',
+						action: upload_url,
 						name: button.attr("id"),
 						onSubmit: function(file, ext){
 							button.text('Uploading');

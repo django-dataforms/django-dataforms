@@ -166,7 +166,7 @@ class BaseDataForm(forms.BaseForm):
 							# Remove the MEDIA_URL from this path, to make it easier
 							# to relocate the uploads folder if the media dir changes
 							if settings.MEDIA_URL in content:
-								content = content.replace(settings.MEDIA_URL+"/", "", 1)
+								content = content.replace(settings.MEDIA_URL, "", 1)
 						else:
 							continue
 				else:
