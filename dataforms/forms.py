@@ -13,6 +13,7 @@ except ImportError: validation = None
 from file_handler import handle_upload
 from collections import defaultdict
 from django import forms
+from django.conf import settings
 from django.forms.forms import BoundField
 from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
@@ -80,13 +81,8 @@ class BaseDataForm(forms.BaseForm):
 		# which will determine if an error should be thrown if the submission object already
 		# exists, or if we should trust the data and overwrite the previous submission.
 
-		# FIXME: This is probably ridiculously inefficient and may generate a ton of SQL.
+		# FIXME: This is probably ridiculously inefficient and may generate a ton of SQL queries.
 		# Do some profiling and see if there are ways to batch some of the SQL queries together.
-		#
-		# Specifically:
-		#  * All the get_or_create() functions could become creates if we delete all answers
-		#	that we are about to update.
-		#  * Is there any way to batch INSERTs in Django's ORM?
 		
 		if not hasattr(self, "cleaned_data"):
 			raise LookupError("The is_valid() method must be called before saving a form")
@@ -158,11 +154,21 @@ class BaseDataForm(forms.BaseForm):
 				if field.field_type in UPLOAD_FIELDS:
 					# We assume that validation of required-ness has already been handled,
 					# so only handle the file upload if a file was selected.
+					
 					if key in self.files:
 						content = handle_upload(self.files, key, self.submission.id)
 					else:
-						# Don't modify what's in the DB if nothing was submitted
-						continue
+						content = self.cleaned_data[key]
+						
+						# Don't modify what's in the DB if nothing was submitted,
+						# otherwise, expect an upload path and save this
+						if content:
+							# Remove the MEDIA_URL from this path, to make it easier
+							# to relocate the uploads folder if the media dir changes
+							if settings.MEDIA_URL in content:
+								content = content.replace(settings.MEDIA_URL+"/", "", 1)
+						else:
+							continue
 				else:
 					# Beware the Django pony magic.
 					# These conditional checks are required for single checkboxes to work.
@@ -187,6 +193,7 @@ class BaseDataForm(forms.BaseForm):
 						# the answer exists, but we might as well fix it and not error.
 						answer_text = answer.answertext_set.create(text=content)
 					
+					# Only update update and save if the actual content has changed.
 					if answer_text.text != content:
 						answer_text.text = content
 						answer_text.save() 
@@ -256,7 +263,7 @@ class BaseCollection(object):
 				fake_index +=1
 			if fake_index == arg:
 				return self.forms[i]
-				
+	
 	def __getslice__(self, start, end):
 		"""
 		Make a new collection with the given subset of forms
@@ -645,7 +652,8 @@ def get_answers(submission, for_form=False, field=None):
 		use on a form, ie. if every field slug should be prepended with
 		the form's slug. This can be annoying when just wanting to inspect
 		answers from a submission, so it is set to False by default, but	needs
-		to be True when used the keys will be used as form element names. 
+		to be True when used the keys will be used as form element names.
+	:param field: Only get the answer for a specific field. Also accepts a list of field_slugs.
 	:return: a dictionary of answers
 	"""
 
@@ -654,12 +662,26 @@ def get_answers(submission, for_form=False, field=None):
 	# Slightly evil, do type checking to see if submission is a Submission object or string
 	if isinstance(submission, str) or isinstance(submission, unicode):
 		submission = Submission.objects.get(slug=submission).id
-	if isinstance(submission, Submission):
+	elif isinstance(submission, Submission):
 		submission = submission.id
-	if isinstance(field, Field):
-		field = field.slug
+		
+	# Think in terms of always handling requests for multiple field_slugs, to keep DRY
+	field_slugs = field
+	if field_slugs is not None and not isinstance(field_slugs, list):
+		field_slugs = [field_slugs]
+		field = [field]
 
-	answers = Answer.objects.get_answer_data(submission=submission, field_slug=field)
+	# Rid ourselves of ORM objects and just use field slug strings
+	if field_slugs is not None:
+		field_slugs = [(field.slug if isinstance(field, Field) else field) for field in field]
+
+		# Transform prepended slugs: personal-information__some-field --> some-field
+		field_slugs = [
+			(_field_for_db(name=slug) if FIELD_DELIMITER in slug else slug)
+			for slug in field_slugs
+		]
+
+	answers = Answer.objects.get_answer_data(submission=submission, field_slugs=field_slugs)
 
 	# For every answer, do some magic and get it into our data dictionary
 	for answer in answers:
@@ -675,9 +697,10 @@ def get_answers(submission, for_form=False, field=None):
 			continue
 
 		if answer['field_type'] in MULTI_CHOICE_FIELDS + MULTI_NUMBER_FIELDS:
+			# MULTI_CHOICE_FIELDS & MULTI_NUMBER_FIELDS
 			data[answer_key] = answer['content']
 		else:
-			# SINGLE_CHOICE_FIELDS + SINGLE_NUMBER_FIELDS + text fields
+			# SINGLE_CHOICE_FIELDS & SINGLE_NUMBER_FIELDS & text fields
 			data[answer_key] = answer['content'][0]
 
 	return dict(data)

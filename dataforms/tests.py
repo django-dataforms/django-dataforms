@@ -166,13 +166,24 @@ class FormsTestCase(CustomTestCase):
 		# (ie. argument to get_answers of for_form=True) 
 		self.assertTrue(answers)
 		
-	def testGetSingleAnswers(self):
+	def testGetSingleFieldAnswers(self):
 		submission = Submission.objects.get(slug="testSubmission")
-		# Test get_answers on single field
+
+		# Test get_answers when given a single field string
 		lang_answer = forms.get_answers(submission=submission, for_form=False, field="other-languages")
 		bio_answer = forms.get_answers(submission=submission, for_form=False, field="biography")
+
 		self.assertEqual(lang_answer['other-languages'], u'\u2600')
 		self.assertEqual(bio_answer['biography'], u'Blah blah blah\u2600')
+		
+	def testGetMultipleFieldAnswers(self):
+		submission = Submission.objects.get(slug="testSubmission")
+		
+		# Test get_answers when given multiple field slugs
+		answers = forms.get_answers(submission=submission, for_form=False, field=["other-languages","biography"])
+
+		self.assertEqual(answers['other-languages'], u'\u2600')
+		self.assertEqual(answers['biography'], u'Blah blah blah\u2600')
 		
 	def testValidation(self):
 		self.assertEquals(True, True)

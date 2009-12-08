@@ -8,6 +8,7 @@ admin.autodiscover()
 urlpatterns = patterns('views',
 	url(r'^$', 'index', name="index"),
 	url(r'^collection/$', 'form_collection', name="form_collection"),
+	url(r'^upload/$', 'upload', name="upload"),
 	(r'^admin/(.*)', admin.site.root),
 )
 

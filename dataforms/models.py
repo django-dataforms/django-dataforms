@@ -187,7 +187,7 @@ class AnswerNumber(models.Model):
 
 class AnswerManager(models.Manager):
 	"""(Protocol manager description)"""
-	def get_answer_data(self, submission, field_slug=None):
+	def get_answer_data(self, submission, field_slugs=None):
 
 		data = {}
 		cursor = connection.cursor()
@@ -204,11 +204,14 @@ class AnswerManager(models.Manager):
 			WHERE a.submission_id = %s
 		"""]
 		args = [submission]
+				
+		if field_slugs is not None:
+			# Compose a conditional to match where any of the slug names exists.
+			# Example: " AND (f.slug = 'slug1' OR f.slug = 'slug2')
+			query.append(" AND (%s)" % " OR ".join(["f.slug = %s" for slug in field_slugs]))
+			args += field_slugs
 		
-		if field_slug is not None:
-			query.append(" AND f.slug = %s")
-			args.append(field_slug)
-		
+		# Engage!
 		cursor.execute("".join(query), args)
 		
 		row = cursor.fetchone()
@@ -228,7 +231,7 @@ class AnswerManager(models.Manager):
 				content_items[0] if content_items[0]
 				# Number
 				else content_items[1] if content_items[1]
-				# Text (forced to evaluate for Oracle LOB objects via unicode())
+				# Text (forced to evaluate via unicode() for Oracle LOB objects)
 				else unicode(content_items[2]) if content_items[2] is not None
 				else None
 			)

@@ -10,18 +10,28 @@
 		<link rel="stylesheet" type="text/css" href="/media/css/base.css" />
 		<link rel="stylesheet" type="text/css" href="/media/css/forms.css" />
 		<link rel="stylesheet" type="text/css" href="/media/css/widgets.css"/>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="/static/scripts/ajaxupload.js"></script>
+		<style type="text/css">
+			.uploadFile {
+				display: inline;
+				padding: 5px;
+				background: #EEE;
+				border: 1px solid #CCC;
+			}		
+			.uploadFile.hover {
+				background: #EEE;
+			}
+		</style>
 	</head>
 	
 	<body id="index">
-		
-	{% block content %}
-		
-	{% endblock %}
-
-	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
-	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js"></script>
-	<script type="text/javascript" src="/static/scripts/json2.js"></script>
-	<script type="text/javascript" src="/static/scripts/bindings.js"></script>
-	<script type="text/javascript" src="/static/scripts/datepicker.js"></script>
+		{% block content %}
+		{% endblock %}
+	
+		<script type="text/javascript" src="/static/scripts/json2.js"></script>
+		<script type="text/javascript" src="/static/scripts/bindings.js"></script>
+		<script type="text/javascript" src="/static/scripts/datepicker.js"></script>
 	</body>
 </html>
