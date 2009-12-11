@@ -45,6 +45,9 @@ function setBindings() {
 
 					// Set event handler
 					bindingParent.change(doBinding);
+					if (bindingParent.attr("type") == 'text') {
+						bindingParent.keyup(doBinding);
+					}
 				}
 			}
 			
@@ -116,6 +119,7 @@ function hasSingleTruth(element) {
 	if (
 	(tagName == "checkbox" && (element.length == 1 && element.attr("checked") || element.filter("input[value='"+choice+"']").attr("checked")))
 	|| ((tagName == "select-one" || tagName == "select-multiple") && element.val() == choice)
+	|| ((tagName == "text") && element.val() != '')
 	|| (tagName == "radio" && element.filter(":checked").val() == choice)) {
 		// FIXME add && choice in element.val()
 		return true;
