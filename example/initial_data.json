@@ -251,7 +251,7 @@
     "model": "dataforms.field", 
     "fields": {
       "field_type": "RadioSelect", 
-      "required": false, 
+      "required": true, 
       "initial": "", 
       "label": "Profession:", 
       "visible": true, 

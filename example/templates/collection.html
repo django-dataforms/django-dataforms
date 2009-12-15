@@ -14,17 +14,24 @@
 					{% if form.non_field_errors %}
 						{{ form.non_field_errors.as_ul }}
 					{% endif %}
-				    {% for field in form %}
-					    {% if not field.is_hidden %}
-					        <div class="form-row">
-					            {{ field.errors }}
-					            {{ field.label_tag }}
-					            {{ field }}
-					        </div>
-					    {% else %}
-				            {{ field }}
-					    {% endif %}
-				    {% endfor %}
+					{% for field in form %}
+						{% if not field.is_hidden %}
+							<div class="form-row{% if field.field.required %} required{% endif %}">
+								{{ field.errors }}
+								{% if field.field.is_checkbox %}
+									{{ field }} {{ field.label_tag }}
+								{% else %}
+									{{ field.label_tag }} {{ field }}
+								{% endif %}
+												
+								{% if field.help_text %}
+									<p>{{ field.help_text }}</p>
+								{% endif %}
+							</div>
+						{% else %}
+							{{ field }}
+						{% endif %}
+					{% endfor %}
 			    {% endfor %}
 			    
 			    <input type="submit" value="Save" />

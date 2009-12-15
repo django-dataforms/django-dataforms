@@ -13,7 +13,7 @@
 			<form action="." method="post" accept-charset="utf-8" enctype="multipart/form-data">
 				{% for field in form %}
 					{% if not field.is_hidden %}
-						<div class="form-row">
+						<div class="form-row{% if field.field.required %} required{% endif %}">
 							{{ field.errors }}
 							{% if field.field.is_checkbox %}
 								{{ field }} {{ field.label_tag }}
