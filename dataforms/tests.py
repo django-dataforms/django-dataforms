@@ -42,6 +42,25 @@ TEST_FORM_POST_DATA = {
 	u'personal-information__biography' : [u'Not much to say\u2600'],
 }
 
+TEST_FORM_POST_DATA2 = {
+	u'personal-information__profession': [u'conquistador'],
+	u'personal-information__has-flag': [u'yes'],
+	#u'personal-information__languages': [u'python', u'other'], # Won't exist in POST if both unchecked
+	u'personal-information__other-languages': [u'\u25c6lisp'],
+	#u'personal-information__single-binding-note': [u''], 		# Won't exist in POST
+	#u'personal-information__compound-binding-note': [u''],		# Won't exist in POST
+	#u'personal-information__other-field-types-note': [u''],	# Won't exist in POST
+	u'personal-information__favorite-language': [u'python'],
+	#u'personal-information__import-antigravity': [u'1'],		# Single checkbox checked = u'1'. Unchecked will not exist.
+	u'personal-information__also-heard-of': [u'import-this'],
+	u'personal-information__birthday': [u'2012-10-09'],
+	u'personal-information__email': [u'test2@example.com'],
+	u'personal-information__password': [u'\xbfn3w2Passw0rd!'],
+	#u'personal-information__profile-photo': [u''],				# NotImplemented
+	u'personal-information__select-multiple': [u'im-all-alone'],
+	u'personal-information__biography' : [u'\u2600All about me'],
+}
+
 TEST_COLLECTION_POST_DATA = {
 	u'form-field-dupes__profession': ['conquistador'],
 	u'form-field-dupes__has-flag': [u'yes'],
@@ -72,7 +91,6 @@ class FormsTestCase(CustomTestCase):
 		
 	def testSaveDataForm(self):
 		request = rf.post('/form/', TEST_FORM_POST_DATA)
-		
 		form = forms.create_form(request, form="personal-information", submission="myForm")
 		
 		# Make sure there's no submission object yet
@@ -107,8 +125,22 @@ class FormsTestCase(CustomTestCase):
 			except UnicodeEncodeError:
 				self.fail("UnicodeEncodeError: 'ascii' codec can't encode character... Make sure you are using unicode() in every model's __unicode__() function, NOT str()")
 		
-		# TODO: test saving again with different POST data --
-		# to verify that edits of submissions work
+		# Test re-submission of form with different data to make sure that edits work.
+		# Tests for regression of data integrity bug where a checked checkbox
+		# could never be un-checked because it would not exist in the form POST.
+		request = rf.post('/form/', TEST_FORM_POST_DATA2)
+		form = forms.create_form(request, form="personal-information", submission="myForm")
+		
+		# Validate the form to populate cleaned_data for the save function
+		form.is_valid()
+		if form.errors:
+			self.fail(form.errors)
+		
+		# Try saving the form
+		form.save()
+		
+		# Verify the data was input correctly
+		self.assertValidSave(data=TEST_FORM_POST_DATA2, submission="myForm")
 		
 	def testCreateUnboundCollection(self):
 		request = rf.get('/')
@@ -134,7 +166,6 @@ class FormsTestCase(CustomTestCase):
 		# Test creation of another bound collection tied to a existing Submission
 		request = rf.get('/')
 		collection = forms.create_collection(request, collection="test-collection", submission="myCollection")
-		
 		
 	def testCreateFormClassTitle(self):
 		# Create some test name cases

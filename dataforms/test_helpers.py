@@ -45,18 +45,22 @@ class RequestFactory(Client):
 		return WSGIRequest(environ)
 
 class CustomTestCase(TestCase):
-	def assertDictionaryEqual(self, dict1, dict2):
+	def assertDictionaryEqual(self, from_post, from_db):
 		"""
 		Just a nicer way to see out dictionary differences
 		"""
 		
 		messages = []
 		
-		for key in dict1:
-			if not dict2.has_key(key):
-				messages.append("Not present in second dictionary: %s" % key)
-			elif dict1[key] != dict2[key]:
-				messages.append("%s not equal: %s != %s" % (key, repr(dict1[key]), repr(dict2[key])))
+		for key in from_post:
+			if not from_db.has_key(key):
+				messages.append("In form POST, but not present in database: %s" % key)
+			elif from_post[key] != from_db[key]:
+				messages.append("POST %s not equal DB: %s != %s" % (key, repr(from_post[key]), repr(from_db[key])))
+				
+		for key in from_db:
+			if not from_post.has_key(key) and from_db[key]:
+				messages.append("Not present in form post: %s, but had DB data: %s" % (key, repr(from_db[key])))
 				
 		return self.fail("\n" + "\n".join(messages)) if messages else None
 	
@@ -77,9 +81,9 @@ class CustomTestCase(TestCase):
 		
 		# ------ 1 ------
 		# This fixes the fact that a POST request will not have a checkbox key,
-		# but the DB _will_ contain a blank string for a checkbox false value
-		# and a 1
-		
+		# but the DB _may_ contain a blank string for a checkbox False value
+		# and _will_ contain a '1' for a checkbox True value.
+				
 		# Get the boolean field answers
 		answers = Answer.objects.select_related('field').filter(
 			submission=submission,
@@ -92,18 +96,19 @@ class CustomTestCase(TestCase):
 		for form_name, field_name in boolean_field_names:
 			key = _field_for_form(name=field_name, form=form_name)
 			if data.has_key(key) and not data[key]:
-				# Checkbox was not checked, delete element containing blank string in DB returned answers
+				# Checkbox was not checked, delete element containing *blank string* in DB returned answers
+				# to make these "equal" for testing
 				del answers_from_db[key]
 			elif data.has_key(key) and data[key]:
 				# Checkbox was checked, so DB has "1" and post has "[1]" ... make these "equal" for testing
 				answers_from_db[key] = [answers_from_db[key]]
-			
+		
 		# ------ 2 ------
 		# This fixes the fact that each request.POST element will be a list
 		# and that won't be true from get_answers
 		
 		# Get all Answers that won't be lists
-		# FIXME: excluding upload fields here. Once testing is implemented, remove this.
+		# FIXME: excluding upload fields here. Once testing is implemented, remove +UPLOAD_FIELDS
 		answers = Answer.objects.select_related('field').filter(
 			submission=submission
 		).exclude(Q(field__field_type__in=MULTI_CHOICE_FIELDS+BOOLEAN_FIELDS+UPLOAD_FIELDS))
@@ -120,8 +125,5 @@ class CustomTestCase(TestCase):
 		
 		# ------ 3 ------
 		# Actually compare the submitted data to the DB data
-		self.assertDictionaryEqual(data, answers_from_db)
-		
-			
-		
+		self.assertDictionaryEqual(from_post=data, from_db=answers_from_db)
 		

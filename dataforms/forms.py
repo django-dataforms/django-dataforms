@@ -1,5 +1,5 @@
 """
-DataForms System
+Dataforms System
 ================
 
 See the GettingStarted guide at:
@@ -58,12 +58,21 @@ class BaseDataForm(forms.BaseForm):
 		for name in self.bound_fields:
 			yield self.bound_fields[name]
 	
-	def is_valid(self, check_required=True):
+	def is_valid(self, check_required=True, process_full_form=True):
 		"""
-		:arg check_required: Whether or not to check required fields. Default True.
+		:arg check_required: Whether or not to validate required fields. Default True.
+		:arg process_full_form: If True, all fields in the form POST will be handled normally
+			(i.e., unchecked checkboxes will not appear in the form POST and so any
+			previously checked answer will be deleted). If False, only fields specified
+			in the FORM post will be handled (allowing changes to a subset of field answers
+			in the database, if desired, but causes checkboxes to not become unchecked unless
+			the key is manually added to the form POST data with a blank string value).
+
+			This function *will* affect what the save() function receives to process and
+			MUST be called before save() is called.
 		"""
 		
-		_remove_extraneous_fields(self)
+		_remove_extraneous_fields(self, process_full_form=process_full_form)
 		
 		if not check_required:
 			for field in self:
@@ -291,21 +300,23 @@ class BaseCollection(object):
 		for form in self:
 			form.save()
 		
-	def is_valid(self, check_required=True):
+	def is_valid(self, check_required=True, process_full_form=True):
 		"""
 		Validate all contained forms
 		"""
 		
 		for form in self:
-			if not form.is_valid(check_required=check_required):
+			if not form.is_valid(check_required=check_required, process_full_form=process_full_form):
 				return False
 		return True
 
-def _remove_extraneous_fields(form):
+def _remove_extraneous_fields(form, process_full_form):
 	"""
 	Delete extraneous fields that should not be included in form processing.
 	This includes hidden bindings fields, note fields, blank file upload
 	fields, and fields that were not included in the form POST.
+	
+	:arg process_full_form: see note on BaseDataForm is_valid()
 	"""
 	
 	keys = []
@@ -321,20 +332,21 @@ def _remove_extraneous_fields(form):
 	for key in keys:
 		if form.fields.has_key(key):
 			del form.fields[key]
-			
-	# Blank file upload fields
-	upload_keys = [_field_for_form(name=field.slug, form=form.meta['slug']) for field in fields if field.field_type in UPLOAD_FIELDS]
-	for key in upload_keys:
-		if form.data.has_key(key) and form.fields.has_key(key) and not form.data[key].strip():
+	
+	if not process_full_form:
+		# Blank file upload fields
+		upload_keys = [_field_for_form(name=field.slug, form=form.meta['slug']) for field in fields if field.field_type in UPLOAD_FIELDS]
+		for key in upload_keys:
+			if form.data.has_key(key) and form.fields.has_key(key) and not form.data[key].strip():
+				del form.fields[key]
+				
+		# Fields that weren't included in the form POST (ignoring upload fields)
+		to_delete = []
+		for key in form.fields:
+			if not form.data.has_key(key) and key not in upload_keys:
+				to_delete.append(key)
+		for key in to_delete:
 			del form.fields[key]
-			
-	# Fields that weren't included in the form POST (ignoring upload fields)
-	to_delete = []
-	for key in form.fields:
-		if not form.data.has_key(key) and key not in upload_keys:
-			to_delete.append(key)
-	for key in to_delete:
-		del form.fields[key]
 
 def create_collection(request, collection, submission, readonly=False):
 	"""
