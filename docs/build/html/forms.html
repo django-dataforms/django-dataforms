@@ -1,0 +1,320 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Dataforms API &mdash; django-dataforms v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="django-dataforms v0.1 documentation" href="index.html" />
+    <link rel="prev" title="django-dataforms documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="django-dataforms documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">django-dataforms v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="dataforms-api">
+<span id="module-dataforms.forms"></span><h1>Dataforms API<a class="headerlink" href="#dataforms-api" title="Permalink to this headline">¶</a></h1>
+<p>See the <a class="reference external" href="http://code.google.com/p/django-dataforms/wiki/GettingStarted">Getting Started guide</a> to jump in.</p>
+<dl class="class">
+<dt id="dataforms.forms.BaseCollection">
+<em class="property">class </em><tt class="descclassname">dataforms.forms.</tt><tt class="descname">BaseCollection</tt><big>(</big><em>title</em>, <em>description</em>, <em>slug</em>, <em>forms</em>, <em>sections</em><big>)</big><a class="headerlink" href="#dataforms.forms.BaseCollection" title="Permalink to this definition">¶</a></dt>
+<dd><p>You shouldn&#8217;t need to instantiate this object directly, use create_collection.</p>
+<p>When you have a collection, here are some tips:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># You can see what&#39;s next and what came before</span>
+<span class="n">collection</span><span class="o">.</span><span class="n">current_section</span>
+<span class="n">collection</span><span class="o">.</span><span class="n">next_section</span>
+<span class="n">collection</span><span class="o">.</span><span class="n">prev_section</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="dataforms.forms.BaseCollection.is_valid">
+<tt class="descname">is_valid</tt><big>(</big><em>check_required=True</em>, <em>process_full_form=True</em><big>)</big><a class="headerlink" href="#dataforms.forms.BaseCollection.is_valid" title="Permalink to this definition">¶</a></dt>
+<dd>Validate all contained forms</dd></dl>
+
+<dl class="method">
+<dt id="dataforms.forms.BaseCollection.save">
+<tt class="descname">save</tt><big>(</big><big>)</big><a class="headerlink" href="#dataforms.forms.BaseCollection.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save all contained forms</dd></dl>
+
+<dl class="method">
+<dt id="dataforms.forms.BaseCollection.set_section">
+<tt class="descname">set_section</tt><big>(</big><em>section=None</em><big>)</big><a class="headerlink" href="#dataforms.forms.BaseCollection.set_section" title="Permalink to this definition">¶</a></dt>
+<dd>Set the visible section whose forms will be returned
+when using array indexing.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.forms.BaseDataForm">
+<em class="property">class </em><tt class="descclassname">dataforms.forms.</tt><tt class="descname">BaseDataForm</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.forms.BaseDataForm" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="dataforms.forms.BaseDataForm.is_valid">
+<tt class="descname">is_valid</tt><big>(</big><em>check_required=True</em>, <em>process_full_form=True</em><big>)</big><a class="headerlink" href="#dataforms.forms.BaseDataForm.is_valid" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><em>check_required</em> &#8211; Whether or not to validate required fields. Default True.</li>
+<li><em>process_full_form</em> &#8211; <p>If True, all fields in the form POST will be handled normally
+(i.e., unchecked checkboxes will not appear in the form POST and so any
+previously checked answer will be deleted). If False, only fields specified
+in the FORM post will be handled (allowing changes to a subset of field answers
+in the database, if desired, but causes checkboxes to not become unchecked unless
+the key is manually added to the form POST data with a blank string value).</p>
+<p>This function <em>will</em> affect what the save() function receives to process and
+MUST be called before save() is called.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataforms.forms.BaseDataForm.save">
+<tt class="descname">save</tt><big>(</big><big>)</big><a class="headerlink" href="#dataforms.forms.BaseDataForm.save" title="Permalink to this definition">¶</a></dt>
+<dd>Saves the validated, cleaned form data. If a submission already exists,
+the new data will be merged over the old data.</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.forms.RequiredArgument">
+<em class="property">exception </em><tt class="descclassname">dataforms.forms.</tt><tt class="descname">RequiredArgument</tt><a class="headerlink" href="#dataforms.forms.RequiredArgument" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.forms.SectionDoesNotExist">
+<em class="property">exception </em><tt class="descclassname">dataforms.forms.</tt><tt class="descname">SectionDoesNotExist</tt><a class="headerlink" href="#dataforms.forms.SectionDoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="dataforms.forms.create_collection">
+<tt class="descclassname">dataforms.forms.</tt><tt class="descname">create_collection</tt><big>(</big><em>request</em>, <em>collection</em>, <em>submission</em>, <em>readonly=False</em><big>)</big><a class="headerlink" href="#dataforms.forms.create_collection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Based on a form collection slug, create a list of form objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><em>request</em> &#8211; the current page request object, so we can pull POST and other vars.</li>
+<li><em>collection</em> &#8211; a data form collection slug or object</li>
+<li><em>submission</em> &#8211; create-on-use submission slug or object; passed in to retrieve
+Answers from an existing Submission, or to be the slug for a new Submission.</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a BaseCollection object, populated with the correct data forms and data</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="dataforms.forms.create_form">
+<tt class="descclassname">dataforms.forms.</tt><tt class="descname">create_form</tt><big>(</big><em>request</em>, <em>form</em>, <em>submission</em>, <em>title=None</em>, <em>description=None</em>, <em>section=None</em>, <em>readonly=False</em><big>)</big><a class="headerlink" href="#dataforms.forms.create_form" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate and return a dynamic form object, optionally already populated from an
+already submitted form.</p>
+<p>Usage:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Get a dynamic form. If a Submission with slug &quot;myForm&quot; exists,</span>
+<span class="c"># this will return a bound form. Otherwise, it will be unbound.</span>
+<span class="n">create_form</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">form</span><span class="o">=</span><span class="s">&quot;personal-info&quot;</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="s">&quot;myForm&quot;</span><span class="p">)</span>
+
+<span class="c"># Create a bound form to a previous submission object</span>
+<span class="n">create_form</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">slug</span><span class="o">=</span><span class="s">&quot;personal-info&quot;</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">Submission</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><em>request</em> &#8211; the current page request object, so we can pull POST and other vars.</li>
+<li><em>form</em> &#8211; a data form slug or object</li>
+<li><em>submission</em> &#8211; create-on-use submission slug or object; passed in to retrieve
+Answers from an existing Submission, or to be the slug for a new Submission.</li>
+<li><em>title</em> &#8211; optional title; pulled from DB by default</li>
+<li><em>description</em> &#8211; optional description; pulled from DB by default</li>
+<li><em>section</em> &#8211; optional section; will be added as an attr to the form instance</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="dataforms.forms.create_form_class_title">
+<tt class="descclassname">dataforms.forms.</tt><tt class="descname">create_form_class_title</tt><big>(</big><em>slug</em><big>)</big><a class="headerlink" href="#dataforms.forms.create_form_class_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform &#8220;my-form-name&#8221; into &#8220;MyFormName&#8221;
+This is important because we need each form class to have a unique name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameter:</th><td class="field-body"><em>slug</em> &#8211; the form slug from the DB</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="dataforms.forms.get_answers">
+<tt class="descclassname">dataforms.forms.</tt><tt class="descname">get_answers</tt><big>(</big><em>submission</em>, <em>for_form=False</em>, <em>field=None</em><big>)</big><a class="headerlink" href="#dataforms.forms.get_answers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the answers for a submission.</p>
+<p>This function intentionally does not return the answers in the same
+form as request.POST data will have submitted them (ie, every element
+wrapped as a list). This is because this function is meant to provide
+data that can be instantly consumed by some <cite>FormClass(data=data)</cite>
+instantiation, as done by create_form.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><em>submission</em> &#8211; A Submission object or slug</li>
+<li><em>for_form</em> &#8211; whether or not these answers should be made unique for
+use on a form, ie. if every field slug should be prepended with
+the form&#8217;s slug. This can be annoying when just wanting to inspect
+answers from a submission, so it is set to False by default, but        needs
+to be True when used the keys will be used as form element names.</li>
+<li><em>field</em> &#8211; Only get the answer for a specific field. Also accepts a list of field_slugs.</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a dictionary of answers</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="dataforms.forms.get_bindings">
+<tt class="descclassname">dataforms.forms.</tt><tt class="descname">get_bindings</tt><big>(</big><em>form</em><big>)</big><a class="headerlink" href="#dataforms.forms.get_bindings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the bindings for specific submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of dictionaries, where each dictionary is a single binding
+that may be a simple child to parent binding, up to a compound binding
+that relates many parents to many children.</p>
+<p>Example return:</p>
+<div class="last highlight-python"><pre>    [
+        # Simple binding: a dropdown will show if a single checkbox is checked
+        {
+            "parents" : [["checkbox1"]],
+            "children" : ["dropdown"]
+        },
+        
+        # Compound binding: the textarea will be shown if either:
+        # 1. checkbox1 is checked AND the dropdown choice of "yes" is selected
+        # 2. OR just checkbox2 is checked
+        {
+            "parents" : [["checkbox1", ["dropdown", "yes"]], ["checkbox2"]],
+            "children" : ["textarea"]
+        },
+        
+        # Date field and textarea will be shown if dropdown choice of "Yes" is selected
+        {
+            "parents" : [[["dropdown", "yes"]]],
+            "children" : ["date", "textarea"]
+        }
+];</pre>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="index.html"
+                                  title="previous chapter">django-dataforms documentation</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/forms.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="django-dataforms documentation"
+             >previous</a> |</li>
+        <li><a href="index.html">django-dataforms v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009, http://code.google.com/p/django-dataforms/people/list.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+    </div>
+  </body>
+</html>

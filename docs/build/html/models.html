@@ -1,0 +1,670 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>django-dataforms Models &mdash; django-dataforms v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="django-dataforms v0.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li><a href="index.html">django-dataforms v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="django-dataforms-models">
+<span id="module-dataforms.models"></span><h1>django-dataforms Models<a class="headerlink" href="#django-dataforms-models" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="dataforms.models.Answer">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">Answer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.Answer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model that holds answers for each submission</p>
+<dl class="exception">
+<dt id="dataforms.models.Answer.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.Answer.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.Answer.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">Answer.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.Answer.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Answer.answerchoice_set">
+<tt class="descclassname">Answer.</tt><tt class="descname">answerchoice_set</tt><a class="headerlink" href="#dataforms.models.Answer.answerchoice_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Answer.answernumber_set">
+<tt class="descclassname">Answer.</tt><tt class="descname">answernumber_set</tt><a class="headerlink" href="#dataforms.models.Answer.answernumber_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Answer.answertext_set">
+<tt class="descclassname">Answer.</tt><tt class="descname">answertext_set</tt><a class="headerlink" href="#dataforms.models.Answer.answertext_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Answer.data_form">
+<tt class="descclassname">Answer.</tt><tt class="descname">data_form</tt><a class="headerlink" href="#dataforms.models.Answer.data_form" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Answer.field">
+<tt class="descclassname">Answer.</tt><tt class="descname">field</tt><a class="headerlink" href="#dataforms.models.Answer.field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Answer.submission">
+<tt class="descclassname">Answer.</tt><tt class="descname">submission</tt><a class="headerlink" href="#dataforms.models.Answer.submission" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.AnswerChoice">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">AnswerChoice</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.AnswerChoice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores the data for an answer that is a choice</p>
+<dl class="exception">
+<dt id="dataforms.models.AnswerChoice.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.AnswerChoice.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.AnswerChoice.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">AnswerChoice.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.AnswerChoice.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.AnswerChoice.answer">
+<tt class="descclassname">AnswerChoice.</tt><tt class="descname">answer</tt><a class="headerlink" href="#dataforms.models.AnswerChoice.answer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.AnswerChoice.choice">
+<tt class="descclassname">AnswerChoice.</tt><tt class="descname">choice</tt><a class="headerlink" href="#dataforms.models.AnswerChoice.choice" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.AnswerManager">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">AnswerManager</tt><a class="headerlink" href="#dataforms.models.AnswerManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>(Protocol manager description)</p>
+<dl class="method">
+<dt id="dataforms.models.AnswerManager.get_answer_data">
+<tt class="descname">get_answer_data</tt><big>(</big><em>submission</em>, <em>field_slugs=None</em><big>)</big><a class="headerlink" href="#dataforms.models.AnswerManager.get_answer_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.AnswerNumber">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">AnswerNumber</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.AnswerNumber" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores the data for an answer that text</p>
+<dl class="exception">
+<dt id="dataforms.models.AnswerNumber.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.AnswerNumber.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.AnswerNumber.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">AnswerNumber.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.AnswerNumber.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.AnswerNumber.answer">
+<tt class="descclassname">AnswerNumber.</tt><tt class="descname">answer</tt><a class="headerlink" href="#dataforms.models.AnswerNumber.answer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.AnswerText">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">AnswerText</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.AnswerText" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores the data for an answer that text</p>
+<dl class="exception">
+<dt id="dataforms.models.AnswerText.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.AnswerText.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.AnswerText.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">AnswerText.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.AnswerText.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.AnswerText.answer">
+<tt class="descclassname">AnswerText.</tt><tt class="descname">answer</tt><a class="headerlink" href="#dataforms.models.AnswerText.answer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.Binding">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">Binding</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.Binding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Binding(id, data_form_id)</p>
+<dl class="exception">
+<dt id="dataforms.models.Binding.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.Binding.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.Binding.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">Binding.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.Binding.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Binding.childfield_set">
+<tt class="descclassname">Binding.</tt><tt class="descname">childfield_set</tt><a class="headerlink" href="#dataforms.models.Binding.childfield_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Binding.children">
+<tt class="descclassname">Binding.</tt><tt class="descname">children</tt><a class="headerlink" href="#dataforms.models.Binding.children" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Binding.data_form">
+<tt class="descclassname">Binding.</tt><tt class="descname">data_form</tt><a class="headerlink" href="#dataforms.models.Binding.data_form" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Binding.parent_choices">
+<tt class="descclassname">Binding.</tt><tt class="descname">parent_choices</tt><a class="headerlink" href="#dataforms.models.Binding.parent_choices" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Binding.parent_fields">
+<tt class="descclassname">Binding.</tt><tt class="descname">parent_fields</tt><a class="headerlink" href="#dataforms.models.Binding.parent_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Binding.parentfield_set">
+<tt class="descclassname">Binding.</tt><tt class="descname">parentfield_set</tt><a class="headerlink" href="#dataforms.models.Binding.parentfield_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Binding.parentfieldchoice_set">
+<tt class="descclassname">Binding.</tt><tt class="descname">parentfieldchoice_set</tt><a class="headerlink" href="#dataforms.models.Binding.parentfieldchoice_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.ChildField">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">ChildField</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.ChildField" title="Permalink to this definition">¶</a></dt>
+<dd><p>ChildField(id, binding_id, field_id)</p>
+<dl class="exception">
+<dt id="dataforms.models.ChildField.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.ChildField.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.ChildField.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">ChildField.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.ChildField.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.ChildField.binding">
+<tt class="descclassname">ChildField.</tt><tt class="descname">binding</tt><a class="headerlink" href="#dataforms.models.ChildField.binding" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.ChildField.field">
+<tt class="descclassname">ChildField.</tt><tt class="descname">field</tt><a class="headerlink" href="#dataforms.models.ChildField.field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.Choice">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">Choice</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.Choice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model that holds choices for fields and their values</p>
+<dl class="exception">
+<dt id="dataforms.models.Choice.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.Choice.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.Choice.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">Choice.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.Choice.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Choice.answerchoice_set">
+<tt class="descclassname">Choice.</tt><tt class="descname">answerchoice_set</tt><a class="headerlink" href="#dataforms.models.Choice.answerchoice_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Choice.field_set">
+<tt class="descclassname">Choice.</tt><tt class="descname">field_set</tt><a class="headerlink" href="#dataforms.models.Choice.field_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Choice.fieldchoice_set">
+<tt class="descclassname">Choice.</tt><tt class="descname">fieldchoice_set</tt><a class="headerlink" href="#dataforms.models.Choice.fieldchoice_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.Collection">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">Collection</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.Collection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model that holds a collection of forms</p>
+<dl class="exception">
+<dt id="dataforms.models.Collection.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.Collection.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.Collection.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">Collection.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.Collection.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Collection.collectiondataform_set">
+<tt class="descclassname">Collection.</tt><tt class="descname">collectiondataform_set</tt><a class="headerlink" href="#dataforms.models.Collection.collectiondataform_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Collection.data_forms">
+<tt class="descclassname">Collection.</tt><tt class="descname">data_forms</tt><a class="headerlink" href="#dataforms.models.Collection.data_forms" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Collection.submission_set">
+<tt class="descclassname">Collection.</tt><tt class="descname">submission_set</tt><a class="headerlink" href="#dataforms.models.Collection.submission_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.CollectionDataForm">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">CollectionDataForm</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.CollectionDataForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model bridge for Collection and DataForm</p>
+<dl class="exception">
+<dt id="dataforms.models.CollectionDataForm.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.CollectionDataForm.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.CollectionDataForm.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">CollectionDataForm.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.CollectionDataForm.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.CollectionDataForm.collection">
+<tt class="descclassname">CollectionDataForm.</tt><tt class="descname">collection</tt><a class="headerlink" href="#dataforms.models.CollectionDataForm.collection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.CollectionDataForm.data_form">
+<tt class="descclassname">CollectionDataForm.</tt><tt class="descname">data_form</tt><a class="headerlink" href="#dataforms.models.CollectionDataForm.data_form" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.CollectionDataForm.section">
+<tt class="descclassname">CollectionDataForm.</tt><tt class="descname">section</tt><a class="headerlink" href="#dataforms.models.CollectionDataForm.section" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.DataForm">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">DataForm</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.DataForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model for each form</p>
+<dl class="exception">
+<dt id="dataforms.models.DataForm.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.DataForm.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.DataForm.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">DataForm.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.DataForm.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.DataForm.answer_set">
+<tt class="descclassname">DataForm.</tt><tt class="descname">answer_set</tt><a class="headerlink" href="#dataforms.models.DataForm.answer_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.DataForm.binding_set">
+<tt class="descclassname">DataForm.</tt><tt class="descname">binding_set</tt><a class="headerlink" href="#dataforms.models.DataForm.binding_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.DataForm.collection_set">
+<tt class="descclassname">DataForm.</tt><tt class="descname">collection_set</tt><a class="headerlink" href="#dataforms.models.DataForm.collection_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.DataForm.collectiondataform_set">
+<tt class="descclassname">DataForm.</tt><tt class="descname">collectiondataform_set</tt><a class="headerlink" href="#dataforms.models.DataForm.collectiondataform_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.DataForm.dataformfield_set">
+<tt class="descclassname">DataForm.</tt><tt class="descname">dataformfield_set</tt><a class="headerlink" href="#dataforms.models.DataForm.dataformfield_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.DataForm.fields">
+<tt class="descclassname">DataForm.</tt><tt class="descname">fields</tt><a class="headerlink" href="#dataforms.models.DataForm.fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.DataFormField">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">DataFormField</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.DataFormField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model bridge for DataForm and Field</p>
+<dl class="exception">
+<dt id="dataforms.models.DataFormField.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.DataFormField.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.DataFormField.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">DataFormField.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.DataFormField.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.DataFormField.data_form">
+<tt class="descclassname">DataFormField.</tt><tt class="descname">data_form</tt><a class="headerlink" href="#dataforms.models.DataFormField.data_form" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.DataFormField.field">
+<tt class="descclassname">DataFormField.</tt><tt class="descname">field</tt><a class="headerlink" href="#dataforms.models.DataFormField.field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.Field">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">Field</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.Field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model that holds fields</p>
+<dl class="exception">
+<dt id="dataforms.models.Field.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.Field.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.Field.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">Field.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.Field.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Field.answer_set">
+<tt class="descclassname">Field.</tt><tt class="descname">answer_set</tt><a class="headerlink" href="#dataforms.models.Field.answer_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Field.binding_set">
+<tt class="descclassname">Field.</tt><tt class="descname">binding_set</tt><a class="headerlink" href="#dataforms.models.Field.binding_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Field.childfield_set">
+<tt class="descclassname">Field.</tt><tt class="descname">childfield_set</tt><a class="headerlink" href="#dataforms.models.Field.childfield_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Field.choices">
+<tt class="descclassname">Field.</tt><tt class="descname">choices</tt><a class="headerlink" href="#dataforms.models.Field.choices" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Field.dataform_set">
+<tt class="descclassname">Field.</tt><tt class="descname">dataform_set</tt><a class="headerlink" href="#dataforms.models.Field.dataform_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Field.dataformfield_set">
+<tt class="descclassname">Field.</tt><tt class="descname">dataformfield_set</tt><a class="headerlink" href="#dataforms.models.Field.dataformfield_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Field.fieldchoice_set">
+<tt class="descclassname">Field.</tt><tt class="descname">fieldchoice_set</tt><a class="headerlink" href="#dataforms.models.Field.fieldchoice_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Field.fields_set">
+<tt class="descclassname">Field.</tt><tt class="descname">fields_set</tt><a class="headerlink" href="#dataforms.models.Field.fields_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dataforms.models.Field.get_field_type_display">
+<tt class="descclassname">Field.</tt><tt class="descname">get_field_type_display</tt><big>(</big><em>*moreargs</em>, <em>**morekwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.Field.get_field_type_display" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Field.parentfield_set">
+<tt class="descclassname">Field.</tt><tt class="descname">parentfield_set</tt><a class="headerlink" href="#dataforms.models.Field.parentfield_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.FieldChoice">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">FieldChoice</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.FieldChoice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model bridge for Field and Choice</p>
+<dl class="exception">
+<dt id="dataforms.models.FieldChoice.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.FieldChoice.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.FieldChoice.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">FieldChoice.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.FieldChoice.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.FieldChoice.choice">
+<tt class="descclassname">FieldChoice.</tt><tt class="descname">choice</tt><a class="headerlink" href="#dataforms.models.FieldChoice.choice" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.FieldChoice.choices_set">
+<tt class="descclassname">FieldChoice.</tt><tt class="descname">choices_set</tt><a class="headerlink" href="#dataforms.models.FieldChoice.choices_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.FieldChoice.field">
+<tt class="descclassname">FieldChoice.</tt><tt class="descname">field</tt><a class="headerlink" href="#dataforms.models.FieldChoice.field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.FieldChoice.parentfieldchoice_set">
+<tt class="descclassname">FieldChoice.</tt><tt class="descname">parentfieldchoice_set</tt><a class="headerlink" href="#dataforms.models.FieldChoice.parentfieldchoice_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.ParentField">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">ParentField</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.ParentField" title="Permalink to this definition">¶</a></dt>
+<dd><p>ParentField(id, binding_id, parent_field_id)</p>
+<dl class="exception">
+<dt id="dataforms.models.ParentField.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.ParentField.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.ParentField.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">ParentField.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.ParentField.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.ParentField.binding">
+<tt class="descclassname">ParentField.</tt><tt class="descname">binding</tt><a class="headerlink" href="#dataforms.models.ParentField.binding" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.ParentField.parent_field">
+<tt class="descclassname">ParentField.</tt><tt class="descname">parent_field</tt><a class="headerlink" href="#dataforms.models.ParentField.parent_field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.ParentFieldChoice">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">ParentFieldChoice</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.ParentFieldChoice" title="Permalink to this definition">¶</a></dt>
+<dd><p>ParentFieldChoice(id, binding_id, field_choice_id)</p>
+<dl class="exception">
+<dt id="dataforms.models.ParentFieldChoice.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.ParentFieldChoice.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.ParentFieldChoice.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">ParentFieldChoice.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.ParentFieldChoice.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.ParentFieldChoice.binding">
+<tt class="descclassname">ParentFieldChoice.</tt><tt class="descname">binding</tt><a class="headerlink" href="#dataforms.models.ParentFieldChoice.binding" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.ParentFieldChoice.field_choice">
+<tt class="descclassname">ParentFieldChoice.</tt><tt class="descname">field_choice</tt><a class="headerlink" href="#dataforms.models.ParentFieldChoice.field_choice" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.Section">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">Section</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.Section" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model that gives a section to a DataForm within a Collection</p>
+<dl class="exception">
+<dt id="dataforms.models.Section.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.Section.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.Section.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">Section.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.Section.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Section.collectiondataform_set">
+<tt class="descclassname">Section.</tt><tt class="descname">collectiondataform_set</tt><a class="headerlink" href="#dataforms.models.Section.collectiondataform_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dataforms.models.Submission">
+<em class="property">class </em><tt class="descclassname">dataforms.models.</tt><tt class="descname">Submission</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.Submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model that holds a unique submission</p>
+<dl class="exception">
+<dt id="dataforms.models.Submission.DoesNotExist">
+<em class="property">exception </em><tt class="descname">DoesNotExist</tt><a class="headerlink" href="#dataforms.models.Submission.DoesNotExist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="dataforms.models.Submission.MultipleObjectsReturned">
+<em class="property">exception </em><tt class="descclassname">Submission.</tt><tt class="descname">MultipleObjectsReturned</tt><a class="headerlink" href="#dataforms.models.Submission.MultipleObjectsReturned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Submission.answer_set">
+<tt class="descclassname">Submission.</tt><tt class="descname">answer_set</tt><a class="headerlink" href="#dataforms.models.Submission.answer_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dataforms.models.Submission.collection">
+<tt class="descclassname">Submission.</tt><tt class="descname">collection</tt><a class="headerlink" href="#dataforms.models.Submission.collection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dataforms.models.Submission.get_next_by_last_modified">
+<tt class="descclassname">Submission.</tt><tt class="descname">get_next_by_last_modified</tt><big>(</big><em>*moreargs</em>, <em>**morekwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.Submission.get_next_by_last_modified" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dataforms.models.Submission.get_previous_by_last_modified">
+<tt class="descclassname">Submission.</tt><tt class="descname">get_previous_by_last_modified</tt><big>(</big><em>*moreargs</em>, <em>**morekwargs</em><big>)</big><a class="headerlink" href="#dataforms.models.Submission.get_previous_by_last_modified" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/models.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">django-dataforms v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2009, http://code.google.com/p/django-dataforms/people/list.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.3.
+    </div>
+  </body>
+</html>
