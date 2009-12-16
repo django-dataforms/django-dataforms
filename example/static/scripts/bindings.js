@@ -115,13 +115,13 @@ function hasSingleTruth(element) {
 	}
 	
 	var tagName = element.attr("type");
+	var value = element.val();
 	
 	if (
 	(tagName == "checkbox" && (element.length == 1 && element.attr("checked") || element.filter("input[value='"+choice+"']").attr("checked")))
-	|| ((tagName == "select-one" || tagName == "select-multiple") && element.val() == choice)
-	|| ((tagName == "text") && element.val() != '')
+	|| ((tagName == "select-one" || tagName == "select-multiple") && (value && value.indexOf(choice) != -1))
+	|| ((tagName == "text") && value != '')
 	|| (tagName == "radio" && element.filter(":checked").val() == choice)) {
-		// FIXME add && choice in element.val()
 		return true;
 	} else {
 		return false;
