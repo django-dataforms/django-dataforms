@@ -557,6 +557,7 @@ def _create_form(form, title=None, description=None, readonly=False):
 		'field_type': 'HiddenInput',
 		'slug': HIDDEN_BINDINGS_SLUG,
 		'initial': safe(force_escape(json.dumps(bindings))),
+		'required': False,
 	})
 	
 	# Populate our choices dictionary
