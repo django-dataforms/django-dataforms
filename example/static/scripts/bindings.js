@@ -119,8 +119,9 @@ function hasSingleTruth(element) {
 	
 	if (
 	(tagName == "checkbox" && (element.length == 1 && element.attr("checked") || element.filter("input[value='"+choice+"']").attr("checked")))
-	|| ((tagName == "select-one" || tagName == "select-multiple") && (value && value.indexOf(choice) != -1))
-	|| ((tagName == "text") && value != '')
+	|| (tagName == "select-one" && value == choice)
+	|| (tagName == "select-multiple" && value && value.indexOf(choice) != -1)
+	|| (tagName == "text" && value != '')
 	|| (tagName == "radio" && element.filter(":checked").val() == choice)) {
 		return true;
 	} else {
