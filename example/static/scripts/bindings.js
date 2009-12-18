@@ -106,6 +106,13 @@ function doBinding() {
 	}
 }
 
+function contains(haystack, needle) {
+	for (i in haystack)
+		if (haystack[i] == needle)
+			return true;
+	return false;
+}
+
 function hasSingleTruth(element) {
 	var choice = null;
 	if (element.length > 1) {
@@ -120,7 +127,7 @@ function hasSingleTruth(element) {
 	if (
 	(tagName == "checkbox" && (element.length == 1 && element.attr("checked") || element.filter("input[value='"+choice+"']").attr("checked")))
 	|| (tagName == "select-one" && value == choice)
-	|| (tagName == "select-multiple" && value && value.indexOf(choice) != -1)
+	|| (tagName == "select-multiple" && value && contains(value, choice))
 	|| (tagName == "text" && value != '')
 	|| (tagName == "radio" && element.filter(":checked").val() == choice)) {
 		return true;
