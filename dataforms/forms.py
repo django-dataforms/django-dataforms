@@ -348,7 +348,7 @@ def _remove_extraneous_fields(form, process_full_form):
 		for key in to_delete:
 			del form.fields[key]
 
-def create_collection(request, collection, submission, readonly=False):
+def create_collection(request, collection, submission, readonly=False, section=None):
 	"""
 	Based on a form collection slug, create a list of form objects.
 	
@@ -369,10 +369,12 @@ def create_collection(request, collection, submission, readonly=False):
 	
 	# Get queryset for all the forms that are needed
 	try:
-		forms = DataForm.objects.filter(
-				collectiondataform__collection=collection,
-				collectiondataform__collection__visible=True
-			).order_by('collectiondataform__order')
+		kwargs = {}
+		kwargs['collectiondataform__collection'] = collection
+		kwargs['collectiondataform__collection__visible'] = True
+		if section:
+			kwargs['collectiondataform__section__slug'] = section
+		forms = DataForm.objects.filter(**kwargs).order_by('collectiondataform__order')
 	except DataForm.DoesNotExist:
 		raise DataForm.DoesNotExist('Dataforms for collection %s do not exist. Make sure the slug name is correct and the forms are visible.' % collection)
 	
