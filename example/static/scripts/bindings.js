@@ -44,7 +44,7 @@ function setBindings() {
 					bindingParent.data("bindings").push(bindings[k]);
 
 					// Set event handler
-					bindingParent.click(doBinding);
+					bindingParent.change(doBinding).click(doBinding);
 					if (bindingParent.attr("type") == 'text') {
 						bindingParent.keyup(doBinding);
 					}
