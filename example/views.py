@@ -24,9 +24,7 @@ def form_collection(request):
 	A demo page to show a form collection (many forms) dynamically generated from the database. 
 	"""
 
-	collection = create_collection(request=request, collection="test-collection", submission="myCollection")
-
-	collection.set_section("a")
+	collection = create_collection(request=request, collection="test-collection", submission="myCollection", section="a")
 
 	if request.method == "POST":
 		if collection.is_valid():
