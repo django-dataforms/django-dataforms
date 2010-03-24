@@ -359,7 +359,7 @@ def create_collection(request, collection, submission, readonly=False, section=N
 	:return: a BaseCollection object, populated with the correct data forms and data
 	"""
 	
-	# Slightly evil, do type checking to see if submission is a Submission object or string
+	# Slightly evil, do type checking to see if collection is a Collection object or string
 	if isinstance(collection, str) or isinstance(collection, unicode):
 		# Get the queryset for the form collection to pass in our dictionary
 		try:
@@ -435,7 +435,7 @@ def create_form(request, form, submission, title=None, description=None, section
 		
 		# Create a bound form to a previous submission object
 		create_form(request, slug="personal-info", submission=Submission.objects.get(...))
-
+		
 	:param request: the current page request object, so we can pull POST and other vars.
 	:param form: a data form slug or object
 	:param submission: create-on-use submission slug or object; passed in to retrieve
@@ -461,7 +461,7 @@ def create_form(request, form, submission, title=None, description=None, section
 	
 	# Create our form class
 	FormClass = _create_form(form=form, title=title, description=description, readonly=readonly)
-
+	
 	# Create the actual form instance, from the dynamic form class
 	if request.method == 'POST':
 		# We assume here that we don't need to overlay the POST data on top of the database
@@ -490,7 +490,7 @@ def create_form(request, form, submission, title=None, description=None, section
 def _create_form(form, title=None, description=None, readonly=False):
 	"""
 	Creates a form class object.
-
+	
 	Usage::
 	
 		FormClass = _create_form(dataform="myForm")
@@ -543,7 +543,7 @@ def _create_form(form, title=None, description=None, readonly=False):
 			field__visible=True
 		).order_by('order')
 	)
-
+	
 	fields = list(field_qs.values())
 	
 	# We originally were setting the "rel" attr on the field objects to do the bindings,
@@ -593,11 +593,11 @@ def _create_form(form, title=None, description=None, readonly=False):
 		
 		# Update the field arguments with the "additional arguments" JSON in the DB
 		field_kwargs.update(additional_field_kwargs)
-
+		
 		# Get the choices for single and multiple choice fields 
 		if row['field_type'] in CHOICE_FIELDS:
 			choices = ()
-
+			
 			# We add a separator for select boxes
 			if row['field_type'] == 'Select':
 				choices += ('', '--------'),
@@ -652,16 +652,33 @@ def _create_form(form, title=None, description=None, readonly=False):
 	
 	return DataFormClass
 
+def get_field_objects(submission):
+	"""
+	Get a list of field objects for a particular submission/collection
+	"""
+	
+	# Slightly evil, do type checking to see if submission is a Submission object or string
+	if isinstance(submission, str) or isinstance(submission, unicode):
+		# Get the queryset for the form collection to pass in our dictionary
+		try:
+			submission = Submission.objects.get(slug=submission)
+		except Submission.DoesNotExist:
+			raise Submission.DoesNotExist('Submission %s does not exist. Make sure the slug name is correct.' % submission)
+	
+	fields = Field.objects.filter(dataform__collection__submission__id=submission.id).order_by('dataformfield__order')
+	
+	return fields
+
 def get_answers(submission, for_form=False, field=None):
 	"""
 	Get the answers for a submission.
-
+	
 	This function intentionally does not return the answers in the same
 	form as request.POST data will have submitted them (ie, every element
 	wrapped as a list). This is because this function is meant to provide
 	data that can be instantly consumed by some `FormClass(data=data)`
 	instantiation, as done by create_form.
-
+	
 	:param submission: A Submission object or slug
 	:param for_form: whether or not these answers should be made unique for
 		use on a form, ie. if every field slug should be prepended with
@@ -671,9 +688,9 @@ def get_answers(submission, for_form=False, field=None):
 	:param field: Only get the answer for a specific field. Also accepts a list of field_slugs.
 	:return: a dictionary of answers
 	"""
-
+	
 	data = defaultdict(list)
-
+	
 	# Slightly evil, do type checking to see if submission is a Submission object or string
 	if isinstance(submission, str) or isinstance(submission, unicode):
 		submission = Submission.objects.get(slug=submission).id
@@ -685,19 +702,19 @@ def get_answers(submission, for_form=False, field=None):
 	if field_slugs is not None and not isinstance(field_slugs, list):
 		field_slugs = [field_slugs]
 		field = [field]
-
+		
 	# Rid ourselves of ORM objects and just use field slug strings
 	if field_slugs is not None:
 		field_slugs = [(field.slug if isinstance(field, Field) else field) for field in field]
-
+		
 		# Transform prepended slugs: personal-information__some-field --> some-field
 		field_slugs = [
 			(_field_for_db(name=slug) if FIELD_DELIMITER in slug else slug)
 			for slug in field_slugs
 		]
-
+		
 	answers = Answer.objects.get_answer_data(submission=submission, field_slugs=field_slugs)
-
+	
 	# For every answer, do some magic and get it into our data dictionary
 	for answer in answers:
 		# Refactors the answer field name to be globally unique (so
@@ -706,18 +723,18 @@ def get_answers(submission, for_form=False, field=None):
 			answer_key = _field_for_form(name=str(answer['field_slug']), form=answer['dataform_slug'])
 		else:
 			answer_key = str(answer['field_slug'])
-
+			
 		# If there isn't an answer (answer['content'] is [None, None...]) then don't include
 		if answer['content'] and True not in [(True if item is not None else False) for item in answer['content']]:
 			continue
-
+			
 		if answer['field_type'] in MULTI_CHOICE_FIELDS + MULTI_NUMBER_FIELDS:
 			# MULTI_CHOICE_FIELDS & MULTI_NUMBER_FIELDS
 			data[answer_key] = answer['content']
 		else:
 			# SINGLE_CHOICE_FIELDS & SINGLE_NUMBER_FIELDS & text fields
 			data[answer_key] = answer['content'][0]
-
+			
 	return dict(data)
 
 def get_bindings(form):
@@ -790,10 +807,10 @@ def create_form_class_title(slug):
 	"""
 	Transform "my-form-name" into "MyFormName"
 	This is important because we need each form class to have a unique name.
-
+	
 	:param slug: the form slug from the DB
 	"""
-
+	
 	return ''.join([word.capitalize() for word in str(slug).split('-')] + ['Form'])
 
 def _field_for_form(name, form):
