@@ -700,7 +700,6 @@ def get_answers(submission, for_form=False, field=None):
 	# Think in terms of always handling requests for multiple field_slugs, to keep DRY
 	field_slugs = field
 	if field_slugs is not None and not isinstance(field_slugs, list):
-		field_slugs = [field_slugs]
 		field = [field]
 		
 	# Rid ourselves of ORM objects and just use field slug strings
@@ -836,6 +835,9 @@ def _field_for_db(name, packed_return=False):
 		return (names[0][len("id_") if "id_" in names[0] else 0:], names[1])
 	else:
 		return names[1]
+	
+def get_db_field_names(form):
+	return [_field_for_db(key) for key in form.fields]
 
 # Custom dataform exception classes
 class RequiredArgument(Exception):
