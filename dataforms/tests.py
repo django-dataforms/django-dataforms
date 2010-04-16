@@ -199,14 +199,17 @@ class FormsTestCase(CustomTestCase):
 		
 	def testGetSingleFieldAnswers(self):
 		submission = Submission.objects.get(slug="testSubmission")
-
+	
 		# Test get_answers when given a single field string
-		lang_answer = forms.get_answers(submission=submission, for_form=False, field="other-languages")
-		bio_answer = forms.get_answers(submission=submission, for_form=False, field="biography")
-
+		lang_answer = forms.get_answers(submission, field="other-languages")
+		bio_answer = forms.get_answers(submission, field="biography")
+	
+		self.assertEqual(len(lang_answer), 1, "Too many answers returned! Got: %s, should have: 1." % len(lang_answer))
 		self.assertEqual(lang_answer['other-languages'], u'\u2600')
-		self.assertEqual(bio_answer['biography'], u'Blah blah blah\u2600')
-		
+
+		self.assertEqual(len(bio_answer), 1, "Too many answers returned! Got: %s, should have: 1." % len(bio_answer))
+		self.assertEqual(bio_answer['biography'], u'Blah blah blah\u2600')		
+
 	def testGetMultipleFieldAnswers(self):
 		submission = Submission.objects.get(slug="testSubmission")
 		

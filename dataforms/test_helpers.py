@@ -56,11 +56,11 @@ class CustomTestCase(TestCase):
 			if not from_db.has_key(key):
 				messages.append("In form POST, but not present in database: %s" % key)
 			elif from_post[key] != from_db[key]:
-				messages.append("POST %s not equal DB: %s != %s" % (key, repr(from_post[key]), repr(from_db[key])))
+				messages.append("POST %s NOT EQUAL DB: %s != %s" % (key, repr(from_post[key]), repr(from_db[key])))
 				
 		for key in from_db:
 			if not from_post.has_key(key) and from_db[key]:
-				messages.append("Not present in form post: %s, but had DB data: %s" % (key, repr(from_db[key])))
+				messages.append("NOT PRESENT IN FORM POST: %s, BUT HAD DB DATA: %s" % (key, repr(from_db[key])))
 				
 		return self.fail("\n" + "\n".join(messages)) if messages else None
 	
