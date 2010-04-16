@@ -9,7 +9,7 @@ urlpatterns = patterns('views',
 	url(r'^$', 'index', name="index"),
 	url(r'^collection/$', 'form_collection', name="form_collection"),
 	url(r'^upload/$', 'upload', name="upload"),
-	(r'^admin/(.*)', admin.site.root),
+	(r'^admin/', include(admin.site.urls)),
 )
 
 # This is for development only. Use apache rewrites in production. 
