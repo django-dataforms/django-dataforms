@@ -177,6 +177,21 @@ class FormsTestCase(CustomTestCase):
 		# Test each name set
 		for row in data:
 			self.assertEquals(forms.create_form_class_title(row[0]), "%sForm" % row[1])
+			
+	def testCollectionSlicing(self):
+		# FIXME: these tests are incomplete
+		
+		request = rf.get('/')
+		collection = forms.create_collection(request, collection="test-collection", submission="myCollection")
+		
+		# Should have a collection with length of 2
+		self.assertEqual(2, len(collection))
+
+		# Check __getitem__ returns just a DataForm
+		self.assertEqual('PersonalInformationForm', str(collection[0].__class__.__name__))
+		
+		collection = collection[0:1]
+		self.assertEqual(1, len(collection))
 		
 	def testGetAnswers(self):
 		# Test getting answers the submission from the tests fixture using a string arg

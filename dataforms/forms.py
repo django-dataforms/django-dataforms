@@ -234,6 +234,8 @@ class BaseCollection(object):
 		"""
 		Set the visible section whose forms will be returned
 		when using array indexing.
+		
+		:deprecated: This method is deprecated. Use the section argument to Collection's instead.
 		"""
 		
 		if isinstance(section, Section):
@@ -282,7 +284,9 @@ class BaseCollection(object):
 			title=self.title,
 			description=self.description,
 			slug=self.slug,
-			forms=self.forms[start, end]
+			forms=self.forms[start:end],
+			# FIXME: does this need to be limited to the sections of the forms in the slice?
+			sections=self.sections 
 		)
 	
 	def __len__(self):
