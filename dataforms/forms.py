@@ -669,7 +669,7 @@ def get_field_objects(submission):
 		except Submission.DoesNotExist:
 			raise Submission.DoesNotExist('Submission %s does not exist. Make sure the slug name is correct.' % submission)
 	
-	fields = Field.objects.filter(dataform__collection__submission__id=submission.id).order_by('dataformfield__order')
+	fields = Field.objects.filter(dataform__collection__submission__id=submission.id).order_by('dataform__collectiondataform', 'dataformfield__order')
 	
 	return fields
 
