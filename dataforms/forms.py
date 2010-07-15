@@ -10,6 +10,7 @@ http://code.google.com/p/django-dataforms/wiki/GettingStarted
 try: import validation
 except ImportError: validation = None
 
+import datetime
 from file_handler import handle_upload
 from collections import defaultdict
 from django import forms
@@ -101,6 +102,10 @@ class BaseDataForm(forms.BaseForm):
 			# The first form saved in a collection will create the submission
 			# but all other forms will still not have self.submission
 			self.submission, was_created = Submission.objects.get_or_create(slug=self.submission_slug)
+		else:
+			# We already have a submission object, so let's update the last_modified field
+			self.submission.last_modified = datetime.datetime.now()
+			self.submission.save()
 		
 		for key in self.fields.keys():
 			# Mangle the key into the DB form, then get the right Field
