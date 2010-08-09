@@ -17,6 +17,7 @@ from django import forms
 from django.conf import settings
 from django.forms.forms import BoundField
 from django.utils import simplejson as json
+from django.db.models.query import QuerySet
 from django.utils.datastructures import SortedDict
 from django.template.defaultfilters import safe, force_escape
 
@@ -206,11 +207,23 @@ class BaseDataForm(forms.BaseForm):
 						# This shouldn't happen, there should always be AnswerText when
 						# the answer exists, but we might as well fix it and not error.
 						answer_text = answer.answertext_set.create(text=content)
+					except AnswerText.MultipleObjectsReturned:
+						# We have more than one answertext already.
+						answer_text = answer.answertext_set.all()
 					
-					# Only update update and save if the actual content has changed.
-					if answer_text.text != content:
-						answer_text.text = content
-						answer_text.save() 
+					if isinstance(answer_text, QuerySet):
+						# We're assuming that since we already have multiple answers, we can 
+						# just add another one, no matter the field type. 
+						if content not in answer_text:
+							answer.answertext_set.create(text=content)
+					elif isinstance(answer_text, AnswerText):
+						if answer_text.text != content:
+							if field.field_type in UPLOAD_FIELDS:
+								# Multiple AnswerTexts are allowed, so we'll just create a new one
+								answer.answertext_set.create(text=content)
+							else:
+								answer_text.text = content
+								answer_text.save()
 
 class BaseCollection(object):
 	"""
@@ -575,6 +588,28 @@ def _create_form(form, title=None, description=None, readonly=False):
 	for row in choices_qs:
 		choices_dict[row.field.pk] += (row.choice.value, safe(row.choice.title)),
 		
+	# Process the field mappings and import any modules specified by string name
+	for key in FIELD_MAPPINGS:
+		# Replace the string arguments with the actual modules or classes
+		for sub_key in ('class', 'widget'):
+			if not FIELD_MAPPINGS[key].has_key(sub_key):
+				continue
+				
+			value = FIELD_MAPPINGS[key][sub_key]
+			
+			if isinstance(value, str) or isinstance(value, unicode):
+				names = value.split(".")
+				module_name = ".".join(names[:-1])
+				class_name = names[-1]
+				module = __import__(module_name, fromlist=[class_name])
+				# Replace the string with a class pointer
+				FIELD_MAPPINGS[key][sub_key] = getattr(module, class_name)
+
+		# Handle widget arguments
+		if not FIELD_MAPPINGS[key].has_key('widget_kwargs'):
+			# Initialize all field-mappings that don't have a 'widget_kwargs' key
+			FIELD_MAPPINGS[key]['widget_kwargs'] = {}
+	
 	# ----- Field Loop -----
 	# Populate our fields dictionary for this form
 	for row in fields:

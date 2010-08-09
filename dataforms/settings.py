@@ -48,29 +48,6 @@ FIELD_MAPPINGS.update( {
 
 MAX_UPLOAD_SIZE = getattr(settings, "MAX_UPLOAD_SIZE", 10485760)
 
-# Process the field mappings and import any modules specified by string name
-for key in FIELD_MAPPINGS:
-	# Replace the string arguments with the actual modules or classes
-	for sub_key in ('class', 'widget'):
-		if not FIELD_MAPPINGS[key].has_key(sub_key):
-			continue
-		
-		value = FIELD_MAPPINGS[key][sub_key]
-		
-		if isinstance(value, str) or isinstance(value, unicode):
-			names = value.split(".")
-			module_name = ".".join(names[:-1])
-			class_name = names[-1]
-			module = __import__(module_name, fromlist=[class_name])
-			
-			# Replace the string with a class pointer
-			FIELD_MAPPINGS[key][sub_key] = getattr(module, class_name)
-
-	# Handle widget arguments
-	if not FIELD_MAPPINGS[key].has_key('widget_kwargs'):
-		# Initialize all field-mappings that don't have a 'widget_kwargs' key
-		FIELD_MAPPINGS[key]['widget_kwargs'] = {}
-
 UPLOAD_FIELDS = getattr(settings, "UPLOAD_FIELDS", ()) + ('FileInput','AjaxSingleFileUpload',)
 BOOLEAN_FIELDS = getattr(settings, "BOOLEAN_FIELDS", ()) + ('CheckboxInput',)
 SINGLE_CHOICE_FIELDS = getattr(settings, "SINGLE_CHOICE_FIELDS", ()) + ('Select', 'RadioSelect')

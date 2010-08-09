@@ -1,9 +1,16 @@
 from django.conf import settings
 from django import forms
 from django.utils.safestring import mark_safe
-#from datetime import date
+from .forms import _field_for_db
+from .models import AnswerText
 
 class NoteWidget(forms.Widget):
+	"""
+	A NoteField Widget
+	"""
+	def __init__(self, attrs={}):
+		super(NoteWidget, self).__init__(attrs)
+	
 	def render(self, name, value, attrs=None):
 		return ""
 	
@@ -38,9 +45,20 @@ class AjaxSingleFileWidget(forms.TextInput):
 	def render(self, name, value, attrs=None):
 		output = []
 		
+		# break up name to be DB readable
+		field_name = _field_for_db(name)
+		# query all answertexts for this field & submission
+		answers = AnswerText.objects.filter(answer__field__slug=field_name, answer__answertext__text=value)
+		
 		files = ''
-		if value:
-			files = '<li><a href="%s">%s</a></li>' % ('/'.join([settings.MEDIA_URL, value]), value.split("/")[-1])
+		if answers:
+			for answer in answers:
+				value = answer.text
+				full_path = ''.join([settings.MEDIA_URL, value])
+				files += """<li>
+							<a class="del_upload" id="%s" href="" style="color:red;">X</a>
+							<a href="%s">%s</a>
+							</li>""" % (value, full_path, value.split("/")[-1])
 			
 		vals = {
 			'name' : name,
@@ -56,6 +74,7 @@ class AjaxSingleFileWidget(forms.TextInput):
 			
 			<script type="text/javascript">
 				$(function() {
+					del_upload();
 					var button = $('#button_%(name)s');
 					var interval;
 					
@@ -92,15 +111,35 @@ class AjaxSingleFileWidget(forms.TextInput):
 							this.enable();
 							
 							var link = response.split("/");
-							link = '<a href="'+response+'">'+link[link.length-1]+'</a>';
+							link = '<a class="del_upload" id="'+response.slice(8)+'" href="" style="color:red;">X</a>\
+							<a href="'+response+'">'+link[link.length-1]+'</a>';
 							
 							// add file to the list
-							button.next(".files").html($('<li></li>').html(link));
+							button.next(".files").prepend($('<li></li>').html(link));
+							del_upload();
 							
 							// Add the path to the hidden variable input in order to save
 							button.next(".files").next("input").val(response);
+							
+							// Save the collection on each upload for history & to make multiple uploads work
+							saveCollection();
 						}
 					});
+					
+					function del_upload() {
+						// Function to handle confirmation box, calling of delete function, and 
+						// ajax removal of file from list
+						$(".del_upload").click(function(e) {
+							e.preventDefault();
+							var del_file = confirm("You are about to delete a file, are you sure you want to do this?");
+							var del_path = {'path': $(this).attr("id")};
+							if (del_file) {
+								deleteFile(del_path); // Call delete JS function
+								$(this).parent().remove(); // Remove file from the list
+							}
+						
+						});
+					}
 				});
 			</script>
 		
