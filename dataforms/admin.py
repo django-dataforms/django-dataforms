@@ -7,7 +7,7 @@ except ImportError:
 	from django.contrib.admin import ModelAdmin as BaseAdminClass
 
 from .settings import ADMIN_SORT_JS
-from .models import (Collection, CollectionDataForm, DataForm, DataFormField,
+from .models import (Collection, CollectionDataForm, CollectionVersion, DataForm, DataFormField,
 					 Field, Binding, FieldChoice, Choice, Answer, Submission,
 					 AnswerText, AnswerChoice, AnswerNumber, Section, ParentField,
 					 ParentFieldChoice, ChildField)
@@ -67,14 +67,21 @@ class AnswerNumberInline(admin.StackedInline):
 class CollectionAdmin(admin.ModelAdmin):
 	prepopulated_fields = {'slug': ('title',)}
 	inlines = [DataFormInline,]
+	list_display = ('title', 'slug')
+	save_as = True
 	
 	class Media:
 		js = ADMIN_SORT_JS
+
+class CollectionVersionAdmin(admin.ModelAdmin):
+	list_display = ('slug', 'collection', 'last_modified' )
+	save_as = True
 
 class DataFormAdmin(admin.ModelAdmin):
 	prepopulated_fields = {'slug': ('title',)}
 	list_display = ('__unicode__', 'visible',)
 	inlines = [FieldInline]
+	save_as = True
 	
 	class Media:
 		js = ADMIN_SORT_JS
@@ -96,6 +103,7 @@ class FieldAdmin(admin.ModelAdmin):
 class BindingAdmin(admin.ModelAdmin):
 	list_display = ('data_form',)
 	inlines = [ParentFieldInline, ParentFieldChoiceInline, ChildFieldInline]
+	save_as = True
 	
 	class Media:
 		js = ADMIN_SORT_JS
@@ -122,12 +130,15 @@ class SubmissionAdmin(BaseAdminClass):
 class ChoiceAdmin(admin.ModelAdmin):
 	list_display = ('title', 'value',)
 	search_fields = ('title','value')
+	save_as = True
 
 class SectionAdmin(admin.ModelAdmin):
 	list_display = ('title',)
+	save_as = True
 	
 admin.site.register(Section, SectionAdmin)
 admin.site.register(Collection, CollectionAdmin)
+admin.site.register(CollectionVersion, CollectionVersionAdmin)
 admin.site.register(DataForm, DataFormAdmin)
 admin.site.register(Field, FieldAdmin)
 admin.site.register(Binding, BindingAdmin)

@@ -16,7 +16,7 @@ class Collection(models.Model):
 	visible = models.BooleanField(verbose_name=_('collection is visible'), default=True)
 
 	def __unicode__(self):
-		return self.title
+		return "%s -- %s" % (self.title, self.slug)
 
 class CollectionDataForm(models.Model):
 	""" 
@@ -34,6 +34,18 @@ class CollectionDataForm(models.Model):
 
 	def __unicode__(self):
 		return u'%s in %s' % (self.collection, self.data_form)
+
+class CollectionVersion(models.Model):
+	"""
+	Model that will keep a record of the newest version of a collection
+	"""
+	slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
+	collection = models.ForeignKey('Collection')
+	last_modified = models.DateTimeField(auto_now=True)
+	
+	def __unicode__(self):
+		return u"%s - %s" % (self.slug, self.collection)
+
 
 class Section(models.Model):
 	"""
