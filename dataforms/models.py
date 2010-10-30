@@ -55,7 +55,7 @@ class Section(models.Model):
 	slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
 
 	def __unicode__(self):
-		return self.title
+		return u"%s - %s" % (self.title, self.slug)
 
 class DataForm(models.Model):
 	"""
@@ -69,7 +69,7 @@ class DataForm(models.Model):
 	visible = models.BooleanField(verbose_name=_('form is visible'), default=True)
 
 	def __unicode__(self):
-		return self.title
+		return u"%s - %s" % (self.title, self.slug)
 
 class DataFormField(models.Model):
 	""" 
