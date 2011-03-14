@@ -109,18 +109,22 @@ class BindingAdmin(admin.ModelAdmin):
 		js = ADMIN_SORT_JS
 		
 class AnswerAdmin(admin.ModelAdmin):
-	list_display = ('submission', 'field', )
+	list_display = ('id', 'submission', 'data_form', 'field', )
 	inlines = [AnswerTextInline, AnswerNumberInline, AnswerChoiceInline]
 	list_select_related = True
+	search_fields = ('field__slug', 'field__label')
 
 class AnswerChoiceAdmin(BaseAdminClass):
 	list_display = ('id', 'answer', 'choice')
+	search_fields = ('answer__field__slug', 'answer__field__label')
 
 class AnswerTextAdmin(BaseAdminClass):
 	list_display = ('id', 'answer', 'text')
+	search_fields = ('answer__field__slug', 'answer__field__label')
 
 class AnswerNumberAdmin(BaseAdminClass):
 	list_display = ('id', 'answer', 'num')
+	search_fields = ('answer__field__slug', 'answer__field__label')
 
 class SubmissionAdmin(BaseAdminClass):
 	list_display = ('id', '__unicode__', 'last_modified',)
