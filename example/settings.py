@@ -93,10 +93,9 @@ INSTALLED_APPS = (
 	'dataforms',
 )
 
-try: __import__("django_extensions")
+try: 
+    INSTALLED_APPS += (
+        'django_extensions',
+        'reversion',
+    )
 except ImportError: pass
-else: INSTALLED_APPS += ("django_extensions",)
-
-try: __import__("reversion")
-except ImportError: pass
-else: INSTALLED_APPS += ("reversion",)
