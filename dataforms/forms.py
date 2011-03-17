@@ -20,6 +20,8 @@ from django.utils import simplejson as json
 from django.db.models.query import QuerySet
 from django.utils.datastructures import SortedDict
 from django.template.defaultfilters import safe, force_escape
+from django.core.cache import cache
+from .utils import cache_set_with_tags
 
 from .settings import (FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS,
 	MULTI_CHOICE_FIELDS, CHOICE_FIELDS, UPLOAD_FIELDS,
@@ -33,7 +35,7 @@ class BaseDataForm(forms.BaseForm):
 	def __init__(self, *args, **kwargs):
 		super(BaseDataForm, self).__init__(*args, **kwargs)
 		self.__generate_bound_fields()
-		
+	
 	def __getattr__(self, name):
 		if 'clean_' in name:
 			# Remove the form-name__ from clean_form-name__textbox
@@ -405,23 +407,8 @@ def create_collection(request, collection, submission, readonly=False, section=N
 		data_form__in=forms,
 	)
 	
-	# Get the sections from the many-to-many, and then make the elements unique (a set)
-	non_unique_sections = (Section.objects.order_by("collectiondataform__order")
-						.filter(collectiondataform__collection=collection).distinct())
-
-	# Force the query to evaluate
-	non_unique_sections = list(non_unique_sections)
-
-	# OK, this is evil. We have to manually remove duplicates that exist in the Section queryset.
-	# See here for why mixing order_by and distinct returns duplicates.
-	#
-	# http://docs.djangoproject.com/en/dev/ref/models/querysets/#distinct
-	#
-	# Also, using list(set(non_unique_sections)) does not work, unfortunately.
-	sections = []
-	for section in non_unique_sections:
-		if section not in sections:
-			sections.append(section)
+	# Get the sections for this collection
+	sections = create_sections(collection)
 	
 	# Initialize a list to contain all the form classes
 	form_list = []
@@ -479,7 +466,10 @@ def create_form(request, form, submission, title=None, description=None, section
 		submission_slug = submission.slug
 	
 	# Before we populate from submitted data, prepare the answers for insertion into the form
-	data = get_answers(submission=submission, for_form=True)
+	if submission:
+		data = get_answers(submission=submission, for_form=True)
+	else:
+		data = None
 	
 	# Create our form class
 	FormClass = _create_form(form=form, title=title, description=description, readonly=readonly)
@@ -497,7 +487,7 @@ def create_form(request, form, submission, title=None, description=None, section
 		# don't have answers for in the database will use their initial field defaults.
 		
 		# This creates an unbound form object.
-		form = FormClass(initial=(data if data else None))
+		form = FormClass(initial=(data))
 		
 	# Now that we have an instantiated form object, let's add our custom attributes
 	if submission:
@@ -508,6 +498,33 @@ def create_form(request, form, submission, title=None, description=None, section
 	form.section = section
 	
 	return form
+
+def create_sections(collection):
+	"""
+	Create sections of a form collection
+	
+	:param collection: a data form collection object
+	"""
+	
+	# Get the sections from the many-to-many, and then make the elements unique (a set)
+	non_unique_sections = (Section.objects.order_by("collectiondataform__order")
+						.filter(collectiondataform__collection=collection).distinct())
+
+	# Force the query to evaluate
+	non_unique_sections = list(non_unique_sections)
+
+	# OK, this is evil. We have to manually remove duplicates that exist in the Section queryset.
+	# See here for why mixing order_by and distinct returns duplicates.
+	#
+	# http://docs.djangoproject.com/en/dev/ref/models/querysets/#distinct
+	#
+	# Also, using list(set(non_unique_sections)) does not work, unfortunately.
+	sections = []
+	for section in non_unique_sections:
+		if section not in sections:
+			sections.append(section)
+			
+	return sections
 
 def _create_form(form, title=None, description=None, readonly=False):
 	"""
@@ -550,7 +567,7 @@ def _create_form(form, title=None, description=None, readonly=False):
 		
 	# Get all the fields
 	try:
-		field_qs = Field.objects.filter(
+		field_qs = Field.objects.select_related().filter(
 			dataformfield__data_form__slug=slug,
 			visible=True
 		).order_by('dataformfield__order')
@@ -811,39 +828,45 @@ def get_bindings(form):
 		    }
 	    ];
 	"""
-	
-	data = []
-	final = []
-	progenyRelations = defaultdict(list)
-	
-	if isinstance(form, str) or isinstance(form, unicode):
-		form = DataForm.objects.get(slug=form)
+	if cache.get('dataforms_bindinds_%s' % form.slug):
+		final = cache.get('dataforms_bindinds_%s' % form.slug)
 		
-	bindings = Binding.objects.filter(data_form=form)
+	else:
 	
-	for binding in bindings:
-		progeny = binding.children.all()
-		children_slugs = [_field_for_form(name=child.slug, form=form.slug) for child in progeny]
+		data = []
+		final = []
+		progenyRelations = defaultdict(list)
 		
-		parent_fields = binding.parent_fields.all()
-		parent_slugs = [_field_for_form(name=parent.slug, form=form.slug) for parent in parent_fields]
-		
-		# This used to be done using: binding.parent_choices.all(), but was generating too many
-		# additional queries in the for-loop because ManyToMany fields don't support select_related().
-		# Just traverse the relations manually, so we can join all the tables in one query:
-		parent_choices = FieldChoice.objects.select_related('field', 'choice').filter(parentfieldchoice__binding=binding)
-		for parent in parent_choices:
-			parent_slugs.append([_field_for_form(name=parent.field.slug, form=form.slug), parent.choice.value])
+		if isinstance(form, str) or isinstance(form, unicode):
+			form = DataForm.objects.get(slug=form)
 			
-		progenyRelations[tuple(children_slugs)] += [parent_slugs]
+		bindings = Binding.objects.filter(data_form=form)
 		
-	# Transform progenyRelations
-	for relation in progenyRelations:
-		final.append({
-			"parents" : progenyRelations[relation],
-			"children" : list(relation)
-		})
+		for binding in bindings:
+			progeny = binding.children.all()
+			children_slugs = [_field_for_form(name=child.slug, form=form.slug) for child in progeny]
+			
+			parent_fields = binding.parent_fields.all()
+			parent_slugs = [_field_for_form(name=parent.slug, form=form.slug) for parent in parent_fields]
+			
+			# This used to be done using: binding.parent_choices.all(), but was generating too many
+			# additional queries in the for-loop because ManyToMany fields don't support select_related().
+			# Just traverse the relations manually, so we can join all the tables in one query:
+			parent_choices = FieldChoice.objects.select_related('field', 'choice').filter(parentfieldchoice__binding=binding)
+			for parent in parent_choices:
+				parent_slugs.append([_field_for_form(name=parent.field.slug, form=form.slug), parent.choice.value])
+				
+			progenyRelations[tuple(children_slugs)] += [parent_slugs]
+			
+		# Transform progenyRelations
+		for relation in progenyRelations:
+			final.append({
+				"parents" : progenyRelations[relation],
+				"children" : list(relation)
+			})
 		
+		cache.set_with_tags('dataforms_bindinds_%s' % form.slug, final, ['dataforms_bindings'])
+	
 	return final
 
 def create_form_class_title(slug):

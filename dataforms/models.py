@@ -1,5 +1,7 @@
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
+from django.core.cache import cache
+from .utils import cache_delete_by_tags
 from .settings import FIELD_TYPE_CHOICES
 from itertools import izip
 from collections import defaultdict
@@ -104,12 +106,20 @@ class Field(models.Model):
 
 	def __unicode__(self):
 		return self.slug
-
+	
 class Binding(models.Model):
 	data_form = models.ForeignKey('DataForm', null=False, blank=False)
 	parent_fields = models.ManyToManyField('Field', related_name='fields_set', through='ParentField')
 	parent_choices = models.ManyToManyField('FieldChoice', related_name='choices_set', through='ParentFieldChoice')
 	children = models.ManyToManyField('Field', through='ChildField')
+	
+	def save(self, *args, **kwargs):
+		cache_delete_by_tags(['dataforms_bindings'])
+		super(Binding, self).save(*args, **kwargs)
+	
+	def delete(self):
+		cache_delete_by_tags(['dataforms_bindings'])
+		super(Binding, self).delete()
 
 class ParentField(models.Model):
 	binding = models.ForeignKey('Binding')
