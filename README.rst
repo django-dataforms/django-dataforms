@@ -1,6 +1,6 @@
-*`django-dataforms`* is a wrapper for the Django forms API that lets you dynamically define forms in a database, rather than hard-coding form definitions. This can be especially helpful for projects that have many forms and/or forms which constantly change, and you don't want to be constantly updating models and schemas. No model creation required.
+**django-dataforms** is a wrapper for the Django forms API that lets you dynamically define forms in a database, rather than hard-coding form definitions. This can be especially helpful for projects that have many forms and/or forms which constantly change, and you don't want to be constantly updating models and schemas. No model creation required.
 
-See the GettingStarted guide to jump in.
+See the `Wiki`__ for more information.
 
 ===============
 Go from this...
@@ -36,3 +36,5 @@ To this!
 	# Now your form is stored in the database and you can
 	# change it without changing a model and DB schema!
 	create_form(request=request, form="contact-form" submission="mySubmission")
+
+__ https://github.com/django-dataforms/dango-dataforms/wiki/Instant-Example

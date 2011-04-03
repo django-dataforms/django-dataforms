@@ -1,0 +1,4 @@
+include AUTHORS README.rst INSTALL LICENCE
+recursive-include dataforms *.py
+include docs/Makefile
+recursive-include docs/source *
