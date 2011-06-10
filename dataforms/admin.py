@@ -66,6 +66,7 @@ class AnswerNumberInline(admin.StackedInline):
 # ModelAdmin Classes
 class CollectionAdmin(admin.ModelAdmin):
 	prepopulated_fields = {'slug': ('title',)}
+	search_fields = ('title', 'slug')
 	inlines = [DataFormInline,]
 	list_display = ('title', 'slug')
 	save_as = True
@@ -80,7 +81,8 @@ class CollectionVersionAdmin(admin.ModelAdmin):
 class DataFormAdmin(admin.ModelAdmin):
 	prepopulated_fields = {'slug': ('title',)}
 	list_display = ('__unicode__', 'visible',)
-	inlines = [FieldInline]
+	search_fields = ('title', 'slug')
+	inlines = [FieldInline, DataFormInline]
 	save_as = True
 	
 	class Media:
@@ -101,7 +103,8 @@ class FieldAdmin(admin.ModelAdmin):
 		js = ADMIN_SORT_JS
 		
 class BindingAdmin(admin.ModelAdmin):
-	list_display = ('data_form',)
+	list_display = ('__unicode__', 'data_form')
+	search_fields = ('__unicode__', 'data_form')
 	inlines = [ParentFieldInline, ParentFieldChoiceInline, ChildFieldInline]
 	save_as = True
 	

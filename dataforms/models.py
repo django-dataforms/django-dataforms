@@ -58,6 +58,9 @@ class Section(models.Model):
 
 	def __unicode__(self):
 		return u"%s - %s" % (self.title, self.slug)
+	
+	class Meta:
+		ordering = ['title', ]
 
 class DataForm(models.Model):
 	"""
@@ -72,6 +75,9 @@ class DataForm(models.Model):
 
 	def __unicode__(self):
 		return u"%s - %s" % (self.title, self.slug)
+	
+	class Meta:
+		ordering = ['title', ]
 
 class DataFormField(models.Model):
 	""" 
@@ -107,6 +113,9 @@ class Field(models.Model):
 	def __unicode__(self):
 		return self.slug
 	
+	class Meta:
+		ordering = ['slug', ]
+	
 class Binding(models.Model):
 	data_form = models.ForeignKey('DataForm', null=False, blank=False)
 	parent_fields = models.ManyToManyField('Field', related_name='fields_set', through='ParentField')
@@ -120,6 +129,12 @@ class Binding(models.Model):
 	def delete(self):
 		cache_delete_by_tags(['dataforms_bindings'])
 		super(Binding, self).delete()
+	
+	def __unicode__(self):
+		if self.parent_fields.count():
+			return u'Fields --- %s' % ([parent_field.slug for parent_field in self.parent_fields.all()])
+		elif self.parent_choices.count():
+			return u'Field choices --- %s' % (['Field: %s, Choice: %s' % (parent_choice.field.slug, parent_choice.choice.value) for parent_choice in self.parent_choices.all()])
 
 class ParentField(models.Model):
 	binding = models.ForeignKey('Binding')
@@ -160,6 +175,9 @@ class Choice(models.Model):
 
 	def __unicode__(self):
 		return unicode(self.title)
+	
+	class Meta:
+		ordering = ['title', ]
 
 class Submission(models.Model):
 	"""
