@@ -82,7 +82,7 @@ class DataFormAdmin(admin.ModelAdmin):
 	prepopulated_fields = {'slug': ('title',)}
 	list_display = ('__unicode__', 'visible',)
 	search_fields = ('title', 'slug')
-	inlines = [FieldInline, DataFormInline]
+	inlines = [FieldInline, DataFormInline, BindingInline]
 	save_as = True
 	
 	class Media:
