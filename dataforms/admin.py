@@ -104,7 +104,7 @@ class FieldAdmin(admin.ModelAdmin):
 		
 class BindingAdmin(admin.ModelAdmin):
 	list_display = ('__unicode__', 'data_form')
-	search_fields = ('__unicode__', 'data_form')
+	search_fields = ('data_form__title', 'childfield__field__label', 'parentfield__parent_field__label', 'parentfieldchoice__field_choice__field__label', 'parentfieldchoice__field_choice__choice__title')
 	inlines = [ParentFieldInline, ParentFieldChoiceInline, ChildFieldInline]
 	save_as = True
 	
