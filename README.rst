@@ -37,4 +37,4 @@ To this!
 	# change it without changing a model and DB schema!
 	create_form(request=request, form="contact-form" submission="mySubmission")
 
-__ https://github.com/django-dataforms/django-dataforms/wiki/Instant-Example
+__ https://github.com/django-dataforms/django-dataforms/wiki/Getting-Started
