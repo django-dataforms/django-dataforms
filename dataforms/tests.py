@@ -15,9 +15,9 @@ Usage::
 	
 """
 
-from . import forms
-from .models import DataForm, Submission, AnswerText
-from .test_helpers import RequestFactory, CustomTestCase
+import forms
+from models import DataForm, Submission, AnswerText
+from test_helpers import RequestFactory, CustomTestCase
 from django import template
 rf = RequestFactory()
 

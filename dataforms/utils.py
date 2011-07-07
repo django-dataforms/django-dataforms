@@ -1,5 +1,4 @@
 from django.core.cache import cache as cache_backend
-from django.core.cache.backends.base import BaseCache
 
 def cache_set_with_tags(key, value, tags=[], timeout=None):
     for tag in tags:
@@ -15,8 +14,8 @@ def cache_delete_by_tags(tags=[]):
     for tag in tags:
         tag_list = cache_backend.get(tag)
         if tag_list:
-           for key in tag_list:
-               cache_backend.delete(key)
+            for key in tag_list:
+                cache_backend.delete(key)
         cache_backend.delete(tag)
         
 cache_backend.set_with_tags = cache_set_with_tags

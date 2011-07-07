@@ -1,10 +1,12 @@
-from django.test import TestCase, Client
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Q
+from django.test import TestCase, Client
+from django.utils.datastructures import SortedDict
+from forms import _field_for_form, \
+	get_answers # kind of breaking low coupling here
+from models import Submission, Answer
+from settings import BOOLEAN_FIELDS, MULTI_CHOICE_FIELDS, UPLOAD_FIELDS
 
-from .forms import _field_for_form, get_answers # kind of breaking low coupling here
-from .models import Submission, Answer
-from .settings import BOOLEAN_FIELDS, MULTI_CHOICE_FIELDS, UPLOAD_FIELDS
 
 class RequestFactory(Client):
 	"""
@@ -55,7 +57,7 @@ class CustomTestCase(TestCase):
 		for key in from_post:
 			if not from_db.has_key(key):
 				messages.append("In form POST, but not present in database: %s" % key)
-			elif from_post[key] != from_db[key]:
+			elif sorted(from_post[key]) != sorted(from_db[key]):
 				messages.append("POST %s NOT EQUAL DB: %s != %s" % (key, repr(from_post[key]), repr(from_db[key])))
 				
 		for key in from_db:

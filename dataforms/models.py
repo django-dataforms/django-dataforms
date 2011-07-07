@@ -1,10 +1,9 @@
+from settings import FIELD_TYPE_CHOICES
+from utils import cache_delete_by_tags
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
-from django.core.cache import cache
-from .utils import cache_delete_by_tags
-from .settings import FIELD_TYPE_CHOICES
 from itertools import izip
-from collections import defaultdict
+
 
 class Collection(models.Model):
 	"""
@@ -18,7 +17,8 @@ class Collection(models.Model):
 	visible = models.BooleanField(verbose_name=_('collection is visible'), default=True)
 
 	def __unicode__(self):
-		return "%s -- %s" % (self.title, self.slug)
+		return self.slug
+
 
 class CollectionDataForm(models.Model):
 	""" 
@@ -27,15 +27,18 @@ class CollectionDataForm(models.Model):
 
 	collection = models.ForeignKey('Collection', null=True)
 	data_form = models.ForeignKey('DataForm', null=True)
-	order = models.IntegerField(verbose_name=_('order'), null=True, blank=True)
 	section = models.ForeignKey('Section', null=True)
+	order = models.IntegerField(verbose_name=_('order'), null=True, blank=True)
 
 	class Meta:
 		unique_together = ('collection', 'data_form')
-		ordering = ['order',]
+		ordering = ['order', ]
+		verbose_name = 'Collection Mapping'
+		verbose_name_plural = 'Collection Mappings'
 
 	def __unicode__(self):
 		return u'%s in %s' % (self.collection, self.data_form)
+
 
 class CollectionVersion(models.Model):
 	"""
@@ -46,7 +49,7 @@ class CollectionVersion(models.Model):
 	last_modified = models.DateTimeField(auto_now=True)
 	
 	def __unicode__(self):
-		return u"%s - %s" % (self.slug, self.collection)
+		return u"%s (%s)" % (self.slug, self.collection)
 
 
 class Section(models.Model):
@@ -57,10 +60,11 @@ class Section(models.Model):
 	slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
 
 	def __unicode__(self):
-		return u"%s - %s" % (self.title, self.slug)
+		return self.slug
 	
 	class Meta:
 		ordering = ['title', ]
+
 
 class DataForm(models.Model):
 	"""
@@ -74,10 +78,11 @@ class DataForm(models.Model):
 	visible = models.BooleanField(verbose_name=_('form is visible'), default=True)
 
 	def __unicode__(self):
-		return u"%s - %s" % (self.title, self.slug)
+		return self.slug
 	
 	class Meta:
 		ordering = ['title', ]
+
 
 class DataFormField(models.Model):
 	""" 
@@ -91,9 +96,12 @@ class DataFormField(models.Model):
 	class Meta:
 		unique_together = ('data_form', 'field')
 		ordering = ['order', ]
+		verbose_name = 'Field Mapping'
+		verbose_name_plural = 'Field Mappings'
 
 	def __unicode__(self):
 		return u'%s in %s' % (self.data_form, self.field)
+
 
 class Field(models.Model):
 	"""
@@ -116,6 +124,7 @@ class Field(models.Model):
 	class Meta:
 		ordering = ['slug', ]
 	
+	
 class Binding(models.Model):
 	data_form = models.ForeignKey('DataForm', null=False, blank=False)
 	parent_fields = models.ManyToManyField('Field', related_name='fields_set', through='ParentField')
@@ -131,22 +140,23 @@ class Binding(models.Model):
 		super(Binding, self).delete()
 	
 	def __unicode__(self):
-		if self.parent_fields.count():
-			return u'Fields --- %s' % ([parent_field.slug for parent_field in self.parent_fields.all()])
-		elif self.parent_choices.count():
-			return u'Field choices --- %s' % (['Field: %s, Choice: %s' % (parent_choice.field.slug, parent_choice.choice.value) for parent_choice in self.parent_choices.all()])
+		return '%s' % self.pk
+
 
 class ParentField(models.Model):
 	binding = models.ForeignKey('Binding')
 	parent_field = models.ForeignKey('Field', help_text="Leave blank if a choice is selected", null=False, blank=False)
 	
+	
 class ParentFieldChoice(models.Model):
 	binding = models.ForeignKey('Binding')
 	field_choice = models.ForeignKey('FieldChoice', help_text="Leave blank if a parent is selected", null=False, blank=False)
 	
+	
 class ChildField(models.Model):
 	binding = models.ForeignKey('Binding')
 	field = models.ForeignKey('Field', null=False, blank=False)
+
 
 class FieldChoice(models.Model):
 	""" 
@@ -160,16 +170,18 @@ class FieldChoice(models.Model):
 
 	class Meta:
 		unique_together = ('field', 'choice')
-		ordering = ['field', 'order', ]
+		ordering = ['field', 'order']
+		verbose_name = 'Choice Mapping'
+		verbose_name_plural = 'Choice Mappings'
 
 	def __unicode__(self):
-		return u'%s - %s' % (self.field, unicode(self.choice).upper())
+		return u'%s (%s)' % (self.field, unicode(self.choice).upper())
+
 
 class Choice(models.Model):
 	"""
 	Model that holds choices for fields and their values
 	"""
-
 	title = models.CharField(verbose_name=_('choice title'), max_length=255)
 	value = models.CharField(verbose_name=_('choice value'), max_length=255)
 
@@ -177,19 +189,21 @@ class Choice(models.Model):
 		return unicode(self.title)
 	
 	class Meta:
-		ordering = ['title', ]
+		ordering = ['title']
+		unique_together = ('title', 'value',)
+
 
 class Submission(models.Model):
 	"""
 	Model that holds a unique submission
 	"""
-
 	slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
 	collection = models.ForeignKey('Collection', null=True, blank=True)
 	last_modified = models.DateTimeField(verbose_name=_('last modified'), auto_now=True)
 
 	def __unicode__(self):
 		return unicode(self.slug)
+
 
 class AnswerChoice(models.Model):
 	"""
@@ -201,6 +215,7 @@ class AnswerChoice(models.Model):
 	def __unicode__(self):
 		return unicode(" - ".join([unicode(self.answer), unicode(self.choice)]))
 
+
 class AnswerText(models.Model):
 	"""
 	Stores the data for an answer that text
@@ -210,6 +225,7 @@ class AnswerText(models.Model):
 
 	def __unicode__(self):
 		return unicode(" - ".join([unicode(self.answer), unicode(self.text)]))
+
 
 class AnswerNumber(models.Model):
 	"""
@@ -224,6 +240,7 @@ class AnswerNumber(models.Model):
 
 	def __unicode__(self):
 		return unicode(" - ".join([unicode(self.answer), unicode(self.num)]))
+
 
 class AnswerManager(models.Manager):
 	"""(Protocol manager description)"""
@@ -281,6 +298,7 @@ class AnswerManager(models.Manager):
 			row = cursor.fetchone()
 
 		return data.values()
+
 
 class Answer(models.Model):
 	"""

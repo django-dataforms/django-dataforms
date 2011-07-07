@@ -21,15 +21,16 @@ from django.db.models.query import QuerySet
 from django.utils.datastructures import SortedDict
 from django.template.defaultfilters import safe, force_escape
 from django.core.cache import cache
-from .utils import cache_set_with_tags
+from utils import cache_set_with_tags
 
-from .settings import (FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS,
+from settings import (FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS,
 	MULTI_CHOICE_FIELDS, CHOICE_FIELDS, UPLOAD_FIELDS,
 	FIELD_DELIMITER, SINGLE_NUMBER_FIELDS, MULTI_NUMBER_FIELDS,
 	NUMBER_FIELDS, HIDDEN_BINDINGS_SLUG)
-from .models import (DataForm, Collection, Field, FieldChoice,
+from models import (DataForm, Collection, Field, FieldChoice,
 	Choice, Answer, Submission, AnswerChoice, AnswerText, AnswerNumber,
 	CollectionDataForm, Binding, Section)
+
 
 class BaseDataForm(forms.BaseForm):
 	def __init__(self, *args, **kwargs):

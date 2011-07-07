@@ -67,7 +67,7 @@ ADMIN_SORT_JS = getattr(settings, "ADMIN_SORT_JS",
 	(
 	'https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',
 	'https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js',
-	'%s/scripts/jquery.adminmenusort.js' % settings.MEDIA_URL,
+	'%s/dataforms/js/jquery.adminmenusort.js' % settings.MEDIA_URL,
 	)
 )
 
