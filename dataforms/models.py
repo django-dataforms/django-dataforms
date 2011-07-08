@@ -190,7 +190,7 @@ class Choice(models.Model):
 	
 	class Meta:
 		ordering = ['title']
-		unique_together = ('title', 'value',)
+		#unique_together = ('title', 'value',)
 
 
 class Submission(models.Model):
