@@ -41,9 +41,15 @@ FIELD_MAPPINGS.update( {
 	'CheckboxSelectMultiple': { 'class': 'django.forms.MultipleChoiceField', 'widget': 'django.forms.CheckboxSelectMultiple' },
 	'HiddenInput' : { 'class': 'django.forms.Field', 'widget': 'django.forms.HiddenInput' },
 	'FileInput' : { 'class': 'django.forms.FileField', 'widget': 'dataforms.widgets.FileWidget' },
+	
+	# FIXME: These two are protis specific.  We should remove these from dataforsm core.
 	'AjaxSingleFileUpload' : { 'class': 'django.forms.Field', 'widget': 'dataforms.widgets.AjaxSingleFileWidget' },
 	'Note' : { 'class': 'django.forms.CharField', 'widget': 'dataforms.widgets.NoteWidget' },
-	'IntegerInput' : { 'class': 'django.forms.IntegerField', 'widget': 'django.forms.TextInput' },    
+	
+	'IntegerInput' : { 'class': 'django.forms.IntegerField', 'widget': 'django.forms.TextInput' },
+	
+	# FIXME: Remove After testing....
+	'USStateField' : { 'class': 'django.contrib.localflavor.us.forms.USStateField', 'widget' : 'django.forms.TextInput' },   
 } )
 
 MAX_UPLOAD_SIZE = getattr(settings, "MAX_UPLOAD_SIZE", 10485760)
@@ -67,9 +73,21 @@ ADMIN_SORT_JS = getattr(settings, "ADMIN_SORT_JS",
 	(
 	'https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',
 	'https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js',
-	'%s/dataforms/js/jquery.adminmenusort.js' % settings.MEDIA_URL,
+	'%sdataforms/js/jquery.adminmenusort.js' % settings.STATIC_URL,
 	)
 )
+
+FORM_MEDIA = {
+	'js' : (
+	'https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',
+	'https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js',
+	'%sdataforms/js/json2.js' % settings.STATIC_URL,
+	'%sdataforms/js/ajaxupload.js' % settings.STATIC_URL,
+	'%sdataforms/js/bindings.js' % settings.STATIC_URL,
+	'%sdataforms/js/datepicker.js' % settings.STATIC_URL,
+	'%sdataforms/js/jquery.formconditions.js' % settings.STATIC_URL,
+	),
+}
 
 FIELD_TYPE_CHOICES = tuple([(field,field) for field in FIELD_MAPPINGS])
 HIDDEN_BINDINGS_SLUG = getattr(settings, "HIDDEN_BINDINGS_SLUG", "js_dataform_bindings")

@@ -1,18 +1,16 @@
-from admin_forms import BindingAdminForm, FieldAdminForm
+from admin_forms import ConditionAdminForm, FieldAdminForm
 from django.conf.urls.defaults import patterns
 from django.contrib import admin
 from models import Collection, CollectionDataForm, CollectionVersion, DataForm, \
-	DataFormField, Field, Binding, FieldChoice, Choice, Answer, Submission, \
-	AnswerText, AnswerChoice, AnswerNumber, Section, ParentField, ParentFieldChoice, \
-	ChildField
+	DataFormField, Field, Condition, FieldChoice, Choice, Answer, Submission, Section
 from settings import ADMIN_SORT_JS
 from admin_views import answers_view
 	
 
-try:
-	from reversion.admin import VersionAdmin as BaseAdminClass
-except ImportError:
-	from django.contrib.admin import ModelAdmin as BaseAdminClass
+#try:
+#	from reversion.admin import VersionAdmin as BaseAdminClass
+#except ImportError:
+from django.contrib.admin import ModelAdmin as BaseAdminClass
 
 
 #------------ Inline Model Admins that are attached ------ ----------------#
@@ -46,15 +44,15 @@ class FieldInline(admin.TabularInline):
 #	model = ChildField
 #	extra = 1
 	
-class AnswerChoiceInline(admin.StackedInline):
-	model = AnswerChoice
-	extra = 1
-class AnswerTextInline(admin.StackedInline):
-	model = AnswerText
-	extra = 1
-class AnswerNumberInline(admin.StackedInline):
-	model = AnswerNumber
-	extra = 1
+#class AnswerChoiceInline(admin.StackedInline):
+#	model = AnswerChoice
+#	extra = 1
+#class AnswerTextInline(admin.StackedInline):
+#	model = AnswerText
+#	extra = 1
+#class AnswerNumberInline(admin.StackedInline):
+#	model = AnswerNumber
+#	extra = 1
 
 
 #------------------------ Main Model Admins classes -----------------------#
@@ -161,53 +159,54 @@ class FieldAdmin(admin.ModelAdmin):
 	choices_link.short_description = "Choices"
 	
 
-class BindingAdmin(admin.ModelAdmin):
-	list_display = ('pk', 'data_form', 'parent_fields_list', 'parent_choices_list', 'children_list')
+class ConditionAdmin(admin.ModelAdmin):
+	list_display = ('pk', 'data_form', 'field', 'operator', 'value', 'true_fields_list', 'false_fields_list')
 	list_filter = ('data_form__title',)
-	search_fields = ('data_form__title', 'childfield__field__label', 'parentfield__parent_field__label', 'parentfieldchoice__field_choice__field__label', 'parentfieldchoice__field_choice__choice__title')
+	search_fields = ('data_form__title', 'field__slug')
 	save_as = True
 	
-	form = BindingAdminForm
+	form = ConditionAdminForm
 	
-	def save_model(self, request, obj, form, change):
-		#save the object first so we can populate the relationships
-		super(BindingAdmin, self).save_model(request, obj, form, change)
-		
-		#clear existing relationships
-		obj.parent_fields.clear()
-		obj.parent_choices.clear()
-		obj.children.clear()
-		
-		#add new relationships back
-		for field in form.cleaned_data['parent_fields_select']:
-			obj.parentfield_set.create(
-				binding = obj,
-				parent_field = field
-			)
-
-		for choice in form.cleaned_data['parent_choices_select']:
-			obj.parentfieldchoice_set.create(
-				binding = obj,
-				field_choice = choice
-			)
-
-		for child in form.cleaned_data['children_select']:
-			obj.childfield_set.create(
-				binding = obj,
-				field = child
-			)
+#	def save_model(self, request, obj, form, change):
+#		#save the object first so we can populate the relationships
+#		super(ConditionAdmin, self).save_model(request, obj, form, change)
+#		
+#		#clear existing relationships
+#		obj.true_field.clear()
+#		obj.true_choice.clear()
+#		obj.false_field.clear()
+#		obj.false_choice.clear()
+#		
+#		#add new relationships back
+#		for field in form.cleaned_data['parent_fields_select']:
+#			obj.parentfield_set.create(
+#				binding = obj,
+#				parent_field = field
+#			)
+#
+#		for choice in form.cleaned_data['parent_choices_select']:
+#			obj.parentfieldchoice_set.create(
+#				binding = obj,
+#				field_choice = choice
+#			)
+#
+#		for child in form.cleaned_data['children_select']:
+#			obj.childfield_set.create(
+#				binding = obj,
+#				field = child
+#			)
 			
-	def parent_fields_list(self, obj):
-		return '<ul>' + ''.join(['<li>' + str(c) + '</li>' for c in obj.parent_fields.all()]) + '</ul>'
-	parent_fields_list.allow_tags = True
+	def true_fields_list(self, obj):
+		fields = ''.join(['<li>' + str(c) + '</li>' for c in obj.true_field.all()])
+		choices = ''.join(['<li>' + str(c) + '</li>' for c in obj.true_choice.all()])
+		return '<ul>' + fields + choices + '</ul>'
+	true_fields_list.allow_tags = True
 
-	def parent_choices_list(self, obj):
-		return '<ul>' + ''.join(['<li>' + str(c) + '</li>' for c in obj.parent_choices.all()]) + '</ul>'
-	parent_choices_list.allow_tags = True
-	
-	def children_list(self, obj):
-		return '<ul>' + ''.join(['<li>' + str(c) + '</li>' for c in obj.children.all()]) + '</ul>'
-	children_list.allow_tags = True
+	def false_fields_list(self, obj):
+		fields = ''.join(['<li>' + str(c) + '</li>' for c in obj.false_field.all()])
+		choices = ''.join(['<li>' + str(c) + '</li>' for c in obj.false_choice.all()])
+		return '<ul>' + fields + choices + '</ul>'
+	false_fields_list.allow_tags = True
 	
 
 class ChoiceAdmin(admin.ModelAdmin):
@@ -254,42 +253,50 @@ class SubmissionAdmin(BaseAdminClass):
 #------------ Model Admins that are hidden from view ----------------#
 
 class AnswerAdmin(admin.ModelAdmin):
-	list_display = ('id', 'submission', 'data_form', 'field',)
-	inlines = [AnswerTextInline, AnswerNumberInline, AnswerChoiceInline]
+	list_display = ('id', 'submission', 'data_form', 'field', 'field_type', 'value', 'choices')
+	#inlines = [AnswerTextInline, AnswerNumberInline, AnswerChoiceInline]
 	list_select_related = True
 	
 	search_fields = ('field__slug', 'field__label')
 	
-	#Hide the model from view
-	def get_model_perms(self, request):
-		return {}
-	
+	# Get Choices
+	def choices(self, obj):
+		return '%s' % obj.choice.all()
 
-class AnswerChoiceAdmin(BaseAdminClass):
-	list_display = ('id', 'answer', 'choice')
-	search_fields = ('answer__field__slug', 'answer__field__label')
-	
-	#Hide the model from view
-	def get_model_perms(self, request):
-		return {}
-
-
-class AnswerTextAdmin(BaseAdminClass):
-	list_display = ('id', 'answer', 'text')
-	search_fields = ('answer__field__slug', 'answer__field__label')
+	# Get Field Types
+	def field_type(self, obj):
+		return '%s' % obj.field.field_type
 	
 	#Hide the model from view
-	def get_model_perms(self, request):
-		return {}
-
-
-class AnswerNumberAdmin(BaseAdminClass):
-	list_display = ('id', 'answer', 'num')
-	search_fields = ('answer__field__slug', 'answer__field__label')
+#	def get_model_perms(self, request):
+#		return {}
 	
-	#Hide the model from view
-	def get_model_perms(self, request):
-		return {}
+
+#class AnswerChoiceAdmin(BaseAdminClass):
+#	list_display = ('id', 'answer', 'choice')
+#	search_fields = ('answer__field__slug', 'answer__field__label')
+#	
+#	#Hide the model from view
+#	def get_model_perms(self, request):
+#		return {}
+#
+#
+#class AnswerTextAdmin(BaseAdminClass):
+#	list_display = ('id', 'answer', 'text')
+#	search_fields = ('answer__field__slug', 'answer__field__label')
+#	
+#	#Hide the model from view
+#	def get_model_perms(self, request):
+#		return {}
+#
+#
+#class AnswerNumberAdmin(BaseAdminClass):
+#	list_display = ('id', 'answer', 'num')
+#	search_fields = ('answer__field__slug', 'answer__field__label')
+#	
+#	#Hide the model from view
+#	def get_model_perms(self, request):
+#		return {}
 
 	
 admin.site.register(Section, SectionAdmin)
@@ -299,11 +306,11 @@ admin.site.register(CollectionVersion, CollectionVersionAdmin)
 admin.site.register(DataForm, DataFormAdmin)
 admin.site.register(DataFormField, FieldMappingAdmin)
 admin.site.register(Field, FieldAdmin)
-admin.site.register(Binding, BindingAdmin)
+admin.site.register(Condition, ConditionAdmin)
 admin.site.register(Answer, AnswerAdmin)
-admin.site.register(AnswerChoice, AnswerChoiceAdmin)
-admin.site.register(AnswerText, AnswerTextAdmin)
-admin.site.register(AnswerNumber, AnswerNumberAdmin)
+#admin.site.register(AnswerChoice, AnswerChoiceAdmin)
+#admin.site.register(AnswerText, AnswerTextAdmin)
+#admin.site.register(AnswerNumber, AnswerNumberAdmin)
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(Choice, ChoiceAdmin)
 admin.site.register(FieldChoice, ChoiceMappingAdmin)

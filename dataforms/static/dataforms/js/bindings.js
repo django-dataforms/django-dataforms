@@ -55,7 +55,7 @@ function setBindings() {
 			children = bindings[k]['children'];
 			for (var i=0; i < children.length; i++) {
 				var child = smartGetElement(children[i]);
-				children[i] = child.closest(".form-row");
+				children[i] = child.parent();
 				
 				// Evaluate initial parent states and hide children if needed
 				if (!hasAllTruth(parents)) {
@@ -87,7 +87,7 @@ function doBinding() {
 	var parents;
 	var children;
 	var bindings = $(this).data("bindings");
-	
+
 	for (var b=0; b < bindings.length; b++) {
 		parents = bindings[b]['parents'];
 		children = bindings[b]['children'];
@@ -95,6 +95,7 @@ function doBinding() {
 		if (hasAllTruth(parents)){
 			// show
 			for (var i=0; i<children.length; i++){
+				console.log(children);
 				$(children[i]).slideDown();
 			}
 		} else {
@@ -157,5 +158,6 @@ function hasAllTruth(listOfParents) {
 }
 
 $(function() {
+	console.log('init');
 	setBindings();
 });

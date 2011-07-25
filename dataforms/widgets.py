@@ -2,9 +2,12 @@ from django.conf import settings
 from django import forms
 from django.utils.safestring import mark_safe
 from forms import _field_for_db
-from models import AnswerText
+from models import Answer
 
 
+# FIXME:
+# This is protis specific, move to protis widgets.py and add to protis settings.py FIELD_MAPPINGS
+# This is dependant on JQuery, so adding the proper media js to this widget needs to happen.
 class NoteWidget(forms.Widget):
     """
     A NoteField Widget
@@ -14,6 +17,7 @@ class NoteWidget(forms.Widget):
     
     def render(self, name, value, attrs=None):
         return ""
+    
     
 class FileWidget(forms.FileInput):
     """
@@ -33,7 +37,12 @@ class FileWidget(forms.FileInput):
             output.append('<div class="cfile">%s <a target="_blank" href="%s">%s</a></div>' % \
                 ('Currently:', '/'.join([settings.MEDIA_URL, value]), value))
         return mark_safe(u''.join(output))
-    
+
+
+
+# FIXME:
+# This is protis specific, move to protis widgets.py and add to protis settings.py FIELD_MAPPINGS
+# This is dependant on JQuery, so adding the proper media js to this widget needs to happen.
 class AjaxSingleFileWidget(forms.TextInput):
     """
     A file upload widget which handles a single file and uploads it
@@ -49,12 +58,12 @@ class AjaxSingleFileWidget(forms.TextInput):
         # break up name to be DB readable
         field_name = _field_for_db(name)
         # query all answertexts for this field & submission
-        answers = AnswerText.objects.filter(answer__field__slug=field_name, answer__answertext__text=value)
+        answers = Answer.objects.filter(field__slug=field_name, value=value)
         
         files = ''
         if answers:
             for answer in answers:
-                value = answer.text
+                value = answer.value
                 full_path = ''.join([settings.MEDIA_URL, value])
                 files += """<li>
                             <a class="del_upload" id="%s" href="" style="color:red;">X</a>

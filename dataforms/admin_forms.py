@@ -1,24 +1,40 @@
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from models import Binding, Field, FieldChoice
+from models import Condition, Field, FieldChoice
 
+FIELD_QS = Field.objects.all()
+CHOICE_QS = FieldChoice.objects.all()
 
-class BindingAdminForm(forms.ModelForm):
-    parent_fields_select = forms.ModelMultipleChoiceField(queryset=Field.objects.all(), 
-        widget=FilteredSelectMultiple("Parent Fields", is_stacked=False), required=False)
-    parent_choices_select = forms.ModelMultipleChoiceField(queryset=FieldChoice.objects.all(), 
-        widget=FilteredSelectMultiple("Parent Choices", is_stacked=False))
-    children_select = forms.ModelMultipleChoiceField(queryset=Field.objects.all(), 
-        widget=FilteredSelectMultiple("Children", is_stacked=False))
-        
-    def __init__(self, *args, **kwargs):
-        super(BindingAdminForm, self).__init__(*args, **kwargs)
-        self.fields['parent_fields_select'].initial = self.initial['parent_fields']
-        self.fields['parent_choices_select'].initial = self.initial['parent_choices']
-        self.fields['children_select'].initial = self.initial['children']
+class ConditionAdminForm(forms.ModelForm):
+    true_field = forms.ModelMultipleChoiceField(queryset=FIELD_QS, 
+        widget=FilteredSelectMultiple("True Fields", is_stacked=False), required=False)
+    true_choice = forms.ModelMultipleChoiceField(queryset=CHOICE_QS, 
+        widget=FilteredSelectMultiple("True Choices", is_stacked=False), required=False)
+    false_field = forms.ModelMultipleChoiceField(queryset=FIELD_QS, 
+        widget=FilteredSelectMultiple("False Fields", is_stacked=False), required=False)
+    false_choice = forms.ModelMultipleChoiceField(queryset=CHOICE_QS, 
+        widget=FilteredSelectMultiple("False Choices", is_stacked=False), required=False)
+            
+#    def __init__(self, *args, **kwargs):
+#        super(ConditionAdminForm, self).__init__(*args, **kwargs)
+#        if self.initial:
+#            self.fields['true_field_select'].initial = self.initial['true_field']
+#            self.fields['true_choice_select'].initial = self.initial['true_choice']
+#            self.fields['false_field_select'].initial = self.initial['false_field']
+#            self.fields['false_choice_select'].initial = self.initial['false_choice']
+    
+#    def clean(self):
+#        cleaned_data = self.cleaned_data
+#
+#        if not cleaned_data['parent_fields_select'] and not cleaned_data['parent_choices_select']:
+#            raise forms.ValidationError("A Parent Field or Parent Choice is required.")
+#
+#        return cleaned_data
+    
     
     class Meta:
-        model = Binding
+        model = Condition
+        #exclude = ('true_field', 'true_choice', 'false_field', 'false_choice',)
 
 
 class FieldAdminForm(forms.ModelForm):
