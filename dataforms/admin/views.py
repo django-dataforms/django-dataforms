@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from models import Submission, Answer
+from dataforms.models import Submission, Answer
 
 
 def answers_view(request, submissionid):

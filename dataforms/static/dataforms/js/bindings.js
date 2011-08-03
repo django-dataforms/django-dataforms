@@ -1,80 +1,73 @@
+var binding_results = {};
+
 function setBindings() {
 	// Create the binding event handlers
-	var many_bindings_js = $("input[type='hidden'][name*='js_dataform_bindings']");
-	var bindings_js = '';
-	var bindings;
-	var bindingParent;
-	var parents;
-	var children;
-	
-	for (var B=0; B < many_bindings_js.length; B++) {
-		bindings_js = many_bindings_js[B].value;
-		
-		if (!bindings_js)
-			continue;
-		
-		bindings = JSON.parse(bindings_js);
-		
-		for (var k=0; k < bindings.length; k++) {
-			
-			// Parents
-			parents = bindings[k]['parents'];
-			for (var i=0; i < parents.length; i++) {
-				for (var j=0; j < parents[i].length; j++) {
-					bindingParent = smartGetElement(parents[i][j]);
-					
-					// Replace the original string with the actual DOM element 
-					if (typeof parents[i][j] == "object") {
-						parents[i][j][0] = bindingParent;
-					} else {
-						parents[i][j] = bindingParent;
-					}
-					
-					// Create the set of bindings on this element
-					// FIXME: If the exact same binding has already been set before,
-					// it will be set again here. Potential performance hit if
-					// setBindings() is called too many times. 
-					// 
-					if (!bindingParent.data("bindings")) {
-						bindingParent.data("bindings", []);
-					}
-                    
-                    // Set each group of compound or single bindings (elements which
-					// are AND'd together). Each group will be OR'd together to evaluate truth.					
-					bindingParent.data("bindings").push(bindings[k]);
+	var binding_selectors = $("input[type='hidden'][name*='js_dataform_bindings']");
+	var bindings = [];
 
-					// Set event handler
-					bindingParent.change(doBinding).click(doBinding);
-					if (bindingParent.attr("type") == 'text') {
-						bindingParent.keyup(doBinding);
-					}
-				}
+	// Parse the bindings from the hidden field into a javascript array
+	$.each(binding_selectors, function(index, binding){
+		bindings.push(jQuery.parseJSON($(this).val()));
+	});
+
+	$.each(bindings, function(i1, bindingArray){
+		
+		$.each(bindingArray, function(i2, binding){
+			
+			if (binding.field_choice) {
+				var selector = smartGetSelector(binding.selector, true, true);
+			}
+			else {
+				var selector = smartGetSelector(binding.selector);
 			}
 			
-			// Children
-			children = bindings[k]['children'];
-			for (var i=0; i < children.length; i++) {
-				var child = smartGetElement(children[i]);
-				children[i] = child.parent();
-				
-				// Evaluate initial parent states and hide children if needed
-				if (!hasAllTruth(parents)) {
-					$(children[i]).hide();
-				}
+			//console.log(selector);
+			//console.log(binding.selector);
+			
+			selector.data('binding', binding);
+			selector.bind('init', function(event){
+				doBinding(event, true);
+			});
+			
+			// Set the event handlers			
+			if (selector.is('select')) {
+				selector.change(doBinding);
 			}
-		}
-	}
+			else if (selector.is('input:text, textarea')) {
+				selector.keyup(doBinding);
+			}
+			else {
+				selector.click(doBinding);
+			}
+			
+			// Manually trigger bindings for page start
+			selector.trigger('init');
+		});
+	});
 }
 
-function smartGetElement(name) {
+
+function smartGetSelector(selector, isChoiceField, isRootElement) {
     var bindingElement;
     
-	if (typeof name == "object") {
+    var name = selector.split('___')[0];
+    if (isChoiceField) {
+	    var value = selector.split('___')[1];
+    } 
+
+	if (value) {
 		// We're on a list (parent with choice)
-		bindingElement = $("input[name='"+name[0]+"'], select[name='"+name[0]+"'], textarea[name='"+name[0]+"']");
+		bindingElement = $(":input[name='"+name+"'][value='"+value+"'], select[name='"+name+"'] option[value='"+value+"']");
+		
+		// FIXME: Hackish way to include selects, should write this better.
+		if (isRootElement && bindingElement.is("option")) {
+			bindingElement = bindingElement.parent();
+		}
 	} else {
 		// We're on a string (direct parent)
-		bindingElement = $("#id_"+name);
+		bindingElement = $(":input[name='"+name+"']");
+		
+		// TODO: Do we need this??
 		if (!bindingElement.length) {
 			// If we didn't find an element #id_ directly, look for a label with for=id_name
 			bindingElement = $("label[for*='id_"+name+"']");
@@ -83,81 +76,196 @@ function smartGetElement(name) {
 	return bindingElement;
 }
 
-function doBinding() {
-	var parents;
-	var children;
-	var bindings = $(this).data("bindings");
 
-	for (var b=0; b < bindings.length; b++) {
-		parents = bindings[b]['parents'];
-		children = bindings[b]['children'];
-		
-		if (hasAllTruth(parents)){
-			// show
-			for (var i=0; i<children.length; i++){
-				console.log(children);
-				$(children[i]).slideDown();
-			}
-		} else {
-			// hide
-			for (var i=0; i<children.length; i++){
-				$(children[i]).slideUp();
-			}
-		}
-	}
+function smartGetElement(selector) {
+	return selector.split('___')[0];
 }
 
-function contains(haystack, needle) {
-	for (i in haystack)
-		if (haystack[i] == needle)
-			return true;
-	return false;
+function smartGetElementValue(selector) {
+	return selector.split('___')[1];
 }
 
-function hasSingleTruth(element) {
-	var choice = null;
-	if (element.length > 1) {
-		// We're on a list (parent with choice)
-		choice = element[1];
-		element = element[0];
-	}
+
+function doBinding(event, noAnimation) {
+	// Assign the binding
+	var binding = $(event.currentTarget).data('binding');
+	var isTrue = hasTruth($(event.currentTarget));
+	var bindingElement = smartGetSelector(binding.selector);
 	
-	var tagName = element.attr("type");
-	var value = element.val();
-	
-	if (
-	(tagName == "checkbox" && (element.length == 1 && element.attr("checked") || element.filter("input[value='"+choice+"']").attr("checked")))
-	|| (tagName == "select-one" && value == choice)
-	|| (tagName == "select-multiple" && value && contains(value, choice))
-	|| (tagName == "text" && value != '')
-	|| (tagName == "radio" && element.filter(":checked").val() == choice)) {
-		return true;
-	} else {
-		return false;
+	if (noAnimation) {
+		var speed = 0;
 	}
-}
+	else {
+		var speed = 100;
+	}
 
-function hasAllTruth(listOfParents) {
-	for(var i=0; i < listOfParents.length; i++) {
-		var parentSet = listOfParents[i];
+	if (binding.value) {
+		var bindingValue = binding.value;
+	}
+	else {
+		var bindingValue = smartGetElementValue(binding.selector);
+	}
+
+	// Do show/hide action
+	if (binding.action == 'show-hide') {
+		// If this is an object (array), then we know we have a fieldchoice
 		
-		// Assume we have all truth
-		var tempTruth = true;
-		
-		for(var x=0; x < parentSet.length; x++){
-			var parent = parentSet[x];
+		// If the value  matches, then we are true!
+		if (isTrue) {
 			
-			// Make sure I always had truth before
-			tempTruth = hasSingleTruth(parent) && tempTruth;
+			if (binding.true_field) {
+				// Loop through the true fields to show
+				$.each(binding.true_field, function(index, selector){
+					$("label[for*='id_"+selector+"']").closest(".dataform-field,tr,ul,p").show(speed);
+				});
+			}
+			
+			if (binding.true_choice) {
+				// Loop though the true field choices to show
+				$.each(binding.true_choice, function(index, selector){
+
+					var bindingElement = smartGetSelector(selector, true);
+					var element = smartGetElement(selector);
+					var value = smartGetElementValue(selector);
+					
+					// console.log(element);
+					// console.log(value);
+					
+					$("label[for*='id_"+element+"_0']").first().show(speed);
+					// Show if the value matches the fieldchoice
+					if (bindingElement.is("option")) {
+						bindingElement.removeAttr('disabled');
+					}
+					else {
+						bindingElement.closest('li').show(speed)
+					}
+				});
+			}
+			
+		}
+		// If The value does not match then we are false!
+		else {
+			
+			if (binding.false_field) {
+				// Loop through the false fields to hide
+				$.each(binding.false_field, function(index, selector){
+					$("label[for*='id_"+selector+"']").filter(":first").closest(".dataform-field,tr,ul,p").hide(speed);
+				});
+			}
+
+			// Loop though the false field choices to hide
+			if (binding.false_choice) {
+				$.each(binding.false_choice, function(index, selector){
+					
+					var bindingElement = smartGetSelector(selector, true);
+					var element = smartGetElement(selector);
+					var value = smartGetElementValue(selector);
+					
+					//console.log(binding.false_choice);
+					//console.log(bindingElement);
+					//console.log(selector);
+					//console.log(element);
+					//console.log(value);
+					
+					
+					// Hide if the value matches the fieldchoice
+					if (bindingElement.is("option")) {
+						bindingElement.attr('disabled', 'disabled');
+					}
+					else {
+						bindingElement.closest('li').hide('fast', function(){
+							if (bindingElement.closest(".dataform-field,tr,ul,p").find('input:visible').length == 0) {
+								$("label[for*='id_"+element+"']").first().hide();
+							}
+						});
+					}
+				});
+			}
+		}
+			
+		
+	}
+	// Do custom function, not implemented yet...
+	else {
+		// TODO: Need to code this.		
+	}
+
+}
+
+
+function hasTruth(selector) {
+	var bindingOperator;
+	var bindingValue;
+	var binding = selector.data('binding');
+	var bindingElement = smartGetSelector(binding.selector);
+	var result = false;
+	
+	// Find out the operator and the value
+	if (binding.field_choice) {
+		bindingOperator = 'checked';
+		bindingValue = smartGetElementValue(binding.selector);
+	}
+	else {
+		bindingOperator = binding.operator;
+		bindingValue = binding.value;
+	}
+	
+	// The default is to return true because this is coming from a
+	// click or change handler, meaning we know something was checked
+	if (bindingOperator == 'checked') {
+		// If there is a value then we need to check to see if the values
+		// match and if not then return false
+		if (selector.is("input")) {
+			if (selector.is(":checked")) {
+				result = true;
+			}
+		}
+		else {
+			if (bindingValue == selector.val()) {
+				result = true;
+			}
+		}
+	}
+	// All other operators require that there is a value, so if there is not
+	// then return false below
+	else {
+		// If there is a value then we need to check to see if the values
+		
+		// equal match
+		if (bindingOperator == 'equal'  && selector.val() == bindingValue) {
+			result = true;
+		}
+		// not equal match
+		if (bindingOperator == 'not-equal'  && selector.val() != bindingValue) {
+			result = true;
+		}
+		// contains match
+		if (bindingOperator == 'contain'  && selector.val().indexOf(bindingValue) != -1) {
+			result = true;
+		}
+		// does not contains match
+		if (bindingOperator == 'not-contain'  && selector.val().indexOf(bindingValue) == -1) {
+			result = true;
 		}
 		
-		if(tempTruth)
-			return true;
 	}
-	return false;
+	
+	binding_results[binding.id] = result
+	
+	// Loop through additional rules to see if they are false
+	// If they are, we override the result until they are true.
+	// This allows us to use compound bindings.
+	if (binding.additional_rules) {
+		$.each(binding.additional_rules, function(index, value){
+			if (binding_results[value] == false) {
+				result = false;
+			}
+		});
+	}
+
+	return result;
 }
 
 $(function() {
-	console.log('init');
 	setBindings();
 });

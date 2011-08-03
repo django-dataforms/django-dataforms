@@ -10,23 +10,25 @@ from django import forms
 from django.conf import settings
 from django.core.cache import cache
 from django.forms.forms import BoundField
-from django.template.defaultfilters import safe
-from django.utils import simplejson as json
+from django.template.defaultfilters import safe, force_escape
+from django.utils import simplejson as json, simplejson
 from django.utils.datastructures import SortedDict
+from django.utils.safestring import mark_safe
 from file_handler import handle_upload
+from itertools import chain
 from models import DataForm, Collection, Field, FieldChoice, Choice, Answer, \
-    Submission, CollectionDataForm, Section, Condition, update_many, insert_many, \
-    delete_many
+    Submission, CollectionDataForm, Section, Binding
+from utils.sql import update_many, insert_many, delete_many
+
 from settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, \
     CHOICE_FIELDS, UPLOAD_FIELDS, FIELD_DELIMITER, SINGLE_NUMBER_FIELDS, \
-    MULTI_NUMBER_FIELDS, NUMBER_FIELDS, HIDDEN_BINDINGS_SLUG, FORM_MEDIA
+    MULTI_NUMBER_FIELDS, NUMBER_FIELDS, FORM_MEDIA, VALIDATION_MODULE
 import datetime
     
 
 # Load the user's custom validation, if it exists
-try: import validation
+try: validation = __import__(VALIDATION_MODULE, fromlist=['*'])
 except ImportError: validation = None
-
 
 
 class BaseDataForm(forms.BaseForm):
@@ -85,6 +87,37 @@ class BaseDataForm(forms.BaseForm):
         return super(BaseDataForm, self).is_valid()
     
     
+    # Override the as_table, as_ul, as_p so that we can inject a rel attr for bindings
+#    def as_table(self):
+#        "Returns this form rendered as HTML <tr>s -- excluding the <table></table>."
+#        return self._html_output(
+#            normal_row = u'<tr%(html_class_attr)s rel="dataform-label"><th>%(label)s</th><td>%(errors)s%(field)s%(help_text)s</td></tr>',
+#            error_row = u'<tr rel="dataform-field"><td colspan="2">%s</td></tr>',
+#            row_ender = u'</td></tr>',
+#            help_text_html = u'<br /><span class="helptext">%s</span>',
+#            errors_on_separate_row = False)
+#
+#
+#    def as_ul(self):
+#        "Returns this form rendered as HTML <li>s -- excluding the <ul></ul>."
+#        return self._html_output(
+#            normal_row = u'<li%(html_class_attr)s rel="dataform-label">%(errors)s%(label)s %(field)s%(help_text)s</li>',
+#            error_row = u'<li rel="dataform-field">%s</li>',
+#            row_ender = '</li>',
+#            help_text_html = u' <span class="helptext">%s</span>',
+#            errors_on_separate_row = False)
+#
+#
+#    def as_p(self):
+#        "Returns this form rendered as HTML <p>s."
+#        return self._html_output(
+#            normal_row = u'<p%(html_class_attr)s rel="dataform-label">%(label)s %(field)s%(help_text)s</p>',
+#            error_row = u'%s',
+#            row_ender = '</p>',
+#            help_text_html = u' <span class="helptext">%s</span>',
+#            errors_on_separate_row = True)
+    
+    
     def save(self, collection=None):
         """    
         Saves the validated, cleaned form data. If a submission already exists,
@@ -94,6 +127,11 @@ class BaseDataForm(forms.BaseForm):
         # TODO: think about adding an "overwrite" argument to this function, default of False,
         # which will determine if an error should be thrown if the submission object already
         # exists, or if we should trust the data and overwrite the previous submission.
+
+        # If there is no submission object, then this should just be a normal
+        # Django form.  No need to call the save method, so we will raise an exception
+        if not hasattr(self, 'submission'):
+            raise LookupError("There is no submission object.  Are your creating the form with 'retrun_class=True'? If so, no need to call save.")
 
         if not self.cleaned_data:
             raise LookupError("The is_valid() method must be called before saving a form")
@@ -117,10 +155,10 @@ class BaseDataForm(forms.BaseForm):
         
         # Get Answers if they exist 
         answers = Answer.objects.select_related(
-                    'submission', 
-                    'data_from', 
+                    'submission',
+                    'data_from',
                     'field').filter(
-                                data_form__slug=self.slug, 
+                                data_form__slug=self.slug,
                                 submission=self.submission)
         
         # If answers don't exist, create the records without answers so that 
@@ -240,13 +278,12 @@ class BaseDataForm(forms.BaseForm):
             
             # Add the selected choices
             for choice_answer in self.cleaned_data[key]:
-                for choice in choices:
-                    if choice.choice.value == choice_answer:
-                        answer_choices.append(unicode(choice.choice.value))
-                        choice_relations.append(choice.choice.pk)
-                            
-                        break
-            
+                cur_choice = filter(lambda x: x.choice.value == choice_answer, choices)
+                if cur_choice:
+                    cur_choice = cur_choice[0]
+                    answer_choices.append(unicode(cur_choice.choice.value))
+                    choice_relations.append(cur_choice.choice.pk)
+                
             if field.field_type in SINGLE_CHOICE_FIELDS:
                 answer.value = ','.join(answer_choices)
             else:
@@ -271,8 +308,9 @@ class BaseDataForm(forms.BaseForm):
         # Get Note and FileInput fields
         fields = Field.objects.filter(dataform__slug=self.meta['slug'], field_type__in=("Note",) + UPLOAD_FIELDS)
         
+        # TODO: Remove these when Binding are re-written and Notes are removed.
         # Bindings fields
-        keys.append(_field_for_form(name=HIDDEN_BINDINGS_SLUG, form=self.meta['slug']))
+        keys.append(_field_for_form(name='js_dataform_bindings', form=self.meta['slug']))
         # Note fields
         keys += [_field_for_form(name=field.slug, form=self.meta['slug']) for field in fields if field.field_type == "Note"]
         
@@ -385,6 +423,7 @@ class BaseCollection(object):
             else:
                 form.save(collection=self.collection)
         
+        
     def is_valid(self, check_required=True, process_full_form=True):
         """
         Validate all contained forms
@@ -493,7 +532,7 @@ def create_collection(request, collection, submission, readonly=False, section=N
     return collection
 
 
-def create_form(request, form, submission, title=None, description=None, section=None, readonly=False, answers=None, use_cache=None):
+def create_form(request, form, submission, title=None, description=None, section=None, readonly=False, answers=None, return_class=False):
     """
     Instantiate and return a dynamic form object, optionally already populated from an
     already submitted form.
@@ -518,6 +557,14 @@ def create_form(request, form, submission, title=None, description=None, section
             
     # Create our form class and get the querys we used
     FormClass, query_data = _create_form(form=form, title=title, description=description, readonly=readonly)
+    
+    # TODO: This is not working yet, needs to be completed.
+    # Return just the class object if a Form Class is only needed
+    # This will de-couple the database integration allowing the developer
+    # to save to form like a normal Django form.
+    # Note: Bindings do not work if this is coupled with a Formset.
+    if return_class:
+        return FormClass
     
     # Create the actual form instance, from the dynamic form class
     if request.POST:
@@ -627,10 +674,12 @@ def _create_form(form, title=None, description=None, readonly=False):
     meta['slug'] = form.slug
         
     # Get all the fields
-    fields = Field.objects.filter(
+    fields_qs = Field.objects.filter(
         dataformfield__data_form__slug=slug,
         visible=True
-    ).order_by('dataformfield__order').values()
+    ).order_by('dataformfield__order')
+    
+    fields = [field for field in fields_qs.values()]
 
     if not fields:
         raise Field.DoesNotExist('Field for %s do not exist. Make sure the slug name is correct and the fields are visible.' % slug)
@@ -655,15 +704,15 @@ def _create_form(form, title=None, description=None, readonly=False):
     # (as of v1.0) extra attributes on <option> elements on Select widgets. So, instead:
     
     # Get the bindings for use in the Field Loop
-#    bindings = get_bindings(form=form)
-#    
-#    # Add a hidden field used for passing information to the JavaScript bindings function
-#    fields.append({
-#        'field_type': 'HiddenInput',
-#        'slug': HIDDEN_BINDINGS_SLUG,
-#        'initial': safe(force_escape(json.dumps(bindings))),
-#        'required': False,
-#    })
+    bindings = get_bindings(form=form)
+    
+    # Add a hidden field used for passing information to the JavaScript bindings function
+    fields.append({
+        'field_type': 'HiddenInput',
+        'slug': 'js_dataform_bindings',
+        'initial': safe(force_escape(json.dumps(bindings))),
+        'required': False,
+    })
     
     
 # --------------------- BINDINGS - needs rewrite 
@@ -755,7 +804,7 @@ def _create_form(form, title=None, description=None, readonly=False):
             widget_attrs['readonly'] = 'readonly'
         if readonly and row['field_type'] == "CheckboxInput":
             widget_attrs['disabled'] = "disabled"
-            
+          
         # Instantiate the widget that this field will use
         # TODO: Possibly create logic that passes submissionid to file upload widget to handle file
         # paths without enforcing a redirect.
@@ -905,14 +954,39 @@ def get_form_media():
     return forms.Media(**FORM_MEDIA)
 
 
-def get_conditions(form):
+def get_bindings(form):
     
-
     if isinstance(form, str) or isinstance(form, unicode):
         form = DataForm.objects.get(slug=form)
             
-            
-    conditions = Condition.objects.filter(data_form=form)
+    bindings = list(Binding.objects.filter(data_form=form).values(
+        'id', 'action', 'field', 'field__slug', 'value', 'parent', 'operator',
+        'data_form', 'data_form__slug', 'field_choice', 'field_choice__field__slug',
+        'field_choice__choice__value', 'true_field', 'true_choice',
+        'false_field', 'false_choice', 'function', 'additional_rules'))
+    bindings_list = []
+
+    for binding in bindings:
+        
+        if binding['field__slug']:
+            binding['selector'] = _field_for_form(name=binding['field__slug'], form=form.slug)
+        else:
+            binding['selector'] = _field_for_form(
+                name='%s___%s' % (binding['field_choice__field__slug'], binding['field_choice__choice__value']),
+                form=form.slug)
+        
+        for key, value in binding.iteritems():
+            if key in ['true_field', 'true_choice', 'false_field','false_choice', 'additional_rules']:
+                if value:
+                    binding[key] = binding[key].split(',')
+                    
+            if not value:
+                binding[key] = None
+                
+        bindings_list.append(binding)
+
+    return bindings_list
+    
     
 # TODO: Bindings needs to be re-written!
 #def get_bindings(form):
@@ -1002,6 +1076,10 @@ def create_form_class_title(slug):
 def get_db_field_names(form):
 
     return [_field_for_db(key) for key in form.fields]
+
+
+def filter_qs(qs, id):
+    return True if qs.id == id else False
 
 
 def _field_for_form(name, form):

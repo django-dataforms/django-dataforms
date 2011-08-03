@@ -25,7 +25,7 @@ from django.conf import settings
 
 FIELD_MAPPINGS = {}
 
-if hasattr(settings, 'FIELD_MAPPINGS'):
+if hasattr(settings, 'DATAFORMS_FIELD_MAPPINGS'):
 	FIELD_MAPPINGS = settings.FIELD_MAPPINGS
 	
 FIELD_MAPPINGS.update( {
@@ -52,42 +52,55 @@ FIELD_MAPPINGS.update( {
 	'USStateField' : { 'class': 'django.contrib.localflavor.us.forms.USStateField', 'widget' : 'django.forms.TextInput' },   
 } )
 
-MAX_UPLOAD_SIZE = getattr(settings, "MAX_UPLOAD_SIZE", 10485760)
+MAX_UPLOAD_SIZE = getattr(settings, "DATAFORMS_MAX_UPLOAD_SIZE", 10485760)
 
-UPLOAD_FIELDS = getattr(settings, "UPLOAD_FIELDS", ()) + ('FileInput','AjaxSingleFileUpload',)
-BOOLEAN_FIELDS = getattr(settings, "BOOLEAN_FIELDS", ()) + ('CheckboxInput',)
-SINGLE_CHOICE_FIELDS = getattr(settings, "SINGLE_CHOICE_FIELDS", ()) + ('Select', 'RadioSelect')
-MULTI_CHOICE_FIELDS = getattr(settings, "MULTI_CHOICE_FIELDS", ()) + ('SelectMultiple', 'CheckboxSelectMultiple')
-CHOICE_FIELDS = getattr(settings, "CHOICE_FIELDS", ()) + (SINGLE_CHOICE_FIELDS + MULTI_CHOICE_FIELDS)
+UPLOAD_FIELDS = getattr(settings, "DATAFORMS_UPLOAD_FIELDS", ()) + ('FileInput','AjaxSingleFileUpload',)
+BOOLEAN_FIELDS = getattr(settings, "DATAFORMS_BOOLEAN_FIELDS", ()) + ('CheckboxInput',)
+SINGLE_CHOICE_FIELDS = getattr(settings, "DATAFORMS_SINGLE_CHOICE_FIELDS", ()) + ('Select', 'RadioSelect')
+MULTI_CHOICE_FIELDS = getattr(settings, "DATAFORMS_MULTI_CHOICE_FIELDS", ()) + ('SelectMultiple', 'CheckboxSelectMultiple')
+CHOICE_FIELDS = getattr(settings, "DATAFORMS_CHOICE_FIELDS", ()) + (SINGLE_CHOICE_FIELDS + MULTI_CHOICE_FIELDS)
 
 # This is for pseudo-foreign key storage (for usage of things like django-ajax-selects)
-SINGLE_NUMBER_FIELDS = getattr(settings, "SINGLE_NUMBER_FIELDS", ())
+SINGLE_NUMBER_FIELDS = getattr(settings, "DATAFORMS_SINGLE_NUMBER_FIELDS", ())
 
 # This is for pseudo-many-to-many key storage
-MULTI_NUMBER_FIELDS = getattr(settings, "MULTI_NUMBER_FIELDS", ())
-NUMBER_FIELDS = getattr(settings, "CHOICE_FIELDS", ()) + (SINGLE_NUMBER_FIELDS + MULTI_NUMBER_FIELDS)
+MULTI_NUMBER_FIELDS = getattr(settings, "DATAFORMS_MULTI_NUMBER_FIELDS", ())
+NUMBER_FIELDS = getattr(settings, "DATAFORMS_CHOICE_FIELDS", ()) + (SINGLE_NUMBER_FIELDS + MULTI_NUMBER_FIELDS)
 
-FIELD_DELIMITER = getattr(settings, "FIELD_DELIMITER", "__")
+FIELD_DELIMITER = getattr(settings, "DATAFORMS_FIELD_DELIMITER", "__")
 
-ADMIN_SORT_JS = getattr(settings, "ADMIN_SORT_JS",
-	(
+#HIDDEN_BINDINGS_SLUG = getattr(settings, "DATAFORMS_HIDDEN_BINDINGS_SLUG", "js_dataform_bindings")
+
+VALIDATION_MODULE = getattr(settings, "DATAFORMS_VALIDATION_MODULE", "validation")
+
+FIELD_TYPE_CHOICES = tuple([(field,field) for field in FIELD_MAPPINGS])
+
+ADMIN_SORT_JS = (
 	'https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',
 	'https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js',
 	'%sdataforms/js/jquery.adminmenusort.js' % settings.STATIC_URL,
-	)
 )
 
 FORM_MEDIA = {
 	'js' : (
-	'https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',
-	'https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js',
-	'%sdataforms/js/json2.js' % settings.STATIC_URL,
+	'http://code.jquery.com/jquery.min.js',
+	'http://code.jquery.com/ui/1.8.14/jquery-ui.min.js',
 	'%sdataforms/js/ajaxupload.js' % settings.STATIC_URL,
 	'%sdataforms/js/bindings.js' % settings.STATIC_URL,
 	'%sdataforms/js/datepicker.js' % settings.STATIC_URL,
-	'%sdataforms/js/jquery.formconditions.js' % settings.STATIC_URL,
 	),
 }
 
-FIELD_TYPE_CHOICES = tuple([(field,field) for field in FIELD_MAPPINGS])
-HIDDEN_BINDINGS_SLUG = getattr(settings, "HIDDEN_BINDINGS_SLUG", "js_dataform_bindings")
+BINDING_OPERATOR_CHOICES = (
+    ('checked', 'Checked, Selected, or has a Value',),
+    ('equal', 'Equal',),
+    ('not-equal', 'Not Equal',),
+    ('contain', 'Contains',),
+    ("not-contain", "Doesn't Contain",),
+)
+
+BINDING_ACTION_CHOICES = (
+    ('show-hide', 'Show/Hide',),
+    ('function', 'Custom Function',),
+)
+

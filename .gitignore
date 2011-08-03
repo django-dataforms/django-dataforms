@@ -7,3 +7,4 @@ dist
 ._*
 /.pydevproject
 /.project
+dataforms/migrations
