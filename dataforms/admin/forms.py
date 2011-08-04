@@ -4,7 +4,7 @@ from dataforms.models import Binding, Field, FieldChoice, DataFormField
 
 FIELD_CHOICES = [
     (u'%s__%s' % (field.data_form, field.field), u'%s (%s)' % (field.data_form, field.field)) 
-    for field in DataFormField.objects.select_related('data_form', 'field').all()
+    for field in DataFormField.objects.select_related('data_form', 'field').all().order_by('data_form')
 ]
 
 CHOICE_CHOICES = [

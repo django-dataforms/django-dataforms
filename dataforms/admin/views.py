@@ -1,5 +1,6 @@
-from django.shortcuts import render
 from dataforms.models import Submission, Answer
+from django.http import Http404
+from django.shortcuts import render
 
 
 def answers_view(request, submissionid):
@@ -18,3 +19,12 @@ def answers_view(request, submissionid):
     }
     
     return render(request, 'admin/dataforms/answers.html', vals)
+
+#def ajax_fiter_field(request, data_form):
+#    
+#    if request.is_ajax():
+#       
+#       
+#        
+#    else:
+#        return Http404

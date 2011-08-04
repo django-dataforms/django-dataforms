@@ -8,21 +8,19 @@ http://code.google.com/p/django-dataforms/wiki/GettingStarted
 from collections import defaultdict
 from django import forms
 from django.conf import settings
-from django.core.cache import cache
 from django.forms.forms import BoundField
 from django.template.defaultfilters import safe, force_escape
-from django.utils import simplejson as json, simplejson
+from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
 from django.utils.safestring import mark_safe
-from file_handler import handle_upload
-from itertools import chain
 from models import DataForm, Collection, Field, FieldChoice, Choice, Answer, \
     Submission, CollectionDataForm, Section, Binding
+from utils.file_handler import handle_upload
 from utils.sql import update_many, insert_many, delete_many
 
 from settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, \
-    CHOICE_FIELDS, UPLOAD_FIELDS, FIELD_DELIMITER, SINGLE_NUMBER_FIELDS, \
-    MULTI_NUMBER_FIELDS, NUMBER_FIELDS, FORM_MEDIA, VALIDATION_MODULE
+    CHOICE_FIELDS, UPLOAD_FIELDS, FIELD_DELIMITER, STATIC_CHOICE_FIELDS, \
+    FORM_MEDIA, VALIDATION_MODULE
 import datetime
     
 
@@ -87,37 +85,6 @@ class BaseDataForm(forms.BaseForm):
         return super(BaseDataForm, self).is_valid()
     
     
-    # Override the as_table, as_ul, as_p so that we can inject a rel attr for bindings
-#    def as_table(self):
-#        "Returns this form rendered as HTML <tr>s -- excluding the <table></table>."
-#        return self._html_output(
-#            normal_row = u'<tr%(html_class_attr)s rel="dataform-label"><th>%(label)s</th><td>%(errors)s%(field)s%(help_text)s</td></tr>',
-#            error_row = u'<tr rel="dataform-field"><td colspan="2">%s</td></tr>',
-#            row_ender = u'</td></tr>',
-#            help_text_html = u'<br /><span class="helptext">%s</span>',
-#            errors_on_separate_row = False)
-#
-#
-#    def as_ul(self):
-#        "Returns this form rendered as HTML <li>s -- excluding the <ul></ul>."
-#        return self._html_output(
-#            normal_row = u'<li%(html_class_attr)s rel="dataform-label">%(errors)s%(label)s %(field)s%(help_text)s</li>',
-#            error_row = u'<li rel="dataform-field">%s</li>',
-#            row_ender = '</li>',
-#            help_text_html = u' <span class="helptext">%s</span>',
-#            errors_on_separate_row = False)
-#
-#
-#    def as_p(self):
-#        "Returns this form rendered as HTML <p>s."
-#        return self._html_output(
-#            normal_row = u'<p%(html_class_attr)s rel="dataform-label">%(label)s %(field)s%(help_text)s</p>',
-#            error_row = u'%s',
-#            row_ender = '</p>',
-#            help_text_html = u' <span class="helptext">%s</span>',
-#            errors_on_separate_row = True)
-    
-    
     def save(self, collection=None):
         """    
         Saves the validated, cleaned form data. If a submission already exists,
@@ -153,45 +120,43 @@ class BaseDataForm(forms.BaseForm):
         self.submission.last_modified = datetime.datetime.now()
         self.submission.save()
         
-        # Get Answers if they exist 
-        answers = Answer.objects.select_related(
-                    'submission',
-                    'data_from',
-                    'field').filter(
-                                data_form__slug=self.slug,
-                                submission=self.submission)
+        # Delete Answers if they exist and start over ;)
+        Answer.objects.select_related(
+            'submission',
+            'data_from',
+            'field').filter(
+                        data_form__slug=self.slug,
+                        submission=self.submission).delete()
         
         # If answers don't exist, create the records without answers so that 
         # we can populate them later and save the relationships 
         # This is more efficient then using the ORM
-        if not answers:
+        #if not answers:
             
-            field_keys = []
-            answers = []
-            for key in self.fields.keys():
-                # Mangle the key into the DB form, then get the right Field
-                field_keys.append(_field_for_db(key))
-            
-            # Get All Fields
-            fields = self.query_data['fields_list']
-            
-            
-            for field in fields:
-                
-                # save the answer only if the field is in the form POST
-                if field['slug'] in field_keys:
-                    # Create a new answer object
-                    answer = Answer()
-                    answer.submission = self.submission
-                    answer.data_form = self.query_data['dataform_query']
-                    answer.field_id = field['id']
-                    answers.append(answer)
-            
-            # Update the answers
-            insert_many(answers)    
-            
-            # Get Answers again so that we have the pks
-            answers = Answer.objects.select_related('submission', 'data_from', 'field').filter(data_form__slug=self.slug, submission=self.submission)
+        field_keys = []
+        answers = []
+        for key in self.fields.keys():
+            # Mangle the key into the DB form, then get the right Field
+            field_keys.append(_field_for_db(key))
+        
+        # Get All Fields
+        fields = self.query_data['fields_list']
+        
+        for field in fields:
+            # save the answer only if the field is in the form POST
+            if field['slug'] in field_keys:
+                # Create a new answer object
+                answer = Answer()
+                answer.submission = self.submission
+                answer.data_form = self.query_data['dataform_query']
+                answer.field_id = field['id']
+                answers.append(answer)
+        
+        # Update the answers
+        insert_many(answers)    
+        
+        # Get Answers again so that we have the pks
+        answers = Answer.objects.select_related('submission', 'data_from', 'field').filter(data_form__slug=self.slug, submission=self.submission)
  
             
         # Get All possible choices from form models dict
@@ -223,14 +188,33 @@ class BaseDataForm(forms.BaseForm):
     def _prepare_answer(self, answer, choices):
         
         field = answer.field
-        
         key = _field_for_form(field, self.slug)
+        choice_relations = []
 
-        if field.field_type in SINGLE_NUMBER_FIELDS:
-            answer.value = self.cleaned_data[key].id
-               
-        elif field.field_type in MULTI_NUMBER_FIELDS:
-            answer.value = [num for num in self.cleaned_data[key]]
+                
+        if field.field_type in STATIC_CHOICE_FIELDS:
+            answer.value = ','.join(self.cleaned_data[key])
+        
+        # Because Choices are m2m relations, we need to do this after the save.
+        elif field.field_type in CHOICE_FIELDS:
+           
+            answer_choices = []
+           
+            # If string, wrap as a list because the for-loop below assumes a list
+            if isinstance(self.cleaned_data[key], str) or isinstance(self.cleaned_data[key], unicode):
+                self.cleaned_data[key] = [self.cleaned_data[key]]
+            
+            # Add the selected choices
+            for choice_answer in self.cleaned_data[key]:
+                cur_choice = filter(lambda x: x.choice.value == choice_answer, choices)
+                if cur_choice:
+                    cur_choice = cur_choice[0]
+                    answer_choices.append(unicode(cur_choice.choice.value))
+                    choice_relations.append(cur_choice.choice.pk)
+            
+            # Save the string representation of the choice answers in to 
+            # answer.value
+            answer.value = ','.join(answer_choices)
         
         else:
             
@@ -255,7 +239,7 @@ class BaseDataForm(forms.BaseForm):
                 # These conditional checks are required for single checkboxes to work.
                 # The unicode() type cast is required to fix an Oracle character
                 # code mismatch when saving an integer.
-                
+
                 content = (
                     '1' if self.cleaned_data[key] is True
                     else unicode(self.cleaned_data[key])
@@ -265,32 +249,6 @@ class BaseDataForm(forms.BaseForm):
         
             answer.value = content
         
-        choice_relations = []
-
-        # Because Choices are m2m relations, we need to do this after the save.
-        if field.field_type in CHOICE_FIELDS:
-           
-            answer_choices = []
-           
-            # If string, wrap as a list because the for-loop below assumes a list
-            if isinstance(self.cleaned_data[key], str) or isinstance(self.cleaned_data[key], unicode):
-                self.cleaned_data[key] = [self.cleaned_data[key]]
-            
-            # Add the selected choices
-            for choice_answer in self.cleaned_data[key]:
-                cur_choice = filter(lambda x: x.choice.value == choice_answer, choices)
-                if cur_choice:
-                    cur_choice = cur_choice[0]
-                    answer_choices.append(unicode(cur_choice.choice.value))
-                    choice_relations.append(cur_choice.choice.pk)
-                
-            if field.field_type in SINGLE_CHOICE_FIELDS:
-                answer.value = ','.join(answer_choices)
-            else:
-                answer.value = answer_choices
-        
-        # Save the answer
-        #answer.save(force_update=True)
         return answer, choice_relations
     
         
@@ -477,6 +435,10 @@ def create_collection(request, collection, submission, readonly=False, section=N
     :param collection: a data form collection slug or object
     :param submission: create-on-use submission slug or object; passed in to retrieve
         Answers from an existing Submission, or to be the slug for a new Submission.
+    :param readonly: optional readonly; converts form fields to be readonly.
+        Usefull for display only logic.
+    :param section: optional section; allows a return of only forms on that section. 
+    
     :return: a BaseCollection object, populated with the correct data forms and data
     """
     
@@ -553,6 +515,11 @@ def create_form(request, form, submission, title=None, description=None, section
     :param title: optional title; pulled from DB by default
     :param description: optional description; pulled from DB by default
     :param section: optional section; will be added as an attr to the form instance 
+    :param readonly: optional readonly; converts form fields to be readonly.
+        Usefull for display only logic.
+    :param answers: optional answers; answer queryset for the submission
+    :param return_class: optional return_class; returns only the form class and decouples database saves
+        Usefull for when you want to save the form somewhere else.
     """
             
     # Create our form class and get the querys we used
@@ -587,7 +554,7 @@ def create_form(request, form, submission, title=None, description=None, section
             data, submission = get_answers(submission=submission, for_form=True)
         else:
             data = None
-        
+
         form = FormClass(initial=(data))
         
     # Now that we have an instantiated form object, let's add our custom attributes
@@ -638,6 +605,8 @@ def _create_form(form, title=None, description=None, readonly=False):
     :param form: a data form slug or object
     :param title: optional title; pulled from DB by default
     :param description: optional description; pulled from DB by default
+    :param readonly: optional readonly; converts form fields to be readonly.
+        Usefull for display only logic.
     """
     
     # Make sure the form definition exists before continuing
@@ -693,16 +662,6 @@ def _create_form(form, title=None, description=None, readonly=False):
     )
     
     
-    
-# --------------------- BINDINGS - needs rewrite 
-    
-    
-    
-    # We originally were setting the "rel" attr on the field objects to do the bindings,
-    # but this only works for checkboxes and other top-level field types. It does not work
-    # with sub-options (like elements of a drop down) because Django does not yet support
-    # (as of v1.0) extra attributes on <option> elements on Select widgets. So, instead:
-    
     # Get the bindings for use in the Field Loop
     bindings = get_bindings(form=form)
     
@@ -713,9 +672,6 @@ def _create_form(form, title=None, description=None, readonly=False):
         'initial': safe(force_escape(json.dumps(bindings))),
         'required': False,
     })
-    
-    
-# --------------------- BINDINGS - needs rewrite 
     
     
     # Populate our choices dictionary
@@ -923,16 +879,17 @@ def get_answers(submission, for_form=False, form=None, field=None):
     
     # For every answer, do some magic and get it into our data dictionary
     for answer in answers:
-        # Refactors the answer field name to be globally unique (so
+        # TODO: Refactors the answer field name to be globally unique (so
         # that a field can be in multiple forms in the same POST)
         if for_form:
             #answer_key = _field_for_form(name=str(answer['field_slug']), form=answer['dataform_slug'])
-            answer_key = _field_for_form(name=str(answer.field_slug), form=answer.data_form_slug)
+            answer_key = _field_for_form(name=answer.field_slug, form=answer.data_form_slug)
         else:
-            answer_key = str(answer.field.slug)
+            answer_key = answer.field_slug
         
         # Pass the answer to the Dict Key
         if answer.choice_id:
+           
            
             # TODO: Need to check to make sure all Fields are covered.
             # Are there more then string or list?
@@ -941,11 +898,13 @@ def get_answers(submission, for_form=False, form=None, field=None):
                     data[answer_key] = [data[answer_key]]
                 data[answer_key].append(answer.choice_value)
             else:
-                data[answer_key] = answer.choice_value
-                
+                if answer.field_type in MULTI_CHOICE_FIELDS:
+                    data[answer_key] = [answer.choice_value]
+                else:
+                    data[answer_key] = answer.choice_value
         else:
             data[answer_key] = answer.value
-    
+
     # Return the answers and the submission back
     return dict(data), submission
 
@@ -955,6 +914,11 @@ def get_form_media():
 
 
 def get_bindings(form):
+    """
+    Get the bindings for specific form
+    
+    :return: list of dictionaries, where each dictionary is a single binding.
+    """
     
     if isinstance(form, str) or isinstance(form, unicode):
         form = DataForm.objects.get(slug=form)
@@ -988,80 +952,6 @@ def get_bindings(form):
     return bindings_list
     
     
-# TODO: Bindings needs to be re-written!
-#def get_bindings(form):
-#    """
-#    Get the bindings for specific submission
-#    
-#    :return: list of dictionaries, where each dictionary is a single binding
-#        that may be a simple child to parent binding, up to a compound binding
-#        that relates many parents to many children.
-#        
-#        Example return:
-#        [
-#            # Simple binding: a dropdown will show if a single checkbox is checked
-#            {
-#                "parents" : [["checkbox1"]],
-#                "children" : ["dropdown"]
-#            },
-#            
-#            # Compound binding: the textarea will be shown if either:
-#            # 1. checkbox1 is checked AND the dropdown choice of "yes" is selected
-#            # 2. OR just checkbox2 is checked
-#            {
-#                "parents" : [["checkbox1", ["dropdown", "yes"]], ["checkbox2"]],
-#                "children" : ["textarea"]
-#            },
-#            
-#            # Date field and textarea will be shown if dropdown choice of "Yes" is selected
-#            {
-#                "parents" : [[["dropdown", "yes"]]],
-#                "children" : ["date", "textarea"]
-#            }
-#        ];
-#    """
-#    if cache.get('dataforms_bindinds_%s' % form.slug):
-#        final = cache.get('dataforms_bindinds_%s' % form.slug)
-#        
-#    else:
-#    
-#        data = []
-#        final = []
-#        progenyRelations = defaultdict(list)
-#        
-#        if isinstance(form, str) or isinstance(form, unicode):
-#            form = DataForm.objects.get(slug=form)
-#            
-#        bindings = Binding.objects.filter(data_form=form)
-#        
-#        for binding in bindings:
-#            progeny = binding.children.all()
-#            children_slugs = [_field_for_form(name=child.slug, form=form.slug) for child in progeny]
-#            
-#            parent_fields = binding.parent_fields.all()
-#            parent_slugs = [_field_for_form(name=parent.slug, form=form.slug) for parent in parent_fields]
-#            
-#            # This used to be done using: binding.parent_choices.all(), but was generating too many
-#            # additional queries in the for-loop because ManyToMany fields don't support select_related().
-#            # Just traverse the relations manually, so we can join all the tables in one query:
-#            parent_choices = FieldChoice.objects.select_related('field', 'choice').filter(parentfieldchoice__binding=binding)
-#            for parent in parent_choices:
-#                parent_slugs.append([_field_for_form(name=parent.field.slug, form=form.slug), parent.choice.value])
-#                
-#            progenyRelations[tuple(children_slugs)] += [parent_slugs]
-#            
-#        # Transform progenyRelations
-#        for relation in progenyRelations:
-#            final.append({
-#                "parents" : progenyRelations[relation],
-#                "children" : list(relation)
-#            })
-#        
-#        cache.set_with_tags('dataforms_bindinds_%s' % form.slug, final, ['dataforms_bindings'])
-#    
-#    return final
-
-
 def create_form_class_title(slug):
     """
     Transform "my-form-name" into "MyFormName"

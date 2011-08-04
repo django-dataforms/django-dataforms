@@ -1,10 +1,10 @@
-import os
-from django.conf import settings
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from dataforms.utils.file_handler import handle_upload
 from dataforms.forms import create_form, create_collection
-from dataforms.file_handler import get_upload_url, handle_upload
-from django.http import HttpResponseRedirect, HttpResponse
+from django.conf import settings
+from django.http import HttpResponse
+from django.shortcuts import render, redirect
+import os
+
 
 def index(request):
 	"""
@@ -12,12 +12,14 @@ def index(request):
 	"""
 	
 	form = create_form(request=request, form="personal-information", submission="myForm")
+
 	if request.method == "POST":
 		if form.is_valid():
 			form.save()
-			return HttpResponseRedirect("/") 
+			return redirect("index") 
 
-	return render_to_response("index.html", { 'form':form }, RequestContext(request))
+	return render(request, "index.html", { 'form':form })
+
 
 def form_collection(request):
 	"""
@@ -29,9 +31,10 @@ def form_collection(request):
 	if request.method == "POST":
 		if collection.is_valid():
 			collection.save()
-			return HttpResponseRedirect("/collection/") 
+			return redirect("form_collection") 
 
-	return render_to_response('collection.html', { 'forms':collection }, RequestContext(request))
+	return render(request, 'collection.html', { 'forms':collection })
+
 
 def upload(request):
 	"""
