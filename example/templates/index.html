@@ -15,11 +15,6 @@
 			{% endif %}
 			
 			<form action="." method="post" accept-charset="utf-8" enctype="multipart/form-data">
-				<table>
-					
-				{{ form.as_table }}
-				</table>
-				{% comment %}
 				{% for field in form %}
 					{% if not field.is_hidden %}
 						<div class="dataform-field{% if field.field.required %} required{% endif %}">
@@ -38,7 +33,6 @@
 						{{ field }}
 					{% endif %}
 				{% endfor %}
-				{% endcomment %}
 				<p><input type="submit" value="Submit"></p>
 			</form>
 		</div>

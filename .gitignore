@@ -7,7 +7,8 @@ dist
 ._*
 /.pydevproject
 /.project
+/.settings
 dataforms/migrations
-example/static
-example/media/uploads
-example/media/uploads
+example/static/*
+example/media/*
+example/dataforms.db
