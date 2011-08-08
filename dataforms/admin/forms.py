@@ -14,9 +14,9 @@ CHOICE_CHOICES = [
 ]
 
 class BindingAdminForm(forms.ModelForm):
-    field_choice = forms.ModelChoiceField(
-        queryset=FieldChoice.objects.select_related('field', 'choice').all(), required=False
-    )
+#    field_choice = forms.ModelChoiceField(
+#        queryset=FieldChoice.objects.select_related('field', 'choice').all(), required=False
+#    )
     true_field = forms.MultipleChoiceField(choices=FIELD_CHOICES, 
         widget=FilteredSelectMultiple("True Fields", is_stacked=False), required=False)
     true_choice = forms.MultipleChoiceField(choices=CHOICE_CHOICES,

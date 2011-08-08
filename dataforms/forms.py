@@ -924,7 +924,7 @@ def get_bindings(form):
         form = DataForm.objects.get(slug=form)
             
     bindings = list(Binding.objects.filter(data_form=form).values(
-        'id', 'action', 'field', 'field__slug', 'value', 'parent', 'operator',
+        'id', 'action', 'field', 'field__slug', 'value', 'operator',
         'data_form', 'data_form__slug', 'field_choice', 'field_choice__field__slug',
         'field_choice__choice__value', 'true_field', 'true_choice',
         'false_field', 'false_choice', 'function', 'additional_rules'))
@@ -932,12 +932,12 @@ def get_bindings(form):
 
     for binding in bindings:
         
-        if binding['field__slug']:
-            binding['selector'] = _field_for_form(name=binding['field__slug'], form=form.slug)
-        else:
-            binding['selector'] = _field_for_form(
-                name='%s___%s' % (binding['field_choice__field__slug'], binding['field_choice__choice__value']),
-                form=form.slug)
+        #if binding['field__slug']:
+        binding['selector'] = _field_for_form(name=binding['field__slug'], form=form.slug)
+#        else:
+#            binding['selector'] = _field_for_form(
+#                name='%s___%s' % (binding['field_choice__field__slug'], binding['field_choice__choice__value']),
+#                form=form.slug)
         
         for key, value in binding.iteritems():
             if key in ['true_field', 'true_choice', 'false_field','false_choice', 'additional_rules']:

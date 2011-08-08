@@ -40,22 +40,20 @@ function setBindings() {
 }
 
 
-function smartGetSelector(selector, isChoiceField) {
+function smartGetSelector(name, choiceValue) {
     var bindingElement;
     
-    var name = selector.split('___')[0];
-    if (isChoiceField) {
-	    var value = selector.split('___')[1];
+    if (choiceValue) {
+	    var value = choiceValue;
     } 
 
 	if (value) {
 		// Get a Field Choice Element
 		bindingElement = $("[name='"+name+"'][value='"+value+"']");
-		
 		// If length is 0, then it is assumed that
 		// the Field Choice is an select option
 		if (bindingElement.length == 0) {
-			bindingElement = $("option[value='"+value+"']");
+			bindingElement = $("[name='"+name+"'] option[value='"+value+"']");
 		}
 	} else {
 		// Get a Field Element 
@@ -90,12 +88,6 @@ function doBinding(event, noAnimation) {
 		var speed = 100;
 	}
 
-	if (binding.value) {
-		var bindingValue = binding.value;
-	}
-	else {
-		var bindingValue = smartGetElementValue(binding.selector);
-	}
 	// Do show/hide action
 	if (binding.action == 'show-hide') {
 
@@ -114,11 +106,11 @@ function doBinding(event, noAnimation) {
 				// Loop though the true field choices to show
 				$.each(binding.true_choice, function(index, selector){
 
-					var bindingElement = smartGetSelector(selector, true);
-					var element = smartGetElement(selector);
-					var value = smartGetElementValue(selector);
+					var bindingSelector = smartGetElement(selector);
+					var bindingValue = smartGetElementValue(selector);
+					var bindingElement = smartGetSelector(bindingSelector, bindingValue);
 					
-					$("label[for*='id_"+element+"_0']").first().show(speed);
+					$("label[for*='id_"+selector+"_0']").first().show(speed);
 					// Show if the value matches the fieldchoice
 					if (bindingElement.is("option")) {
 						bindingElement.removeAttr('disabled');
@@ -137,7 +129,6 @@ function doBinding(event, noAnimation) {
 				// Loop through the false fields to hide
 				$.each(binding.false_field, function(index, selector){
 					$("label[for*='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li").hide(speed);
-					console.log($("label[for*='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li"));
 				});
 			}
 
@@ -145,9 +136,9 @@ function doBinding(event, noAnimation) {
 			if (binding.false_choice) {
 				$.each(binding.false_choice, function(index, selector){
 					
-					var bindingElement = smartGetSelector(selector, true);
-					var element = smartGetElement(selector);
-					var value = smartGetElementValue(selector);
+					var bindingSelector = smartGetElement(selector);
+					var bindingValue = smartGetElementValue(selector);
+					var bindingElement = smartGetSelector(bindingSelector, bindingValue);
 					
 					// Hide if the value matches the fieldchoice
 					if (bindingElement.is("option")) {
@@ -156,7 +147,7 @@ function doBinding(event, noAnimation) {
 					else {
 						bindingElement.closest('li').hide('fast', function(){
 							if (bindingElement.closest(".dataform-field,tr,ul,p").find('input:visible').length == 0) {
-								$("label[for*='id_"+element+"']").first().hide();
+								$("label[for*='id_"+selector+"']").first().hide();
 							}
 						});
 					}
@@ -175,25 +166,21 @@ function doBinding(event, noAnimation) {
 
 
 function hasTruth(selector) {
-	var bindingOperator;
 	var bindingValue;
 	var selectorValue = [];
 	var binding = selector.data('binding');
+	var bindingOperator = binding.operator;
 	var result = false;
 	
 	// Find out the operator and the value
 	if (binding.field_choice) {
-		bindingOperator = 'checked';
-		bindingValue = smartGetElementValue(binding.selector);
-		bindingSelector = smartGetSelector(binding.selector, true);
+		bindingValue = binding.field_choice__choice__value;
+		bindingSelector = smartGetSelector(binding.selector, bindingValue);
 	}
 	else {
-		bindingOperator = binding.operator;
 		bindingValue = binding.value;
 		bindingSelector = smartGetSelector(binding.selector);
 	}
-	
-	//console.log(bindingOperator);
 	
 	// First evaluate for checked
 	if (bindingOperator == 'checked') {
@@ -294,7 +281,7 @@ function hasTruth(selector) {
 			}
 		});
 	}
-
+	
 	return result;
 }
 

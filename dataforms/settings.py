@@ -68,10 +68,10 @@ VALIDATION_MODULE = getattr(settings, "DATAFORMS_VALIDATION_MODULE", "validation
 
 FIELD_TYPE_CHOICES = tuple([(field,field) for field in FIELD_MAPPINGS])
 
-ADMIN_SORT_JS = (
-	'https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',
-	'https://ajax.googleapis.com/ajax/libs/jqueryui/1.7.1/jquery-ui.min.js',
-	'%sdataforms/js/jquery.adminmenusort.js' % settings.STATIC_URL,
+ADMIN_JS = (
+	'http://code.jquery.com/jquery.min.js',
+	'http://code.jquery.com/ui/1.8.14/jquery-ui.min.js',
+	'%sdataforms/js/admin.js' % settings.STATIC_URL,
 )
 
 FORM_MEDIA = {

@@ -129,11 +129,10 @@ class Field(models.Model):
 
 class Binding(models.Model):
     data_form = models.ForeignKey('DataForm')
-    field = models.ForeignKey('Field', blank=True, null=True, help_text='Please select either a Field or a Field choice')
-    field_choice = models.ForeignKey('FieldChoice', blank=True, null=True)
-    operator = models.CharField(max_length=255, choices=BINDING_OPERATOR_CHOICES, blank=True, help_text="Required if a Field is selected.")
-    value = models.CharField(max_length=255, blank=True, help_text="Required if a Field is selected.")
-    parent = models.CharField(max_length=255, blank=True, help_text="A parent selector that contains the True and False fields.")
+    field = models.ForeignKey('Field')
+    field_choice = models.ForeignKey('FieldChoice', blank=True, null=True, help_text='Optionally narrow down to a choice on this field if available.')
+    operator = models.CharField(max_length=255, choices=BINDING_OPERATOR_CHOICES)
+    value = models.CharField(max_length=255, blank=True, help_text="Required if a Operator is equal to 'checked'.")
     
     true_field = SeparatedValuesField(blank=True)
     true_choice = SeparatedValuesField(blank=True)
@@ -142,20 +141,17 @@ class Binding(models.Model):
     false_choice = SeparatedValuesField(blank=True)
 
     action = models.CharField(max_length=255, choices=BINDING_ACTION_CHOICES, default='show-hide')
-    function = models.CharField(max_length=255, blank=True, help_text="Required if Action is 'Function'.")
+    function = models.CharField(max_length=255, blank=True, help_text="Required if Action is equal to 'Function'.")
     
     additional_rules = CommaSeparatedIntegerField(max_length=200, blank=True)
     
     def clean(self):
-        # Only Field or Field Choice should be selected
-        if ((not self.field and not self.field_choice) or
-            (self.field and self.field_choice)):
-            raise ValidationError('A Field or Field Choice is required.')
-        
-        # Field required a Operator and Value
-        if self.field and not self.value and self.operator != 'checked':
-            raise ValidationError('A Operator and Value are required if a Field is selected' 
-                                  ' and Operator is something other then defined as checked.')
+        # Field requires a Operator and Value
+        if self.operator != 'checked' and not self.value:
+            raise ValidationError("A Value is required if the Operator is not equal to 'checked'.")
+
+        if self.field_choice and self.operator != 'checked':
+            raise ValidationError("Operator must be equal to 'checked of Field Choice is selected.")
         
         # A True Field or True Choice is required
         if not self.true_field and not self.true_choice:

@@ -1,16 +1,18 @@
-from forms import BindingAdminForm, FieldAdminForm
+from dataforms.models import Collection, CollectionDataForm, CollectionVersion, \
+    DataForm, DataFormField, Field, Binding, FieldChoice, Choice, Answer, Submission, \
+    Section
+from dataforms.settings import ADMIN_JS
 from django.conf.urls.defaults import patterns
 from django.contrib import admin
-from dataforms.models import Collection, CollectionDataForm, CollectionVersion, DataForm, \
-    DataFormField, Field, Binding, FieldChoice, Choice, Answer, Submission, Section
-from dataforms.settings import ADMIN_SORT_JS
-from views import answers_view
+from django.contrib.admin import ModelAdmin as BaseAdminClass
+from django.forms.models import ModelChoiceField
+from forms import BindingAdminForm, FieldAdminForm
+from views import answers, ajax_filter
     
 
 #try:
 #    from reversion.admin import VersionAdmin as BaseAdminClass
 #except ImportError:
-from django.contrib.admin import ModelAdmin as BaseAdminClass
 
 
 #------------ Inline Model Admins that are attached ------ ----------------#
@@ -92,7 +94,7 @@ class CollectionMappingAdmin(admin.ModelAdmin):
         return obj.section.title
     
     class Media:
-        js = ADMIN_SORT_JS
+        js = ADMIN_JS
     
     
 class DataFormAdmin(admin.ModelAdmin):
@@ -140,7 +142,7 @@ class FieldMappingAdmin(admin.ModelAdmin):
         return obj.field.label
         
     class Media:
-        js = ADMIN_SORT_JS
+        js = ADMIN_JS
         
 class FieldAdmin(admin.ModelAdmin):
     list_select_related = True
@@ -160,7 +162,7 @@ class FieldAdmin(admin.ModelAdmin):
     
 
 class BindingAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'data_form', 'field', 'operator', 'value', 'field_choice', 'parent', 'true_fields_list', 'false_fields_list')
+    list_display = ('pk', 'data_form', 'field', 'operator', 'value', 'field_choice', 'true_fields_list', 'false_fields_list')
     list_filter = ('data_form__title',)
     list_select_related = True
     search_fields = ('data_form__title', 'field__slug')
@@ -192,6 +194,32 @@ class BindingAdmin(admin.ModelAdmin):
     false_fields_list.allow_tags = True
     
 
+#    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+#        if request.GET.has_key('data_form'):
+#            if db_field.name == 'data_form':
+#                return ModelChoiceField(queryset=DataForm.objects.all(), initial=request.GET['data_form'])
+#            if db_field.name == 'field':
+#                kwargs["queryset"] = Field.objects.filter(dataform__id=request.GET['data_form'])
+#        
+#        if request.GET.has_key('field') and db_field.name == "field_choice":
+#            kwargs["queryset"] = FieldChoice.objects.select_related('field', 'choice').filter(field__id=request.GET['field'])
+#        
+#        return super(BindingAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    
+    def get_urls(self):
+        urls = super(BindingAdmin, self).get_urls()
+        new_urls = patterns('',
+            (r'ajax/(?P<object>(dataformfield|fieldchoice))/$', 
+             self.admin_site.admin_view(ajax_filter, cacheable=True)),
+        )
+        return new_urls + urls
+    
+    
+    class Media:
+        js = ADMIN_JS
+
+
 class ChoiceAdmin(admin.ModelAdmin):
     list_display = ('pk', 'title', 'value',)
     search_fields = ('title','value')
@@ -204,7 +232,7 @@ class ChoiceMappingAdmin(admin.ModelAdmin):
     list_editable = ('order',)
     
     class Media:
-        js = ADMIN_SORT_JS
+        js = ADMIN_JS
 
 
 class SectionAdmin(admin.ModelAdmin):
@@ -228,7 +256,8 @@ class SubmissionAdmin(BaseAdminClass):
     def get_urls(self):
         urls = super(SubmissionAdmin, self).get_urls()
         new_urls = patterns('',
-            (r'answers/(?P<submissionid>\d+)/$', answers_view),
+            (r'answers/(?P<submissionid>\d+)/$', 
+             self.admin_site.admin_view(answers, cacheable=True)),
         )
         return new_urls + urls
     
