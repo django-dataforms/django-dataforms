@@ -1,4 +1,4 @@
-from dataforms.validators import reserved_delimiter
+from validators import reserved_delimiter
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.fields import CommaSeparatedIntegerField
@@ -112,13 +112,13 @@ class Field(models.Model):
     """
 
     choices = models.ManyToManyField('Choice', through='FieldChoice')
-    field_type = models.CharField(verbose_name=_('field type key'), 
+    field_type = models.CharField(verbose_name=_('field type key'),
         max_length=255, choices=FIELD_TYPE_CHOICES)
     label = models.TextField(verbose_name=_('field label'))
     slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True, validators=[reserved_delimiter])
     help_text = models.TextField(verbose_name=_('field help text'), blank=True)
     initial = models.TextField(verbose_name=_('initial value of the field'), blank=True)
-    arguments = models.CharField(verbose_name=_('additional arguments'), 
+    arguments = models.CharField(verbose_name=_('additional arguments'),
         help_text="A JSON dictionary of keyword arguments.", blank=True, max_length=255)
     required = models.BooleanField(verbose_name=_('field is required'), default=False)
     visible = models.BooleanField(verbose_name=_('field is visible'), default=True)
@@ -133,10 +133,10 @@ class Field(models.Model):
 class Binding(models.Model):
     data_form = models.ForeignKey('DataForm')
     field = models.ForeignKey('Field')
-    field_choice = models.ForeignKey('FieldChoice', blank=True, null=True, 
+    field_choice = models.ForeignKey('FieldChoice', blank=True, null=True,
         help_text='Optionally narrow down to a choice on this field if available.')
     operator = models.CharField(max_length=255, choices=BINDING_OPERATOR_CHOICES)
-    value = models.CharField(max_length=255, blank=True, 
+    value = models.CharField(max_length=255, blank=True,
         help_text="Required if a Operator is equal to 'checked'.")
     
     true_field = SeparatedValuesField(blank=True)
@@ -146,7 +146,7 @@ class Binding(models.Model):
     false_choice = SeparatedValuesField(blank=True)
 
     action = models.CharField(max_length=255, choices=BINDING_ACTION_CHOICES, default='show-hide')
-    function = models.CharField(max_length=255, blank=True, 
+    function = models.CharField(max_length=255, blank=True,
         help_text="Required if Action is equal to 'Function'.")
     
     additional_rules = CommaSeparatedIntegerField(max_length=200, blank=True)
