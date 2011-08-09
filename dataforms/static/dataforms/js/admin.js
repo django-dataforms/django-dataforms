@@ -31,28 +31,31 @@ $(document).ready(function() {
 	
 	$("#binding_form #id_data_form").change(function(){
 		$.getJSON('ajax/dataformfield/?values=field__slug,field__id&order=field__slug&data_form__id='+$(this).val(), function(data) {
-			var items = ['<option value="">---------</option>'];
-			$.each(data, function(key, val) {
-				items.push('<option value="' + val.field__id + '">' + val.field__slug + '</option>');
-			});
-			
-			var selected = $("#binding_form #id_field").val();
-			$("#binding_form #id_field").html(items.join(''));
-			$("#binding_form #id_field").val(selected);
-			
+			if(data) {
+				var items = ['<option value="">---------</option>'];
+				$.each(data, function(key, val) {
+					items.push('<option value="' + val.field__id + '">' + val.field__slug + '</option>');
+				});
+				
+				var selected = $("#binding_form #id_field").val();
+				$("#binding_form #id_field").html(items.join(''));
+				$("#binding_form #id_field").val(selected);
+			}
 		});
 	}).trigger('change');
 
 	$("#binding_form #id_field").change(function(){
 		$.getJSON('ajax/fieldchoice/?values=field__slug,choice__value,id&order=choice__value&field__id='+$(this).val(), function(data) {
-			var items = ['<option value="">---------</option>'];
-			$.each(data, function(key, val) {
-				items.push('<option value="' + val.id + '">' + val.choice__value + ' (' + val.field__slug + ')</option>');
-			});
-			
-			var selected = $("#binding_form #id_field_choice").val();
-			$("#binding_form #id_field_choice").html(items.join(''));
-			$("#binding_form #id_field_choice").val(selected);
+			if(data) {
+				var items = ['<option value="">---------</option>'];
+				$.each(data, function(key, val) {
+					items.push('<option value="' + val.id + '">' + val.choice__value + ' (' + val.field__slug + ')</option>');
+				});
+				
+				var selected = $("#binding_form #id_field_choice").val();
+				$("#binding_form #id_field_choice").html(items.join(''));
+				$("#binding_form #id_field_choice").val(selected);
+			}
 		});
 	}).trigger('change');
 

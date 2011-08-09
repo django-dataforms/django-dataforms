@@ -1,3 +1,4 @@
+from dataforms.validators import reserved_delimiter
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.fields import CommaSeparatedIntegerField
@@ -76,7 +77,7 @@ class DataForm(models.Model):
     fields = models.ManyToManyField('Field', through='DataFormField')
     title = models.CharField(verbose_name=_('form title'), max_length=255)
     description = models.TextField(verbose_name=_('description'), blank=True)
-    slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
+    slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True, validators=[reserved_delimiter])
     visible = models.BooleanField(verbose_name=_('form is visible'), default=True)
 
     def __unicode__(self):
@@ -111,12 +112,14 @@ class Field(models.Model):
     """
 
     choices = models.ManyToManyField('Choice', through='FieldChoice')
-    field_type = models.CharField(verbose_name=_('field type key'), max_length=255, choices=FIELD_TYPE_CHOICES)
+    field_type = models.CharField(verbose_name=_('field type key'), 
+        max_length=255, choices=FIELD_TYPE_CHOICES)
     label = models.TextField(verbose_name=_('field label'))
-    slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
+    slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True, validators=[reserved_delimiter])
     help_text = models.TextField(verbose_name=_('field help text'), blank=True)
     initial = models.TextField(verbose_name=_('initial value of the field'), blank=True)
-    arguments = models.CharField(verbose_name=_('additional arguments'), help_text="A JSON dictionary of keyword arguments.", blank=True, max_length=255)
+    arguments = models.CharField(verbose_name=_('additional arguments'), 
+        help_text="A JSON dictionary of keyword arguments.", blank=True, max_length=255)
     required = models.BooleanField(verbose_name=_('field is required'), default=False)
     visible = models.BooleanField(verbose_name=_('field is visible'), default=True)
 
@@ -130,9 +133,11 @@ class Field(models.Model):
 class Binding(models.Model):
     data_form = models.ForeignKey('DataForm')
     field = models.ForeignKey('Field')
-    field_choice = models.ForeignKey('FieldChoice', blank=True, null=True, help_text='Optionally narrow down to a choice on this field if available.')
+    field_choice = models.ForeignKey('FieldChoice', blank=True, null=True, 
+        help_text='Optionally narrow down to a choice on this field if available.')
     operator = models.CharField(max_length=255, choices=BINDING_OPERATOR_CHOICES)
-    value = models.CharField(max_length=255, blank=True, help_text="Required if a Operator is equal to 'checked'.")
+    value = models.CharField(max_length=255, blank=True, 
+        help_text="Required if a Operator is equal to 'checked'.")
     
     true_field = SeparatedValuesField(blank=True)
     true_choice = SeparatedValuesField(blank=True)
@@ -141,7 +146,8 @@ class Binding(models.Model):
     false_choice = SeparatedValuesField(blank=True)
 
     action = models.CharField(max_length=255, choices=BINDING_ACTION_CHOICES, default='show-hide')
-    function = models.CharField(max_length=255, blank=True, help_text="Required if Action is equal to 'Function'.")
+    function = models.CharField(max_length=255, blank=True, 
+        help_text="Required if Action is equal to 'Function'.")
     
     additional_rules = CommaSeparatedIntegerField(max_length=200, blank=True)
     
@@ -179,7 +185,8 @@ class FieldChoiceManager(models.Manager):
     def get_fieldchoice_data(self):
     
         sql = '''
-            SELECT fc.id, fc.choice_id, fc.field_id, f.slug AS field_slug, d.slug AS data_form_slug, c.value AS choice_value
+            SELECT fc.id, fc.choice_id, fc.field_id, f.slug AS field_slug, 
+                d.slug AS data_form_slug, c.value AS choice_value
             FROM dataforms_fieldchoice fc 
             INNER JOIN dataforms_field f ON f.id = fc.field_id
             INNER JOIN dataforms_choice c ON c.id = fc.choice_id
@@ -219,7 +226,7 @@ class Choice(models.Model):
     Model that holds choices for fields and their values
     """
     title = models.CharField(verbose_name=_('choice title'), max_length=255)
-    value = models.CharField(verbose_name=_('choice value'), max_length=255)
+    value = models.CharField(verbose_name=_('choice value'), max_length=255, validators=[reserved_delimiter])
 
     def __unicode__(self):
         return unicode(self.title)
@@ -247,7 +254,8 @@ class AnswerManager(models.Manager):
         
         # When you need many to many, use raw()....its awesome!
         sql = '''
-            SELECT a.*, f.field_type, f.slug AS field_slug, d.slug AS data_form_slug, c.value as choice_value, ac.choice_id
+            SELECT a.*, f.field_type, f.slug AS field_slug, 
+                d.slug AS data_form_slug, c.value as choice_value, ac.choice_id
                      FROM dataforms_answer a 
                      LEFT JOIN dataforms_answer_choice ac ON a.id = ac.answer_id
                      LEFT JOIN dataforms_choice c ON ac.choice_id = c.id

@@ -944,6 +944,12 @@ def get_bindings(form):
                 if value:
                     binding[key] = binding[key].split(',')
                     
+                    # Additional split on choice field and its value
+                    if key != 'additional_rules':
+                        for index, value in enumerate(binding[key]):
+                            binding[key][index] = binding[key][index].split('___')
+                    
+                    
             if not value:
                 binding[key] = None
                 

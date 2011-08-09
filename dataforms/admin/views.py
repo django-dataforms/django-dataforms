@@ -22,9 +22,9 @@ def answers(request, submissionid):
 
 def ajax_filter(request, object):
     
-    # Return 404 if not an ajax request
-#    if not request.is_ajax():
-#        raise Http404
+    #Return 404 if not an ajax request
+    if not request.is_ajax():
+        raise Http404
     
     values = []
     order = []
@@ -45,7 +45,7 @@ def ajax_filter(request, object):
         queryset = model_class.objects.values(*values).order_by(*order).filter(**filter)
     
     except:
-        raise Http404
+        return JsonResponse(0)
         
     return JsonResponse(list(queryset))
     

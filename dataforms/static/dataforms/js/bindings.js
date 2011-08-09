@@ -64,15 +64,6 @@ function smartGetSelector(name, choiceValue) {
 }
 
 
-function smartGetElement(selector) {
-	return selector.split('___')[0];
-}
-
-function smartGetElementValue(selector) {
-	return selector.split('___')[1];
-}
-
-
 function doBinding(event, noAnimation) {
 	// Assign the binding
 	var selector = $(event.currentTarget);
@@ -106,11 +97,9 @@ function doBinding(event, noAnimation) {
 				// Loop though the true field choices to show
 				$.each(binding.true_choice, function(index, selector){
 
-					var bindingSelector = smartGetElement(selector);
-					var bindingValue = smartGetElementValue(selector);
-					var bindingElement = smartGetSelector(bindingSelector, bindingValue);
+					var bindingElement = smartGetSelector(selector[0], selector[1]);
 					
-					$("label[for*='id_"+selector+"_0']").first().show(speed);
+					$("label[for*='id_"+selector[0]+"_0']").first().show(speed);
 					// Show if the value matches the fieldchoice
 					if (bindingElement.is("option")) {
 						bindingElement.removeAttr('disabled');
@@ -136,9 +125,7 @@ function doBinding(event, noAnimation) {
 			if (binding.false_choice) {
 				$.each(binding.false_choice, function(index, selector){
 					
-					var bindingSelector = smartGetElement(selector);
-					var bindingValue = smartGetElementValue(selector);
-					var bindingElement = smartGetSelector(bindingSelector, bindingValue);
+					var bindingElement = smartGetSelector(selector[0], selector[1]);
 					
 					// Hide if the value matches the fieldchoice
 					if (bindingElement.is("option")) {
@@ -147,7 +134,7 @@ function doBinding(event, noAnimation) {
 					else {
 						bindingElement.closest('li').hide('fast', function(){
 							if (bindingElement.closest(".dataform-field,tr,ul,p").find('input:visible').length == 0) {
-								$("label[for*='id_"+selector+"']").first().hide();
+								$("label[for*='id_"+selector[0]+"']").first().hide();
 							}
 						});
 					}
@@ -222,6 +209,11 @@ function hasTruth(selector) {
 			else if (bindingSelector.is(":checked")) {
 				result = true;
 			}
+		}
+		
+		// true if has a value
+		else if (bindingSelector.val()){
+			result = true;
 		}
 	}
 	// Now evaluate based on other contidions

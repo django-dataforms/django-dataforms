@@ -30,32 +30,6 @@ class FieldInline(admin.TabularInline):
     model = DataFormField
     extra = 1
 
-#class BindingInline(admin.StackedInline):
-#    model = Binding
-#    extra = 1
-    
-#class ParentFieldInline(admin.TabularInline):
-#    model = ParentField
-#    extra = 1
-#    
-#class ParentFieldChoiceInline(admin.TabularInline):
-#    model = ParentFieldChoice
-#    extra = 1
-#    
-#class ChildFieldInline(admin.TabularInline):
-#    model = ChildField
-#    extra = 1
-    
-#class AnswerChoiceInline(admin.StackedInline):
-#    model = AnswerChoice
-#    extra = 1
-#class AnswerTextInline(admin.StackedInline):
-#    model = AnswerText
-#    extra = 1
-#class AnswerNumberInline(admin.StackedInline):
-#    model = AnswerNumber
-#    extra = 1
-
 
 #------------------------ Main Model Admins classes -----------------------#
 
@@ -162,7 +136,8 @@ class FieldAdmin(admin.ModelAdmin):
     
 
 class BindingAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'data_form', 'field', 'operator', 'value', 'field_choice', 'true_fields_list', 'false_fields_list')
+    list_display = ('pk', 'data_form', 'field', 'operator', 'value', 
+                    'field_choice', 'true_fields_list', 'false_fields_list')
     list_filter = ('data_form__title',)
     list_select_related = True
     search_fields = ('data_form__title', 'field__slug')
@@ -194,19 +169,6 @@ class BindingAdmin(admin.ModelAdmin):
     false_fields_list.allow_tags = True
     
 
-#    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-#        if request.GET.has_key('data_form'):
-#            if db_field.name == 'data_form':
-#                return ModelChoiceField(queryset=DataForm.objects.all(), initial=request.GET['data_form'])
-#            if db_field.name == 'field':
-#                kwargs["queryset"] = Field.objects.filter(dataform__id=request.GET['data_form'])
-#        
-#        if request.GET.has_key('field') and db_field.name == "field_choice":
-#            kwargs["queryset"] = FieldChoice.objects.select_related('field', 'choice').filter(field__id=request.GET['field'])
-#        
-#        return super(BindingAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-    
-    
     def get_urls(self):
         urls = super(BindingAdmin, self).get_urls()
         new_urls = patterns('',
@@ -283,33 +245,6 @@ class AnswerAdmin(admin.ModelAdmin):
 #    def get_model_perms(self, request):
 #        return {}
     
-
-#class AnswerChoiceAdmin(BaseAdminClass):
-#    list_display = ('id', 'answer', 'choice')
-#    search_fields = ('answer__field__slug', 'answer__field__label')
-#    
-#    #Hide the model from view
-#    def get_model_perms(self, request):
-#        return {}
-#
-#
-#class AnswerTextAdmin(BaseAdminClass):
-#    list_display = ('id', 'answer', 'text')
-#    search_fields = ('answer__field__slug', 'answer__field__label')
-#    
-#    #Hide the model from view
-#    def get_model_perms(self, request):
-#        return {}
-#
-#
-#class AnswerNumberAdmin(BaseAdminClass):
-#    list_display = ('id', 'answer', 'num')
-#    search_fields = ('answer__field__slug', 'answer__field__label')
-#    
-#    #Hide the model from view
-#    def get_model_perms(self, request):
-#        return {}
-
     
 admin.site.register(Section, SectionAdmin)
 admin.site.register(Collection, CollectionAdmin)
@@ -320,9 +255,6 @@ admin.site.register(DataFormField, FieldMappingAdmin)
 admin.site.register(Field, FieldAdmin)
 admin.site.register(Binding, BindingAdmin)
 admin.site.register(Answer, AnswerAdmin)
-#admin.site.register(AnswerChoice, AnswerChoiceAdmin)
-#admin.site.register(AnswerText, AnswerTextAdmin)
-#admin.site.register(AnswerNumber, AnswerNumberAdmin)
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(Choice, ChoiceAdmin)
 admin.site.register(FieldChoice, ChoiceMappingAdmin)
