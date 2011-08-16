@@ -57,7 +57,7 @@ class AjaxSingleFileWidget(forms.TextInput):
 				full_path = ''.join([settings.MEDIA_URL, value])
 				files += """<li>
 							<a class="del_upload" id="%s" href="" style="color:red;">X</a>
-							<a href="%s">%s</a>
+							<a href="%s" target="_blank">%s</a>
 							</li>""" % (value, full_path, value.split("/")[-1])
 			
 		vals = {
@@ -112,7 +112,7 @@ class AjaxSingleFileWidget(forms.TextInput):
 							
 							var link = response.split("/");
 							link = '<a class="del_upload" id="'+response.slice(8)+'" href="" style="color:red;">X</a>\
-							<a href="'+response+'">'+link[link.length-1]+'</a>';
+							<a href="'+response+'" target="_blank">'+link[link.length-1]+'</a>';
 							
 							// add file to the list
 							button.next(".files").prepend($('<li></li>').html(link));
