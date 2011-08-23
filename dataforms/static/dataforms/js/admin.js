@@ -1,16 +1,18 @@
 $(document).ready(function() {
 	
+	// Helper Function for Sort
+	var fixHelper = function(e, ui) {
+	    ui.children().each(function() {
+	        $(this).width($(this).width());
+	    });
+	    return ui;
+	};
+	
+	// Sort for Mapping list Views
 	if (((location.search.indexOf("__id__exact") != -1) ||
 		(location.search.indexOf("__title=") != -1)) &&
 		(location.search.indexOf("ot=") == -1) && 
 		(location.search.indexOf("o=") == -1)) {
-		
-		var fixHelper = function(e, ui) {
-		    ui.children().each(function() {
-		        $(this).width($(this).width());
-		    });
-		    return ui;
-		};
 		
 		$('#result_list').sortable({
 			items: '.row1, .row2',
@@ -29,6 +31,24 @@ $(document).ready(function() {
 		$('#result_list td').css({'cursor':'move'});
 	}
 	
+	// Sort for Tabular Inlines
+	$('div.inline-group table tbody').sortable({
+		items: '.row1, .row2',
+		handle: 'td',
+		helper: fixHelper,
+		update: function(event, ui) {
+			var items_moved = $(ui.item).parent().children();
+			
+			$(items_moved).each(function(index, ele){
+				$(this).find('input[class="vIntegerField"]').val(index);
+			});
+		}
+	});
+		
+	$('div.inline-group table tbody tr').css({'cursor':'move'});
+	
+	
+	// Binding Function Helpers
 	$("#binding_form #id_data_form").change(function(){
 		$.getJSON('ajax/dataformfield/?values=field__slug,field__id&order=field__slug&data_form__id='+$(this).val(), function(data) {
 			if(data) {

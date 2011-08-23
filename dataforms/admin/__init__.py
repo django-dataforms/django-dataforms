@@ -47,6 +47,9 @@ class CollectionAdmin(admin.ModelAdmin):
         }),
     )
     
+    class Media:
+        js = ADMIN_JS
+
 
 class CollectionVersionAdmin(admin.ModelAdmin):
     list_display = ('slug', 'collection', 'last_modified' )
@@ -104,6 +107,9 @@ class DataFormAdmin(admin.ModelAdmin):
         return '<a href="../binding/?data_form__title=%s">Bindings<a>' % obj.title
     bindings_link.allow_tags = True
     bindings_link.short_description = "Bindings"
+    
+    class Media:
+        js = ADMIN_JS
     
 
 class FieldMappingAdmin(admin.ModelAdmin):
