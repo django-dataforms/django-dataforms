@@ -1,0 +1,36 @@
+{% extends 'admin/dataforms/base.html' %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url admin:index %}">Home</a> &rsaquo; 
+    <a href="../../../">Dataforms</a> &rsaquo; 
+    <a href="../../">Submissions</a> &rsaquo; 
+    {{ title }}
+  </div>
+{% endblock %}
+
+
+{% block content %}
+	<table id="result_list">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Content</th>
+				<th>Answer Text</th>
+				<th>Answer Number</th>
+				<th>Answer Choice</th>
+			</tr>
+		</thead>
+		<tbody>
+		{% for answer in answers %}
+			<tr>
+				<td>{{ answer.id }}</td>
+				<td>{{ answer.content }}</td>
+				<td>{{ answer.text }}</td>
+				<td>{{ answer.num }}</td>
+				<td>{{ answer.choice_value }}</td>
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+{% endblock %}

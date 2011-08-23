@@ -1,7 +1,7 @@
 import os
 from django.conf import settings
 from urllib import unquote
-import forms
+
 
 def handle_upload(files, field_key, folder=''):
 	upload_dir = settings.UPLOAD_PATH + str(folder)
@@ -28,7 +28,3 @@ def handle_upload(files, field_key, folder=''):
 	dest.close()
 	
 	return os.path.join(upload_dir, upload.name)
-	
-def get_upload_url(request, submission):
-	files = forms.get_answers(submission=submission, for_form=True, field=request.FILES.keys()[0])
-	return os.path.join(settings.MEDIA_URL, files[request.FILES.keys()[0]])

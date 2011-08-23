@@ -5,3 +5,10 @@ build
 dist
 .DS_Store
 ._*
+/.pydevproject
+/.project
+/.settings
+dataforms/migrations
+example/static/*
+example/media/*
+example/dataforms.db

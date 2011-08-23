@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import sys
 import os
-sys.path.insert(0, '.')
 sys.path.insert(0, os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 from django.core.management import execute_manager
