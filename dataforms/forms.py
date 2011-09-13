@@ -14,14 +14,15 @@ from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
 from django.utils.safestring import mark_safe
 from models import DataForm, Collection, Field, FieldChoice, Choice, Answer, \
-    Submission, CollectionDataForm, Section, Binding
-from utils.file_handler import handle_upload
-from utils.sql import update_many, insert_many, delete_many
-
+    AnswerChoice, Submission, CollectionDataForm, Section, Binding
 from settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, \
-    CHOICE_FIELDS, UPLOAD_FIELDS, FIELD_DELIMITER, STATIC_CHOICE_FIELDS, \
-    FORM_MEDIA, VALIDATION_MODULE
+    CHOICE_FIELDS, UPLOAD_FIELDS, FIELD_DELIMITER, STATIC_CHOICE_FIELDS, FORM_MEDIA, \
+    VALIDATION_MODULE
+from utils.file import handle_upload, DataFormFile
+from utils.sql import update_many, insert_many
 import datetime
+import os
+
     
 
 # Load the user's custom validation, if it exists
@@ -62,9 +63,15 @@ class BaseDataForm(forms.BaseForm):
             yield self.bound_fields[name]
     
 
-    def is_valid(self, check_required=True, process_full_form=True):
+    def is_valid(self, check_required=True, *args, **kwargs):
         """
         :arg check_required: Whether or not to validate required fields. Default True.
+        
+        DEPRECATED! - process_full_form is no longer needed.  File upload logic has changed.
+        This was a nasty hack and didn't follow Django form logic.  Django forms should ALWAYS
+        have all fields passed.  This allows proper validation.  Using the initial, data, and files
+        arguments, you can account for any dynamic logic you need.  Omitting fields was always a bad idea.
+        
         :arg process_full_form: If True, all fields in the form POST will be handled normally
             (i.e., unchecked checkboxes will not appear in the form POST and so any
             previously checked answer will be deleted). If False, only fields specified
@@ -75,8 +82,10 @@ class BaseDataForm(forms.BaseForm):
             This function *will* affect what the save() function receives to process and
             MUST be called before save() is called.
         """
-        
-        self._remove_extraneous_fields(process_full_form=process_full_form)
+
+        # We still erase bindings.
+        # TODO: Find a better solution for this.
+        self._remove_extraneous_fields()
         
         if not check_required:
             for field in self:
@@ -120,67 +129,82 @@ class BaseDataForm(forms.BaseForm):
         self.submission.last_modified = datetime.datetime.now()
         self.submission.save()
         
-        # Delete Answers if they exist and start over ;)
-        Answer.objects.select_related(
+        # Get the existing answers
+        answers = Answer.objects.select_related(
             'submission',
             'data_from',
             'field').filter(
                         data_form__slug=self.slug,
-                        submission=self.submission).delete()
+                        submission=self.submission)
         
-        # If answers don't exist, create the records without answers so that 
-        # we can populate them later and save the relationships 
-        # This is more efficient then using the ORM
-        #if not answers:
-            
+        # Delete all the Choice relations on all answers
+        # We will update those later.
+        AnswerChoice.objects.filter(answer__submission=self.submission).delete()
+        
+        # Get the fields from the form post
         field_keys = []
-        answers = []
         for key in self.fields.keys():
             # Mangle the key into the DB form, then get the right Field
             field_keys.append(_field_for_db(key))
         
-        # Get All Fields
-        fields = self.query_data['fields_list']
+        # Get all fields that pertian to this dataform (from db)
+        fields_from_db = self.query_data['field_query']
         
-        for field in fields:
-            # save the answer only if the field is in the form POST
-            if field['slug'] in field_keys:
-                # Create a new answer object
-                answer = Answer()
-                answer.submission = self.submission
-                answer.data_form = self.query_data['dataform_query']
-                answer.field_id = field['id']
-                answers.append(answer)
+        # Check for fields that aren't in the database and create a list of them
+        fields_to_insert = []
+        for field in fields_from_db:
+            has_answer = filter(lambda a: a.field.slug == field.slug, answers)
+            if has_answer:
+                continue
+            else:
+                fields_to_insert.append(field)
         
-        # Update the answers
-        insert_many(answers)    
+        # For these new fields, create answer objects for insertion, if any      
+        if fields_to_insert:
+            new_answers = []  
+            for field in fields_to_insert:
+                # save the answer only if the field is in the form POST
+                if field.slug in field_keys:
+                    # Create a new answer object
+                    answer = Answer()
+                    answer.submission = self.submission
+                    answer.data_form = self.query_data['dataform_query']
+                    answer.field = field
+                    new_answers.append(answer)
         
-        # Get Answers again so that we have the pks
-        answers = Answer.objects.select_related('submission', 'data_from', 'field').filter(data_form__slug=self.slug, submission=self.submission)
- 
+            # Insert the new objects, if any
+            if new_answers:
+                insert_many(new_answers)    
+            
+            # Get Answers again so that we have the pks if we had answers that were inserted
+            answers = (Answer.objects.select_related('submission', 'data_from', 'field')
+                       .filter(data_form__slug=self.slug, submission=self.submission))
             
         # Get All possible choices from form models dict
-        choices = self.query_data['choice_query']
-        
+        choices = Choice.objects.all()
+
         # Setup answer list so we can do a bulk update
         answer_objects = []
 
-        #Delete choice relations
-        delete_many(answers, table='dataforms_answer_choice')
-        
         # We know answers exist now, so update them if needed.            
         for answer in answers:
             answer_obj, choice_relations = self._prepare_answer(answer, choices)
             answer_objects.append(answer_obj)
-
+            
+            # If there are choices, do mass insert on them for each answer.
             if choice_relations:
-                for choice_relation in choice_relations:
-                    answer.choice.add(choice_relation)
-        
+                answer_choices = []
+                for choice in choice_relations:
+                    answer_choice = AnswerChoice()
+                    answer_choice.answer = answer
+                    answer_choice.choice = choice
+                    answer_choices.append(answer_choice)
+                
+                insert_many(answer_choices)
+                
         # Update the answers
         update_many(answer_objects, fields=['value'])
             
-                    
         # Return a submission so the collection or form can have this.
         return self.submission
 
@@ -206,11 +230,11 @@ class BaseDataForm(forms.BaseForm):
             
             # Add the selected choices
             for choice_answer in self.cleaned_data[key]:
-                cur_choice = filter(lambda x: x.choice.value == choice_answer, choices)
+                cur_choice = filter(lambda c: c.value == choice_answer, choices)
                 if cur_choice:
                     cur_choice = cur_choice[0]
-                    answer_choices.append(unicode(cur_choice.choice.value))
-                    choice_relations.append(cur_choice.choice.pk)
+                    answer_choices.append(unicode(cur_choice.value))
+                    choice_relations.append(cur_choice)
             
             # Save the string representation of the choice answers in to 
             # answer.value
@@ -224,15 +248,13 @@ class BaseDataForm(forms.BaseForm):
                 if key in self.files:
                     content = handle_upload(self.files, key, self.submission.id)
                 else:
-                    content = self.cleaned_data[key]
+                    content = self.cleaned_data.get(key, None)
                     
-                    # Don't modify what's in the DB if nothing was submitted,
-                    # otherwise, expect an upload path and save this
-                    if content:
-                        # Remove the MEDIA_URL from this path, to make it easier
-                        # to relocate the uploads folder if the media dir changes
-                        if settings.MEDIA_URL in content:
-                            content = content.replace(settings.MEDIA_URL, "", 1)
+                # Remove the MEDIA_URL from this path, to make it easier
+                # to relocate the uploads folder if the media dir changes
+                if content:
+                    if settings.MEDIA_URL in content:
+                        content = content.replace(settings.MEDIA_URL, "", 1)
                             
             else:
                 # Beware the Django pony magic.
@@ -252,46 +274,19 @@ class BaseDataForm(forms.BaseForm):
         return answer, choice_relations
     
         
-    def _remove_extraneous_fields(self, process_full_form):
+    def _remove_extraneous_fields(self):
         """
         Delete extraneous fields that should not be included in form processing.
-        This includes hidden bindings fields, note fields, blank file upload
-        fields, and fields that were not included in the form POST.
+        This includes hidden bindings fields.  This function may change later.
         
-        :arg process_full_form: see note on BaseDataForm is_valid()
         """
         
-        keys = []
-    
-        # Get Note and FileInput fields
-        fields = Field.objects.filter(dataform__slug=self.meta['slug'], field_type__in=("Note",) + UPLOAD_FIELDS)
-        
-        # TODO: Remove these when Binding are re-written and Notes are removed.
         # Bindings fields
-        keys.append(_field_for_form(name='js_dataform_bindings', form=self.meta['slug']))
-        # Note fields
-        keys += [_field_for_form(name=field.slug, form=self.meta['slug']) for field in fields if field.field_type == "Note"]
+        binding_key = _field_for_form(name='js_dataform_bindings', form=self.meta['slug'])
+        if self.fields.has_key(binding_key):
+            del self.fields[binding_key]
         
-        for key in keys:
-            if self.fields.has_key(key):
-                del self.fields[key]
-        
-        if not process_full_form:
-            # Blank file upload fields
-            upload_keys = [_field_for_form(name=field.slug, form=self.meta['slug']) for field in fields if field.field_type in UPLOAD_FIELDS]
-            for key in upload_keys:
-                if self.data.has_key(key) and self.fields.has_key(key) and not self.data[key].strip():
-                    del self.fields[key]
-                    
-            # Fields that weren't included in the form POST (ignoring upload fields)
-            to_delete = []
-            for key in self.fields:
-                if not self.data.has_key(key) and key not in upload_keys:
-                    to_delete.append(key)
-            for key in to_delete:
-                del self.fields[key]
-    
-    
+
     def _generate_bound_fields(self):
         self.bound_fields = SortedDict([(name, BoundField(self, field, name)) for name, field in self.fields.items()])
     
@@ -312,17 +307,16 @@ class BaseCollection(object):
         collection.prev_section
     """
     
-    def __init__(self, collection, forms, sections):
+    def __init__(self, collection, forms, sections, current_section):
         self.collection = collection
         self.submission = None
         self.title = str(collection.title)
         self.description = str(collection.description)
         self.slug = str(collection.slug)
         self.forms = forms
-        # Section helpers
         self.sections = sections
-        # Set all forms to be viewable initially
-        self.set_section()
+        self.current_section = current_section
+        self.set_section(self.current_section)
 
         
     def __getitem__(self, name):
@@ -386,48 +380,76 @@ class BaseCollection(object):
         """
         Validate all contained forms
         """
+        valid_list = []
         
         for form in self:
-            if not form.is_valid(check_required=check_required, process_full_form=process_full_form):
-                return False
-        return True
+            valid_list.append(form.is_valid(check_required=check_required, process_full_form=process_full_form))
+        
+        if False in valid_list:
+            return False
+        else:
+            return True
 
+
+    def errors(self):
+        """
+        List of errors for all forms in the collection
+        """
+        
+        errors_list = []
+        
+        for form in self:
+            if form.errors:
+                errors_list.append(form.errors)
+
+        return errors_list
+    
 
     def set_section(self, section=None):
         """
         Set the visible section whose forms will be returned
         when using array indexing.
         
+        :section: Expects a Section object.  This pas changed, before was a slug as string
+        
         :deprecated: This method is deprecated. Use the section argument to Collection's instead.
+        
         """
         
-        if isinstance(section, Section):
-            section = section.slug
+        # leaving this here for backwards compatibility
+        if isinstance(section, str) or isinstance(section, unicode):
+            try:
+                section = Section.objects.get(slug=section)
+            except:
+                raise SectionDoesNotExist(section)
+
 
         if section is None:
             self.__form_existence = [True for form in self.forms]
         else:
-            self.__form_existence = [True if form.section == section else False for form in self.forms]
-            
+            self.__form_existence = [True if form.meta['section'] == section else False for form in self.forms]
+
         if True not in self.__form_existence:
             raise SectionDoesNotExist(section)
-        
+
         # Set the indexes
-        self._section = [row.slug for row in self.sections].index(section) if section else 0
-        self._next_section = self._section + 1 if self._section + 1 < len(self.sections) else None
-        self._prev_section = self._section - 1 if self._section - 1 >= 0 else None
+        self.section_index = [row.slug for row in self.sections].index(section.slug) if section else -1
+        self.next_section_index = self.section_index + 1 if self.section_index + 1 < len(self.sections) else None
+        self.prev_section_index = self.section_index - 1 if self.section_index - 1 >= 0 else None
         
         # Set the objects
-        self.section = self.sections[self._section]
-        self.next_section = self.sections[self._next_section] if self._next_section is not None else None
-        self.prev_section = self.sections[self._prev_section] if self._prev_section is not None else None
+        if self.sections:
+            self.section = self.sections[self.section_index]
+            self.next_section = self.sections[self.next_section_index] if self.next_section_index is not None else None
+            self.prev_section = self.sections[self.prev_section_index] if self.prev_section_index is not None else None
+
     
     def _media(self):
         return get_form_media()
     media = property(_media)
 
 
-def create_collection(request, collection, submission, readonly=False, section=None):
+def create_collection(request, collection, submission, readonly=False, section=None, force_bind=False):
     """
     Based on a form collection slug, create a list of form objects.
     
@@ -456,10 +478,14 @@ def create_collection(request, collection, submission, readonly=False, section=N
         kwargs['collection'] = collection
         kwargs['collection__visible'] = True
         if section:
-            kwargs['section__slug'] = section
+            if isinstance(section, str) or isinstance(section, unicode):
+                section = Section.objects.get(slug=section)
+            kwargs['section'] = section
+                
         forms = CollectionDataForm.objects.select_related('section', 'collection', 'data_form').filter(**kwargs).order_by('order')
-    except DataForm.DoesNotExist:
-        raise CollectionDataForm.DoesNotExist('Dataforms for collection %s do not exist. Make sure the slug name is correct and the forms are visible.' % collection)
+    except:
+        raise CollectionDataForm.DoesNotExist('Dataforms for collection %s do not exist. Make sure the slug name for the collection and section are correct and the forms are visible.' % collection)
+    
     
     # Get the sections for this collection
     sections = create_sections(collection)
@@ -467,18 +493,13 @@ def create_collection(request, collection, submission, readonly=False, section=N
     # Initialize a list to contain all the form classes
     form_list = []
     
-    # If we are not posting this, then get the answers for the whole collection
-    # We do this now instead of in create_form to avoid dup queries
-    if not request.POST:
-        answers, submission = get_answers(submission=submission, for_form=True)
-    else:
-        answers = None
+    # Get answers for this submission so we can pass this toour form(s)
+    answers, submission = get_answers(submission=submission, for_form=True)
     
     # Populate the list
     for form in forms:
-        # Hmm...is this evil?
-        section = form.section.slug
-        temp_form = create_form(request, form=form.data_form, submission=submission, section=section, readonly=readonly, answers=answers)
+        temp_form = create_form(request, form=form.data_form, submission=submission, section=form.section,
+                                readonly=readonly, answers=answers, force_bind=force_bind)
         form_list.append(temp_form)
     
     # Pass our collection info and our form list to the dictionary
@@ -486,15 +507,15 @@ def create_collection(request, collection, submission, readonly=False, section=N
         collection=collection,
         forms=form_list,
         sections=sections,
+        current_section=section
     )
-    
-#    t = collection.__dict__
-#    assert False
     
     return collection
 
 
-def create_form(request, form, submission, title=None, description=None, section=None, readonly=False, answers=None, return_class=False):
+def create_form(request, form, submission, title=None,
+            description=None, section=None, readonly=False, answers=None,
+            return_class=False, force_bind=False):
     """
     Instantiate and return a dynamic form object, optionally already populated from an
     already submitted form.
@@ -517,7 +538,7 @@ def create_form(request, form, submission, title=None, description=None, section
     :param section: optional section; will be added as an attr to the form instance 
     :param readonly: optional readonly; converts form fields to be readonly.
         Usefull for display only logic.
-    :param answers: optional answers; answer queryset for the submission
+    :param answers: optional answers; answer dictionary for the submission
     :param return_class: optional return_class; returns only the form class and decouples database saves
         Usefull for when you want to save the form somewhere else.
     """
@@ -525,7 +546,6 @@ def create_form(request, form, submission, title=None, description=None, section
     # Create our form class and get the querys we used
     FormClass, query_data = _create_form(form=form, title=title, description=description, readonly=readonly)
     
-    # TODO: This is not working yet, needs to be completed.
     # Return just the class object if a Form Class is only needed
     # This will de-couple the database integration allowing the developer
     # to save to form like a normal Django form.
@@ -533,34 +553,76 @@ def create_form(request, form, submission, title=None, description=None, section
     if return_class:
         return FormClass
     
+    # Get all existing answers and submission objects.
+    # We do this now because we have to check for existing file uploads
+    # So that we can merge request.FILES with existing files since we always
+    # have to pass files on POST for them to validate.
+    
+    if answers:
+        data = answers 
+    elif submission:
+        data, submission = get_answers(submission=submission, for_form=True)
+    else:
+        data = None
+    
+    # Parse Upload Fields into list
+    upload_fields = []
+    form_fields = FormClass.declared_fields
+    for field in form_fields:
+        if form_fields[field].__class__.__name__ == 'FileField':
+            upload_fields.append(field)
+
+    # Check for existing uploaded fields
+    existing_files = {}
+    for item in data:
+        if item in upload_fields and data[item]:
+            # Try to attach the existing uploaded files.  If this fails
+            # we assume it was deleted and will pass nothing.
+            try:
+                parent_path = os.path.dirname(os.getcwd())
+                file = open(parent_path + ''.join([settings.MEDIA_URL, data[item]]), 'r')
+                data[item] = DataFormFile(file, name=data[item])
+                existing_files[item] = data[item]
+            except: pass 
+    
     # Create the actual form instance, from the dynamic form class
     if request.POST:
-        # We assume here that we don't need to overlay the POST data on top of the database
-        # data because the initial form, before POST, will contain the database defaults and so
-        # the resulting POST data will (in normal cases) originate from database defaults already.
         
-        # This creates a bound form object.
-        form = FormClass(data=request.POST, files=request.FILES)
+        # Here we are merging request.FILES and existing files that are
+        # already in the database.  The rule is, that when you are POSTING (binding)
+        # to a form, you must always pass files.  So if there is a request.FILES
+        # key then we will use that, otherwise we will use the key from existing_files
+        # if it exists and if the ClearableFileField option is not triggered.
+        files = {}
+        for field in upload_fields:
+            if request.FILES.has_key(field):
+                files[field] = request.FILES[field]
+            elif existing_files.has_key(field) and not request.POST.get(field + '-clear', None):
+                files[field] = existing_files[field]
+                
+        
+        form = FormClass(data=request.POST, files=files)
     else:
         # We populate the initial data of the form from the database answers. Any questions we
         # don't have answers for in the database will use their initial field defaults.
         
-        # This creates an unbound form object.
-        
-        # Before we populate from submitted data, prepare the answers for insertion into the form
-        if answers:
-            data = answers 
-        elif submission:
-            data, submission = get_answers(submission=submission, for_form=True)
+        # This creates an unbound form object if is_bound is False.
+        # You can manually bind to force validation wihtout a POST by setting
+        # is_bound to True
+        if force_bind:
+            form = FormClass(data=data, files=existing_files)
         else:
-            data = None
-
-        form = FormClass(initial=(data))
+            form = FormClass(initial=(data))
         
     # Now that we have an instantiated form object, let's add our custom attributes
+    # TODO: I now have this in the meta....we should remove these.
     form.submission = submission
     form.section = section
     form.query_data = query_data
+    
+    form.meta['submission'] = submission
+    form.meta['section'] = section
+    form.meta['query_data'] = query_data
     
     return form
 
@@ -717,7 +779,7 @@ def _create_form(form, title=None, description=None, readonly=False):
             field_kwargs['initial'] = row['initial']
         if row.has_key('required'):
             field_kwargs['required'] = row['required']
-            
+                
         additional_field_kwargs = {}
         if row.has_key('arguments') and row['arguments'].strip():
             # Parse any additional field arguments as JSON and include them in field_kwargs
@@ -790,8 +852,9 @@ def _create_form(form, title=None, description=None, readonly=False):
     # Also return the querysets so that they can be re-used
     query_data = {
         'dataform_query' : form,
-        'fields_list' : fields,
         'choice_query' : choices_qs,
+        'field_query' : fields_qs,
+        'fields_list' : fields,
     }
     
     return DataFormClass, query_data
@@ -940,7 +1003,7 @@ def get_bindings(form):
 #                form=form.slug)
         
         for key, value in binding.iteritems():
-            if key in ['true_field', 'true_choice', 'false_field','false_choice', 'additional_rules']:
+            if key in ['true_field', 'true_choice', 'false_field', 'false_choice', 'additional_rules']:
                 if value:
                     binding[key] = binding[key].split(',')
                     

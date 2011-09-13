@@ -30,17 +30,17 @@ class CollectionDataForm(models.Model):
 
     collection = models.ForeignKey('Collection', null=True)
     data_form = models.ForeignKey('DataForm', null=True)
-    section = models.ForeignKey('Section', null=True)
-    order = models.IntegerField(verbose_name=_('order'), null=True, blank=True)
+    section = models.ForeignKey('Section', blank=True, null=True)
+    order = models.IntegerField(verbose_name=_('order'), blank=True, null=True)
 
     class Meta:
-        unique_together = ('collection', 'data_form')
+        unique_together = ('collection', 'data_form', 'section')
         ordering = ['order', ]
         verbose_name = 'Collection Mapping'
         verbose_name_plural = 'Collection Mappings'
 
     def __unicode__(self):
-        return u'%s in %s' % (self.collection, self.data_form)
+        return u'%s in %s (%s)' % (self.collection, self.data_form, self.section)
 
 
 class CollectionVersion(models.Model):
@@ -159,14 +159,11 @@ class Binding(models.Model):
         if self.field_choice and self.operator != 'checked':
             raise ValidationError("Operator must be equal to 'checked of Field Choice is selected.")
         
-        # A True Field or True Choice is required
-        if not self.true_field and not self.true_choice:
-            raise ValidationError('A True Field or True Choice is required.')
+        # A field or choice is required
+        if (not self.true_field and not self.true_choice
+            and not self.false_field and not self.field_choice):
+            raise ValidationError('A Field or Choice is required.')
 
-        # A False Field or False Choice is required
-        if not self.false_field and not self.false_choice:
-            raise ValidationError('A False Field or False Choice is required.')
-        
         # If action is function, then a function is needed
         if self.action == 'function' and not self.function:
             raise ValidationError('A function is required if action is function.')
@@ -257,7 +254,7 @@ class AnswerManager(models.Manager):
             SELECT a.*, f.field_type, f.slug AS field_slug, 
                 d.slug AS data_form_slug, c.value as choice_value, ac.choice_id
                      FROM dataforms_answer a 
-                     LEFT JOIN dataforms_answer_choice ac ON a.id = ac.answer_id
+                     LEFT JOIN dataforms_answerchoice ac ON a.id = ac.answer_id
                      LEFT JOIN dataforms_choice c ON ac.choice_id = c.id
                      INNER JOIN dataforms_field f ON a.field_id = f.id
                      INNER JOIN dataforms_dataform d ON a.data_form_id = d.id 
@@ -271,7 +268,7 @@ class AnswerManager(models.Manager):
             params.append(data_form_id)
             
         if field_slugs:
-            sql += 'AND a.field_id IN (%s)'
+            sql += 'AND f.slug IN (%s)'
             params.append(','.join(field_slugs))
         
         return self.raw(sql, params)
@@ -286,7 +283,7 @@ class Answer(models.Model):
     data_form = models.ForeignKey(DataForm)
     field = models.ForeignKey(Field)
     value = models.TextField(blank=True, null=True)
-    choice = models.ManyToManyField(Choice, blank=True, null=True)
+    choice = models.ManyToManyField(Choice, through='AnswerChoice', blank=True, null=True)
 
     def __unicode__(self):
         return unicode(self.field)
@@ -294,6 +291,10 @@ class Answer(models.Model):
     objects = AnswerManager()
 
 
+class AnswerChoice(models.Model):
+    choice = models.ForeignKey('Choice')
+    answer = models.ForeignKey('Answer')
+    
+    def __unicode__(self):
+        return self.choice.title
 
-    
-    

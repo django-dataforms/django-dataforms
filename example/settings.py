@@ -84,9 +84,6 @@ TEMPLATE_LOADERS = (
 #	  'django.template.loaders.eggs.load_template_source',
 )
 
-# Path for file uploads (don't forget trailing slash)
-UPLOAD_PATH = 'uploads/'
-
 #TEMPLATE_CONTEXT_PROCESSORS = ('django.core.context_processors.debug',)
 
 MIDDLEWARE_CLASSES = (

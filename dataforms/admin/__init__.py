@@ -1,6 +1,6 @@
 from dataforms.models import Collection, CollectionDataForm, CollectionVersion, \
     DataForm, DataFormField, Field, Binding, FieldChoice, Choice, Answer, Submission, \
-    Section
+    Section, AnswerChoice
 from dataforms.settings import ADMIN_JS
 from django.conf.urls.defaults import patterns
 from django.contrib import admin
@@ -239,9 +239,13 @@ class AnswerAdmin(admin.ModelAdmin):
     
     search_fields = ('field__slug', 'field__label')
     
+    def __init__(self, *args, **kwargs):
+        super(AnswerAdmin, self).__init__(*args, **kwargs)
+        self.answer_choices_qs = AnswerChoice.objects.select_related('answer', 'choice').all()
+    
     # Get Choices
     def choices(self, obj):
-        return '%s' % obj.choice.all()
+        return '%s' % str(filter(lambda c: c.answer == obj, self.answer_choices_qs))
 
     # Get Field Types
     def field_type(self, obj):
