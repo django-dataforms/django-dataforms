@@ -137,10 +137,6 @@ class BaseDataForm(forms.BaseForm):
                         data_form__slug=self.slug,
                         submission=self.submission)
         
-        # Delete all the Choice relations on all answers
-        # We will update those later.
-        AnswerChoice.objects.filter(answer__submission=self.submission).delete()
-        
         # Get the fields from the form post
         field_keys = []
         for key in self.fields.keys():
@@ -188,6 +184,10 @@ class BaseDataForm(forms.BaseForm):
 
         # We know answers exist now, so update them if needed.            
         for answer in answers:
+            
+            # Delete the choices so we can re-insert
+            AnswerChoice.objects.filter(answer=answer).delete()
+            
             answer_obj, choice_relations = self._prepare_answer(answer, choices)
             answer_objects.append(answer_obj)
             
@@ -951,7 +951,6 @@ def get_answers(submission, for_form=False, form=None, field=None):
         
         # Pass the answer to the Dict Key
         if answer.choice_id:
-           
            
             # TODO: Need to check to make sure all Fields are covered.
             # Are there more then string or list?
