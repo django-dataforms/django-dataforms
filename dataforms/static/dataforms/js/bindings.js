@@ -12,6 +12,12 @@ function setBindings() {
 			bindings.push(binding);
 			console.log(binding);
 		}
+		
+		// Remove values from all hidden fields
+		$.unique($(this).parents('form')).submit(function() {
+			$(".dataform-field:hidden").val('')			
+		});
+		
 	});
 
 	$.each(bindings, function(i1, bindingArray){
@@ -288,6 +294,7 @@ function hasTruth(selector, binding) {
 	}
 	return result;
 }
+
 
 $(function() {
 	setBindings();

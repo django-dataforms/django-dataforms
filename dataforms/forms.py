@@ -278,7 +278,6 @@ class BaseDataForm(forms.BaseForm):
         """
         Delete extraneous fields that should not be included in form processing.
         This includes hidden bindings fields.  This function may change later.
-        
         """
         
         # Bindings fields
@@ -820,7 +819,8 @@ def _create_form(form, title=None, description=None, readonly=False):
             widget_attrs['disabled'] = "disabled"
         
         # Add bindings css class
-        widget_attrs['class'] = "dataform-field"
+        if row['field_type'] != 'HiddenInput':
+            widget_attrs['class'] = "dataform-field"
         
         # Instantiate the widget that this field will use
         # TODO: Possibly create logic that passes submissionid to file upload widget to handle file
