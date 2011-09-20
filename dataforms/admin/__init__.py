@@ -60,7 +60,12 @@ class CollectionMappingAdmin(admin.ModelAdmin):
     list_display = ('collection', 'data_form', 'section', 'order',)
     list_filter = ('collection__title', 'section__title',)
     list_editable = ('order',)
-
+    list_select_related = True
+    
+    def queryset(self, request):
+        qs = super(CollectionMappingAdmin, self).queryset(request)
+        return qs.select_related('data_form', 'collection', 'section')
+    
     def collection_title(self, obj):
         return obj.collection.title
 
@@ -113,13 +118,25 @@ class DataFormAdmin(admin.ModelAdmin):
     
 
 class FieldMappingAdmin(admin.ModelAdmin):
-    list_display = ('data_form', 'field', 'field_label', 'order')
+    list_display = ('id', 'dataform_slug', 'field_slug', 'field_label', 'order')
     list_filter = ('data_form',)
     list_editable = ('order',)
     search_fields = ('data_form__title', 'field__slug', 'field__label')
+    list_select_related = True
+
+    def __init__(self, *args, **kwargs):
+        super(FieldMappingAdmin, self).__init__(*args, **kwargs)
+        self.field_qs = Field.objects.all()
+        self.dataform_qs = DataForm.objects.all()
+        
+    def dataform_slug(self, obj):
+        return '%s' % filter(lambda d: d.id == obj.data_form_id, self.dataform_qs)[0].slug
+
+    def field_slug(self, obj):
+        return '%s' % filter(lambda f: f.id == obj.field_id, self.field_qs)[0].slug
 
     def field_label(self, obj):
-        return obj.field.label
+        return '%s' % filter(lambda f: f.id == obj.field_id, self.field_qs)[0].label
         
     class Media:
         js = ADMIN_JS
@@ -150,6 +167,10 @@ class BindingAdmin(admin.ModelAdmin):
     save_as = True
     
     form = BindingAdminForm
+    
+    def queryset(self, request):
+        qs = super(BindingAdmin, self).queryset(request)
+        return qs.select_related('data_form', 'field', 'field_choice__choice', 'field_choice__field')
     
     def true_fields_list(self, obj):
         fields = ''.join([
@@ -198,6 +219,10 @@ class ChoiceMappingAdmin(admin.ModelAdmin):
     list_display = ('pk', 'field', 'choice', 'order',)
     list_filter = ('field',)
     list_editable = ('order',)
+    
+    def queryset(self, request):
+        qs = super(ChoiceMappingAdmin, self).queryset(request)
+        return qs.select_related('field', 'choice')
     
     class Media:
         js = ADMIN_JS

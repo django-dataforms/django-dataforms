@@ -316,7 +316,8 @@ class BaseCollection(object):
         self.forms = forms
         self.sections = sections
         self.current_section = current_section
-        self.set_section(self.current_section)
+        # Set the previous and next sections
+        self._set_next_previous_sections(self.current_section)
 
         
     def __getitem__(self, name):
@@ -347,12 +348,11 @@ class BaseCollection(object):
         """
         
         return BaseCollection(
-            title=self.title,
-            description=self.description,
-            slug=self.slug,
+            collection=self.collection,
             forms=self.forms[start:end],
             # FIXME: does this need to be limited to the sections of the forms in the slice?
-            sections=self.sections 
+            sections=self.sections, 
+            current_section=self.current_section
         )
     
     
@@ -404,16 +404,13 @@ class BaseCollection(object):
 
         return errors_list
     
-
-    def set_section(self, section=None):
+    
+    def _set_next_previous_sections(self, section=None):
         """
         Set the visible section whose forms will be returned
         when using array indexing.
         
-        :section: Expects a Section object.  This pas changed, before was a slug as string
-        
-        :deprecated: This method is deprecated. Use the section argument to Collection's instead.
-        
+        :section: Expects a Section object.  This has changed, before was a slug as string
         """
         
         # leaving this here for backwards compatibility
@@ -726,7 +723,7 @@ def _create_form(form, title=None, description=None, readonly=False):
     
     # Get the bindings for use in the Field Loop
     bindings = get_bindings(form=form)
-    
+
     # Add a hidden field used for passing information to the JavaScript bindings function
     fields.append({
         'field_type': 'HiddenInput',
@@ -734,7 +731,6 @@ def _create_form(form, title=None, description=None, readonly=False):
         'initial': safe(force_escape(json.dumps(bindings))),
         'required': False,
     })
-    
     
     # Populate our choices dictionary
     for row in choices_qs:
@@ -822,7 +818,10 @@ def _create_form(form, title=None, description=None, readonly=False):
             widget_attrs['readonly'] = 'readonly'
         if readonly and row['field_type'] == "CheckboxInput":
             widget_attrs['disabled'] = "disabled"
-          
+        
+        # Add bindings css class
+        widget_attrs['class'] = "dataform-field"
+        
         # Instantiate the widget that this field will use
         # TODO: Possibly create logic that passes submissionid to file upload widget to handle file
         # paths without enforcing a redirect.

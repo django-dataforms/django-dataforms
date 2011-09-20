@@ -1,6 +1,7 @@
 from dataforms.settings import FILE_UPLOAD_PATH
 from django.conf import settings
 from django.core.files.base import File
+from django.utils.encoding import smart_str
 from urllib import unquote
 import os
 
@@ -37,8 +38,9 @@ def handle_upload(files, field_key, folder=''):
 		os.makedirs(upload_full_path)
 
 
-	# Turn urlencodeded characters into normal characters
-	upload.name = unquote(upload.name)
+	# Turn urlencodeded characters into normal characters and wrap
+	# it with smart_str for foreign characters
+	upload.name = smart_str(unquote(upload.name))
 
 	# Append an underscore to the given filename until the name is unique
 	while os.path.exists(os.path.join(upload_full_path, upload.name)):

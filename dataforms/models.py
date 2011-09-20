@@ -43,6 +43,7 @@ class CollectionDataForm(models.Model):
         return u'%s in %s (%s)' % (self.collection, self.data_form, self.section)
 
 
+# TODO: This probably should be removed since this was app specific.
 class CollectionVersion(models.Model):
     """
     Model that will keep a record of the newest version of a collection

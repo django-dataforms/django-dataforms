@@ -7,7 +7,10 @@ function setBindings() {
 
 	// Parse the bindings from the hidden field into a javascript array
 	$.each(binding_selectors, function(index, binding){
-		bindings.push(jQuery.parseJSON($(this).val()));
+		var binding = jQuery.parseJSON($(this).val());
+		if (binding) {
+			bindings.push(binding);
+		}
 	});
 
 	$.each(bindings, function(i1, bindingArray){
@@ -94,7 +97,7 @@ function doBindings(event, noAnimation) {
 				if (binding.true_field) {
 					// Loop through the true fields to show
 					$.each(binding.true_field, function(index, selector){
-						$("label[for*='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li").show(speed);
+						$("label[for*='id_"+selector+"']").closest(".dataform-field").show(speed);
 					});
 				}
 				
@@ -122,7 +125,7 @@ function doBindings(event, noAnimation) {
 				if (binding.false_field) {
 					// Loop through the false fields to hide
 					$.each(binding.false_field, function(index, selector){
-						$("label[for*='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li").hide(speed);
+						$("label[for*='id_"+selector+"']").closest(".dataform-field").hide(speed);
 					});
 				}
 	
@@ -138,7 +141,7 @@ function doBindings(event, noAnimation) {
 						}
 						else {
 							bindingElement.closest('li').hide('fast', function(){
-								if (bindingElement.closest(".dataform-field,tr,ul,p").find('input:visible').length == 0) {
+								if (bindingElement.closest(".dataform-field").find('input:visible').length == 0) {
 									$("label[for*='id_"+selector[0]+"']").first().hide();
 								}
 							});
@@ -281,6 +284,7 @@ function hasTruth(selector, binding) {
 			}
 		});
 	}
+
 	return result;
 }
 

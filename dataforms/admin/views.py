@@ -1,4 +1,3 @@
-from annoying.decorators import JsonResponse
 from dataforms.models import Submission, Answer, Field, DataFormField, \
     FieldChoice
 from django.contrib.contenttypes.models import ContentType
