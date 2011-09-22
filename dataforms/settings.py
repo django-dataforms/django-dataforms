@@ -88,11 +88,11 @@ FORM_MEDIA = {
 USE_REMOTE_JQUERY = getattr(settings, "USE_REMOTE_JQUERY", True)
 if USE_REMOTE_JQUERY:
 	FORM_MEDIA['js'].extend([
-		'http://code.jquery.com/ui/1.8.14/jquery-ui.min.js',
-		'http://code.jquery.com/jquery.min.js',
+		'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js',
+		'https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js',
 	])
 	FORM_MEDIA['css'] = {
-		'all' : ('http://code.jquery.com/ui/1.8.14/themes/base/jquery-ui.css',)
+		'all' : ('https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/base/jquery-ui.css',)
 	}
 	FORM_MEDIA['js'].reverse()
 
