@@ -10,7 +10,6 @@ function setBindings() {
 		var binding = jQuery.parseJSON($(this).val());
 		if (binding) {
 			bindings.push(binding);
-			console.log(binding);
 		}
 		
 		// Remove values from all hidden fields
@@ -132,7 +131,6 @@ function doBindings(event, noAnimation) {
 				if (binding.false_field) {
 					// Loop through the false fields to hide
 					$.each(binding.false_field, function(index, selector){
-						console.log(selector);
 						$("label[for*='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li").hide(speed);
 					});
 				}

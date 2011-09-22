@@ -139,7 +139,7 @@ class BaseDataForm(forms.BaseForm):
         
         # Get the fields from the form post
         field_keys = []
-        for key in self.fields.keys():
+        for key in self.fields:
             # Mangle the key into the DB form, then get the right Field
             field_keys.append(_field_for_db(key))
         
@@ -819,9 +819,13 @@ def _create_form(form, title=None, description=None, readonly=False):
             widget_attrs['disabled'] = "disabled"
         
         # Add bindings css class
+        #FIXME: Should we be adding this on the widget or field?
         if row['field_type'] != 'HiddenInput':
-            widget_attrs['class'] = "dataform-field"
-        
+            if 'class' in widget_attrs:
+                widget_attrs['class'] += " dataform-field"
+            else:
+                widget_attrs['class'] = "dataform-field"
+
         # Instantiate the widget that this field will use
         # TODO: Possibly create logic that passes submissionid to file upload widget to handle file
         # paths without enforcing a redirect.
