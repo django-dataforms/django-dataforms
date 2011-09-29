@@ -161,7 +161,7 @@ class FieldAdmin(admin.ModelAdmin):
 class BindingAdmin(admin.ModelAdmin):
     list_display = ('pk', 'data_form', 'field', 'operator', 'value', 
                     'field_choice', 'true_fields_list', 'false_fields_list')
-    list_filter = ('data_form__title',)
+    list_filter = ('data_form__slug',)
     list_select_related = True
     search_fields = ('data_form__title', 'field__slug')
     save_as = True

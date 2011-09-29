@@ -14,7 +14,7 @@ function setBindings() {
 		
 		// Remove values from all hidden fields
 		$.unique($(this).parents('form')).submit(function() {
-			$(".dataform-field:hidden").val('')			
+			$(".dataform-field:hidden").val('').removeAttr('checked');			
 		});
 		
 	});
