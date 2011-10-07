@@ -42,6 +42,7 @@ FIELD_MAPPINGS.update( {
 	'HiddenInput' : { 'class': 'django.forms.Field', 'widget': 'django.forms.HiddenInput' },
 	'FileInput' : { 'class': 'django.forms.FileField', 'widget': 'django.forms.ClearableFileInput' },
 	'IntegerInput' : { 'class': 'django.forms.IntegerField', 'widget': 'django.forms.TextInput' },
+	'DecimalInput' : { 'class': 'django.forms.DecimalField', 'widget': 'django.forms.TextInput' },
 	# Note Widget:  This is a way you can add sub headings to your forms.  See - dataforms.widgets.NoteWidget
 	'Note' : { 'class': 'django.forms.CharField', 'widget': 'dataforms.widgets.NoteWidget' },
 	

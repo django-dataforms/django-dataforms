@@ -71,7 +71,6 @@ class BaseDataForm(forms.BaseForm):
         This was a nasty hack and didn't follow Django form logic.  Django forms should ALWAYS
         have all fields passed.  This allows proper validation.  Using the initial, data, and files
         arguments, you can account for any dynamic logic you need.  Omitting fields was always a bad idea.
-        
         :arg process_full_form: If True, all fields in the form POST will be handled normally
             (i.e., unchecked checkboxes will not appear in the form POST and so any
             previously checked answer will be deleted). If False, only fields specified
@@ -375,14 +374,14 @@ class BaseCollection(object):
                 form.save(collection=self.collection)
         
         
-    def is_valid(self, check_required=True, process_full_form=True):
+    def is_valid(self, check_required=True, *args, **kwargs):
         """
         Validate all contained forms
         """
         valid_list = []
         
         for form in self:
-            valid_list.append(form.is_valid(check_required=check_required, process_full_form=process_full_form))
+            valid_list.append(form.is_valid(check_required=check_required))
         
         if False in valid_list:
             return False
