@@ -814,7 +814,7 @@ def _create_form(form, title=None, description=None, readonly=False):
                 
         if readonly:
             widget_attrs['readonly'] = 'readonly'
-        if readonly and row['field_type'] == "CheckboxInput":
+        if readonly and row['field_type'] in ['CheckboxInput', 'FileInput']:
             widget_attrs['disabled'] = "disabled"
         
         # Add bindings css class
