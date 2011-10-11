@@ -574,11 +574,11 @@ def create_form(request, form, submission, title=None,
             # Try to attach the existing uploaded files.  If this fails
             # we assume it was deleted and will pass nothing.
             try:
-                parent_path = os.path.dirname(os.getcwd())
-                file = open(parent_path + ''.join([settings.MEDIA_URL, data[item]]), 'r')
+                file = open(''.join([settings.MEDIA_ROOT, data[item]]), 'r')
                 data[item] = DataFormFile(file, name=data[item])
                 existing_files[item] = data[item]
-            except: pass 
+            except:
+                pass
     
     # Create the actual form instance, from the dynamic form class
     if request.POST:
