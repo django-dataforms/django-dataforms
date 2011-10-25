@@ -26,7 +26,7 @@ from django.conf import settings
 FIELD_MAPPINGS = {}
 
 if hasattr(settings, 'DATAFORMS_FIELD_MAPPINGS'):
-	FIELD_MAPPINGS = settings.FIELD_MAPPINGS
+	FIELD_MAPPINGS = settings.DATAFORMS_FIELD_MAPPINGS
 	
 FIELD_MAPPINGS.update( {
 	'TextInput' : { 'class': 'django.forms.CharField', 'widget': 'django.forms.TextInput' },

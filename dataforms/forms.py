@@ -288,9 +288,9 @@ class BaseDataForm(forms.BaseForm):
     def _generate_bound_fields(self):
         self.bound_fields = SortedDict([(name, BoundField(self, field, name)) for name, field in self.fields.items()])
     
-    def _media(self):
+    @property
+    def media(self):
         return get_form_media()
-    media = property(_media)
     
 
 class BaseCollection(object):
