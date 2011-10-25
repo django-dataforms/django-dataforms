@@ -223,7 +223,7 @@ class Choice(models.Model):
     """
     Model that holds choices for fields and their values
     """
-    title = models.CharField(verbose_name=_('choice title'), max_length=255)
+    title = models.CharField(verbose_name=_('choice title'), max_length=255, unique=True)
     value = models.CharField(verbose_name=_('choice value'), max_length=255, validators=[reserved_delimiter])
 
     def __unicode__(self):
@@ -231,7 +231,8 @@ class Choice(models.Model):
     
     class Meta:
         ordering = ['title']
-        unique_together = ('title', 'value',)
+        # FIXME: This fails on MySQL using InnoDB due to MySQL bug http://bugs.mysql.com/bug.php?id=4541
+        #unique_together = ('title', 'value',)
 
 
 class Submission(models.Model):
