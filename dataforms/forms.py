@@ -808,22 +808,19 @@ def _create_form(form, title=None, description=None, readonly=False):
                 
             else:
                 field_kwargs['initial'] = ''.join(field_kwargs['initial'])
-                
-            if readonly:
-                widget_attrs['disabled'] = "disabled"
-                
+        
         if readonly:
             widget_attrs['readonly'] = 'readonly'
-        if readonly and row['field_type'] in ['CheckboxInput', 'FileInput']:
             widget_attrs['disabled'] = "disabled"
         
-        # Add bindings css class
-        #FIXME: Should we be adding this on the widget or field?
-        if row['field_type'] != 'HiddenInput':
-            if 'class' in widget_attrs:
-                widget_attrs['class'] += " dataform-field"
-            else:
-                widget_attrs['class'] = "dataform-field"
+        # Add our additional css classes
+        if row.has_key('classes'):
+            widget_attrs['class'] = ' '.join(row['classes'].split(',')).strip()
+            # Add bindings css class
+            #FIXME: Should we be adding this on the widget or field?
+            if row['field_type'] != 'HiddenInput':
+                if not 'dataform-field' in widget_attrs['class']:
+                    widget_attrs['class'] += " dataform-field"
 
         # Instantiate the widget that this field will use
         # TODO: Possibly create logic that passes submissionid to file upload widget to handle file

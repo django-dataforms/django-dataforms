@@ -1,0 +1,127 @@
+label {
+	display: block;
+	font-weight: bold;
+}
+input[type='text'], textarea {
+	width: 300px;
+}
+
+#content-main {
+	margin: 10px 0px;
+	/*border: 1px solid #ccc;
+	border-radius: 5px;*/
+}
+
+#builder-nav {
+	float: left;
+	position: static;
+	margin: 10px 0px 0px 10px;
+	padding: 0px;
+	list-style: none;
+}
+
+#builder-nav li {
+	float: left;
+	list-style: none;
+	margin: 0px 5px;
+	padding: 5px 5px 10px 5px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	border-bottom: 0px;
+	position: relative;
+	top: 3px;
+}
+
+#builder-nav li a {
+	margin: 0px 10px;
+	font-size: 14px;
+}
+
+#builder-panel {
+	clear: both;
+	width: 400px;
+	background: #fff;
+	z-index: 10;
+	position: relative;
+}
+
+#add-fields{
+	float: left;
+	width: 410px;
+	background: #eff6ff;
+	border: 1px solid #96bde6;
+	border-radius: 5px;
+	padding: 10px 0px;
+}
+
+#add-fields ul {
+	margin: 0px 0px 0px 30px;
+	padding: 0px;
+	list-style: none;
+}
+
+#add-fields li {
+	list-style: none;
+	float: left;
+	width: 130px;
+	margin: 3px 15px;
+	text-align: center;
+}
+
+#add-fields li a {
+	list-style: none;
+	border: 1px solid #ccc;
+	float: left;
+	width: 130px;
+	padding: 5px;
+	border-radius: 5px;
+	text-align: center;
+}
+
+#add-fields li a:hover {
+	background: #fff;
+}
+
+#form-layout {
+	float: left;
+	width: 600px;
+	min-height: 400px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	position: relative;
+	left: -1px;
+	top: -28px;
+}
+
+#form-layout-fields {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+
+#form-layout-fields li {
+	list-style: none;
+	margin: 5px 5px 5px 18px;
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	background: #fff;
+	cursor: move;
+	min-height: 40px;
+}
+
+#form-layout-fields li img {
+	display: none;
+}
+
+#form-layout-fields li.form-selected img {
+	display: block;
+	position: absolute;
+	margin-left: -30px;
+	margin-top: 5px;
+	z-index: 50;
+}
+
+.form-selected {
+	background: #DFEFFF !important;
+}

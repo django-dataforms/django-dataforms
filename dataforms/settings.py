@@ -72,30 +72,33 @@ VALIDATION_MODULE = getattr(settings, "DATAFORMS_VALIDATION_MODULE", "validation
 
 FIELD_TYPE_CHOICES = tuple([(field,field) for field in FIELD_MAPPINGS])
 
-ADMIN_JS = (
+REMOTE_JQUERY_JS = (
 	'https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js',
 	'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js',
+)
+REMOTE_JQUERY_CSS = (
+	'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/base/jquery-ui.css',
+)
+
+ADMIN_JS = REMOTE_JQUERY_JS + (
 	'%sdataforms/js/admin.js' % settings.STATIC_URL,
 )
 
 FORM_MEDIA = {
-	'js' : [
+	'js' : (
 	'%sdataforms/js/ajaxupload.js' % settings.STATIC_URL,
 	'%sdataforms/js/bindings.js' % settings.STATIC_URL,
 	'%sdataforms/js/datepicker.js' % settings.STATIC_URL,
-	],
+	),
 }
 
-USE_REMOTE_JQUERY = getattr(settings, "USE_REMOTE_JQUERY", True)
+USE_REMOTE_JQUERY = getattr(settings, "DATAFORMS_USE_REMOTE_JQUERY", True)
 if USE_REMOTE_JQUERY:
-	FORM_MEDIA['js'].extend([
-		'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js',
-		'https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js',
-	])
+	FORM_MEDIA['js'] = REMOTE_JQUERY_JS + FORM_MEDIA['js']
 	FORM_MEDIA['css'] = {
-		'all' : ('https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/base/jquery-ui.css',)
+		'all' : REMOTE_JQUERY_CSS
 	}
-	FORM_MEDIA['js'].reverse()
+	#FORM_MEDIA['js'].reverse()
 
 BINDING_OPERATOR_CHOICES = (
     ('checked', 'Checked or Has Value',),
