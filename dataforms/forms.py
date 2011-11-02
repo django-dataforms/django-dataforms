@@ -815,7 +815,8 @@ def _create_form(form, title=None, description=None, readonly=False):
         
         # Add our additional css classes
         if row.has_key('classes'):
-            widget_attrs['class'] = ' '.join(row['classes'].split(',')).strip()
+            existing_widget_attrs = widget_attrs.get('class', '')
+            widget_attrs['class'] = existing_widget_attrs + ' '.join(row['classes'].split(',')).strip()
             # Add bindings css class
             #FIXME: Should we be adding this on the widget or field?
             if row['field_type'] != 'HiddenInput':
