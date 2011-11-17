@@ -1,4 +1,6 @@
 include AUTHORS README.rst LICENSE
 recursive-include dataforms *.py
+recursive-include dataforms/templates *
+recursive-include dataforms/static *
 include docs/Makefile
 recursive-include docs/source *
