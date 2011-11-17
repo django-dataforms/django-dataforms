@@ -272,10 +272,10 @@ class AnswerManager(models.Manager):
             params.append(data_form_id)
             
         if field_slugs:
-            sql += 'AND f.slug IN (%s)'
-            params.append(','.join(field_slugs))
-        
-        return self.raw(sql, params)
+            sql += 'AND f.slug IN (%s)' % ','.join(["%s"]*len(field_slugs))
+            params += field_slugs
+
+        return self.raw(sql, tuple(params))
 
 
 class Answer(models.Model):

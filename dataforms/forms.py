@@ -488,8 +488,9 @@ def create_collection(request, collection, submission, readonly=False, section=N
     # Initialize a list to contain all the form classes
     form_list = []
     
-    # Get answers for this submission so we can pass this toour form(s)
-    answers, submission = get_answers(submission=submission, for_form=True)
+    # Get answers for this submission so we can pass this to our form(s)
+    # This avoids extra queries on our create_form object
+    answers = get_answers(submission=submission, for_form=True)
     
     # Populate the list
     for form in forms:
@@ -556,7 +557,7 @@ def create_form(request, form, submission, title=None,
     if answers:
         data = answers 
     elif submission:
-        data, submission = get_answers(submission=submission, for_form=True)
+        data = get_answers(submission=submission, for_form=True)
     else:
         data = None
     
@@ -564,9 +565,9 @@ def create_form(request, form, submission, title=None,
     upload_fields = []
     form_fields = FormClass.declared_fields
     for field in form_fields:
-        if form_fields[field].__class__.__name__ == 'FileField':
+        if form_fields[field].dataform_key in UPLOAD_FIELDS:
             upload_fields.append(field)
-
+    
     # Check for existing uploaded fields
     existing_files = {}
     for item in data:
@@ -574,8 +575,8 @@ def create_form(request, form, submission, title=None,
             # Try to attach the existing uploaded files.  If this fails
             # we assume it was deleted and will pass nothing.
             try:
-                file = open(''.join([settings.MEDIA_ROOT, data[item]]), 'r')
-                data[item] = DataFormFile(file, name=data[item])
+                dataform_file = open(''.join([settings.MEDIA_ROOT, data[item]]), 'r')
+                data[item] = DataFormFile(dataform_file, name=data[item])
                 existing_files[item] = data[item]
             except:
                 pass
@@ -815,7 +816,8 @@ def _create_form(form, title=None, description=None, readonly=False):
         
         # Add our additional css classes
         if row.has_key('classes'):
-            widget_attrs['class'] = ' '.join(row['classes'].split(',')).strip()
+            existing_widget_attrs = widget_attrs.get('class', '')
+            widget_attrs['class'] = existing_widget_attrs + ' '.join(row['classes'].split(',')).strip()
             # Add bindings css class
             #FIXME: Should we be adding this on the widget or field?
             if row['field_type'] != 'HiddenInput':
@@ -832,6 +834,7 @@ def _create_form(form, title=None, description=None, readonly=False):
         # (initial, label, required, help_text, etc)
         final_field = field_map['class'](**field_kwargs)
         final_field.is_checkbox = (row['field_type'] == 'CheckboxInput')
+        final_field.dataform_key = row['field_type']
         final_fields[form_field_name] = final_field
 
     # Grab the dynamic validation function from validation.py
@@ -895,7 +898,7 @@ def get_answers(submission, for_form=False, form=None, field=None):
         to be True when used the keys will be used as form element names.
     :param form: Only get the answer for a specific form. Also accepts a data_form slug.
     :param field: Only get the answer for a specific field. Also accepts a list of field_slugs.
-    :return: a dictionary of answers
+    :return: tuple of a dictionary of answers and submission object
     """
     
     data = defaultdict(list)
@@ -906,7 +909,7 @@ def get_answers(submission, for_form=False, form=None, field=None):
             submission = Submission.objects.get(slug=submission)
         except:
             # If no records or error, return empty
-            return dict(data), None
+            return dict(data)
    
     elif not isinstance(submission, Submission):
         raise AttributeError('Submission %s is not a valid submission object.' % submission)
@@ -926,8 +929,11 @@ def get_answers(submission, for_form=False, form=None, field=None):
         
     # Rid ourselves of ORM objects and just use field slug strings
     if field_slugs:
-        field_slugs = [(field.slug if isinstance(field, Field) else field) for field in field]
-        
+        # Convert to list of not one
+        if not isinstance(field_slugs, (list, tuple)):
+            field_slugs = [field_slugs]
+
+        field_slugs = [(field.slug if isinstance(field, Field) else field) for field in field_slugs]
         # Transform prepended slugs: personal-information__some-field --> some-field
         field_slugs = [
             (_field_for_db(name=slug) if FIELD_DELIMITER in slug else slug)
@@ -935,13 +941,14 @@ def get_answers(submission, for_form=False, form=None, field=None):
         ]
     else:
         field_slugs = None
-    
+        
     # Populate the query into answers
     answers = Answer.objects.get_answer_data(submission_id, field_slugs, form)
     
     # For every answer, do some magic and get it into our data dictionary
     for answer in answers:
-        # TODO: Refactors the answer field name to be globally unique (so
+
+        # TODO: Refactor the answer field name to be globally unique (so
         # that a field can be in multiple forms in the same POST)
         if for_form:
             #answer_key = _field_for_form(name=str(answer['field_slug']), form=answer['dataform_slug'])
@@ -967,7 +974,7 @@ def get_answers(submission, for_form=False, form=None, field=None):
             data[answer_key] = answer.value
 
     # Return the answers and the submission back
-    return dict(data), submission
+    return dict(data)
 
 
 def get_form_media():

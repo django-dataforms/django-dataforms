@@ -116,5 +116,6 @@ try:
     INSTALLED_APPS += (
         'django_extensions',
         'reversion',
+        'south',
     )
 except ImportError: pass

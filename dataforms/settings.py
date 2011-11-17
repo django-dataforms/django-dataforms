@@ -41,6 +41,7 @@ FIELD_MAPPINGS.update( {
 	'CheckboxSelectMultiple': { 'class': 'django.forms.MultipleChoiceField', 'widget': 'django.forms.CheckboxSelectMultiple' },
 	'HiddenInput' : { 'class': 'django.forms.Field', 'widget': 'django.forms.HiddenInput' },
 	'FileInput' : { 'class': 'django.forms.FileField', 'widget': 'django.forms.ClearableFileInput' },
+	'ImageFileInput' : { 'class': 'django.forms.ImageField', 'widget': 'django.forms.ClearableFileInput' },
 	'IntegerInput' : { 'class': 'django.forms.IntegerField', 'widget': 'django.forms.TextInput' },
 	'DecimalInput' : { 'class': 'django.forms.DecimalField', 'widget': 'django.forms.TextInput' },
 	# Note Widget:  This is a way you can add sub headings to your forms.  See - dataforms.widgets.NoteWidget
@@ -57,7 +58,7 @@ FILE_UPLOAD_PATH = getattr(settings, "DATAFORMS_FILE_UPLOAD_PATH", "uploads/")
 
 MAX_UPLOAD_SIZE = getattr(settings, "DATAFORMS_MAX_UPLOAD_SIZE", 10485760)
 
-UPLOAD_FIELDS = getattr(settings, "DATAFORMS_UPLOAD_FIELDS", ()) + ('FileInput',)
+UPLOAD_FIELDS = getattr(settings, "DATAFORMS_UPLOAD_FIELDS", ()) + ('FileInput', 'ImageFileInput')
 BOOLEAN_FIELDS = getattr(settings, "DATAFORMS_BOOLEAN_FIELDS", ()) + ('CheckboxInput',)
 SINGLE_CHOICE_FIELDS = getattr(settings, "DATAFORMS_SINGLE_CHOICE_FIELDS", ()) + ('Select', 'RadioSelect')
 MULTI_CHOICE_FIELDS = getattr(settings, "DATAFORMS_MULTI_CHOICE_FIELDS", ()) + ('SelectMultiple', 'CheckboxSelectMultiple')

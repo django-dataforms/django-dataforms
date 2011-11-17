@@ -1,6 +1,6 @@
 [
   {
-    "pk": 1, 
+    "pk": 3, 
     "model": "dataforms.submission", 
     "fields": {
       "last_modified": "2009-09-04 23:38:31", 
@@ -50,59 +50,12 @@
   }, 
   {
     "pk": 1, 
-    "model": "dataforms.answertext", 
-    "fields": {
-      "answer": 4, 
-      "text": "\u2600"
-    }
-  }, 
-  {
-    "pk": 2, 
-    "model": "dataforms.answertext", 
-    "fields": {
-      "answer": 6, 
-      "text": "1"
-    }
-  }, 
-  {
-    "pk": 3, 
-    "model": "dataforms.answertext", 
-    "fields": {
-      "answer": 8, 
-      "text": "2009-09-09"
-    }
-  }, 
-  {
-    "pk": 4, 
-    "model": "dataforms.answertext", 
-    "fields": {
-      "answer": 9, 
-      "text": "test@example.com"
-    }
-  }, 
-  {
-    "pk": 5, 
-    "model": "dataforms.answertext", 
-    "fields": {
-      "answer": 10, 
-      "text": "password123"
-    }
-  }, 
-  {
-    "pk": 6, 
-    "model": "dataforms.answertext", 
-    "fields": {
-      "answer": 12, 
-      "text": "Blah blah blah\u2600"
-    }
-  }, 
-  {
-    "pk": 1, 
     "model": "dataforms.answer", 
     "fields": {
       "field": 1, 
       "data_form": 1, 
-      "submission": 1
+      "submission": 3,
+      "value":"conquistador"
     }
   }, 
   {
@@ -111,7 +64,8 @@
     "fields": {
       "field": 2, 
       "data_form": 1, 
-      "submission": 1
+      "submission": 3,
+      "value":"no"
     }
   }, 
   {
@@ -120,7 +74,8 @@
     "fields": {
       "field": 3, 
       "data_form": 1, 
-      "submission": 1
+      "submission": 3,
+      "value":""
     }
   }, 
   {
@@ -129,7 +84,8 @@
     "fields": {
       "field": 4, 
       "data_form": 1, 
-      "submission": 1
+      "submission": 3,
+      "value": "\u2600"
     }
   }, 
   {
@@ -138,7 +94,8 @@
     "fields": {
       "field": 7, 
       "data_form": 1, 
-      "submission": 1
+      "submission": 3,
+      "value": "python"
     }
   }, 
   {
@@ -147,7 +104,8 @@
     "fields": {
       "field": 8, 
       "data_form": 1, 
-      "submission": 1
+      "submission": 3,
+      "value": "1"
     }
   }, 
   {
@@ -156,7 +114,8 @@
     "fields": {
       "field": 9, 
       "data_form": 1, 
-      "submission": 1
+      "submission": 3,
+      "value": "not-a-chance"
     }
   }, 
   {
@@ -165,7 +124,8 @@
     "fields": {
       "field": 11, 
       "data_form": 1, 
-      "submission": 1
+      "submission": 3,
+      "value": "2009-09-09"
     }
   }, 
   {
@@ -174,7 +134,8 @@
     "fields": {
       "field": 12, 
       "data_form": 1, 
-      "submission": 1
+      "submission": 3,
+      "value": "test@example.com"
     }
   }, 
   {
@@ -183,7 +144,8 @@
     "fields": {
       "field": 13, 
       "data_form": 1, 
-      "submission": 1
+      "submission": 3,
+      "value": "password123"
     }
   }, 
   {
@@ -192,7 +154,8 @@
     "fields": {
       "field": 15, 
       "data_form": 1, 
-      "submission": 1
+      "submission": 3,
+      "value": "no-choose-me"
     }
   }, 
   {
@@ -201,7 +164,8 @@
     "fields": {
       "field": 16, 
       "data_form": 1, 
-      "submission": 1
+      "submission": 3,
+      "value": "Blah blah blah\u2600"
     }
   }
 ]
