@@ -1,5 +1,5 @@
 from dataforms.admin.forms import BindingAdminForm
-from dataforms.settings import ADMIN_JS
+from dataforms.app_settings import ADMIN_JS
 from django.conf.urls.defaults import patterns
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType

@@ -1,6 +1,6 @@
 from django.http import Http404
 from django.shortcuts import render
-from settings import FIELD_MAPPINGS, REMOTE_JQUERY_JS, REMOTE_JQUERY_CSS
+from app_settings import FIELD_MAPPINGS, REMOTE_JQUERY_JS, REMOTE_JQUERY_CSS
 
 def build(request):
     

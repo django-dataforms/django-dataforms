@@ -1,4 +1,4 @@
-from dataforms.settings import ADMIN_JS
+from dataforms.app_settings import ADMIN_JS
 from django.contrib import admin
 from inlines import CollectionInline
 
@@ -21,11 +21,6 @@ class CollectionAdmin(admin.ModelAdmin):
         js = ADMIN_JS
 
 
-class CollectionVersionAdmin(admin.ModelAdmin):
-    list_display = ('slug', 'collection', 'last_modified' )
-    save_as = True
-    
-    
 class CollectionMappingAdmin(admin.ModelAdmin):
     list_display = ('collection', 'data_form', 'section', 'order',)
     list_filter = ('collection__title', 'section__title',)

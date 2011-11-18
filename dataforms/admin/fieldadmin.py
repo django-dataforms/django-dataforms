@@ -1,6 +1,6 @@
 from dataforms.admin.forms import FieldAdminForm
 from dataforms.models import Field, DataForm
-from dataforms.settings import ADMIN_JS
+from dataforms.app_settings import ADMIN_JS
 from django import forms
 from django.contrib import admin
 from inlines import ChoiceInline, FieldInline

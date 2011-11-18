@@ -1,9 +1,9 @@
 """
-Dataforms System
-================
+Dataforms Form API
+==================
 
 See the GettingStarted guide at:
-http://code.google.com/p/django-dataforms/wiki/GettingStarted
+http://readthedocs.org/docs/django-dataforms/en/latest/
 """
 from collections import defaultdict
 from django import forms
@@ -15,7 +15,7 @@ from django.utils.datastructures import SortedDict
 from django.utils.safestring import mark_safe
 from models import DataForm, Collection, Field, FieldChoice, Choice, Answer, \
     AnswerChoice, Submission, CollectionDataForm, Section, Binding
-from settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, \
+from app_settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, \
     CHOICE_FIELDS, UPLOAD_FIELDS, FIELD_DELIMITER, STATIC_CHOICE_FIELDS, FORM_MEDIA, \
     VALIDATION_MODULE
 from utils.file import handle_upload, DataFormFile
@@ -66,20 +66,6 @@ class BaseDataForm(forms.BaseForm):
     def is_valid(self, check_required=True, *args, **kwargs):
         """
         :arg check_required: Whether or not to validate required fields. Default True.
-        
-        DEPRECATED! - process_full_form is no longer needed.  File upload logic has changed.
-        This was a nasty hack and didn't follow Django form logic.  Django forms should ALWAYS
-        have all fields passed.  This allows proper validation.  Using the initial, data, and files
-        arguments, you can account for any dynamic logic you need.  Omitting fields was always a bad idea.
-        :arg process_full_form: If True, all fields in the form POST will be handled normally
-            (i.e., unchecked checkboxes will not appear in the form POST and so any
-            previously checked answer will be deleted). If False, only fields specified
-            in the FORM post will be handled (allowing changes to a subset of field answers
-            in the database, if desired, but causes checkboxes to not become unchecked unless
-            the key is manually added to the form POST data with a blank string value).
-
-            This function *will* affect what the save() function receives to process and
-            MUST be called before save() is called.
         """
 
         # We still erase bindings.

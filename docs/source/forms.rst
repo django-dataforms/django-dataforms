@@ -1,4 +1,4 @@
 .. automodule:: dataforms.forms
-	:synopsis: django-dataforms API
+	:synopsis: Dataforms Form API
 	:members:
 	:undoc-members:

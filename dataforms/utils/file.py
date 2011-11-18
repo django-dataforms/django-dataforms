@@ -1,4 +1,4 @@
-from dataforms.settings import FILE_UPLOAD_PATH
+from dataforms.app_settings import FILE_UPLOAD_PATH
 from django.conf import settings
 from django.core.files.base import File
 from django.utils.encoding import smart_str

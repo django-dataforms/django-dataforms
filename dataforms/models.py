@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models.fields import CommaSeparatedIntegerField
 from django.utils.translation import ugettext_lazy as _
 from fields import SeparatedValuesField
-from settings import FIELD_TYPE_CHOICES, BINDING_OPERATOR_CHOICES, \
+from app_settings import FIELD_TYPE_CHOICES, BINDING_OPERATOR_CHOICES, \
     BINDING_ACTION_CHOICES
     
 
@@ -41,19 +41,6 @@ class CollectionDataForm(models.Model):
 
     def __unicode__(self):
         return u'%s in %s (%s)' % (self.collection, self.data_form, self.section)
-
-
-# TODO: This probably should be removed since this was app specific.
-class CollectionVersion(models.Model):
-    """
-    Model that will keep a record of the newest version of a collection
-    """
-    slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
-    collection = models.ForeignKey('Collection')
-    last_modified = models.DateTimeField(auto_now=True)
-    
-    def __unicode__(self):
-        return u"%s (%s)" % (self.slug, self.collection)
 
 
 class Section(models.Model):

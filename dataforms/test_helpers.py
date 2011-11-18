@@ -4,7 +4,7 @@ from django.test import TestCase, Client
 from forms import _field_for_form, \
 	get_answers # kind of breaking low coupling here
 from models import Submission, Answer
-from settings import BOOLEAN_FIELDS, MULTI_CHOICE_FIELDS, UPLOAD_FIELDS
+from app_settings import BOOLEAN_FIELDS, MULTI_CHOICE_FIELDS, UPLOAD_FIELDS
 
 
 class RequestFactory(Client):
