@@ -75,6 +75,16 @@ To get this application up and running, please follow the steps below:
 			    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 			)
 			
+	*	To maintain data integrity, you'll need to add the transaction middleware 
+		to your `settings.py`. This will put all queries from each request into 
+		a single transaction—so if something goes wrong, all DB changes 
+		from the entire request will not be committed.::
+		
+			MIDDLEWARE_CLASSES = (
+				# ...
+				'django.middleware.transaction.TransactionMiddleware',	
+			)
+			
 5.	Modify **app_settings.py** as needed.  See :doc:`settings` for specifics.
 
 		
@@ -91,6 +101,7 @@ __ https://github.com/django-dataforms/dango-dataforms/downloads
    :maxdepth: 2
    :hidden:
    
+   usage
    concepts
    settings
    validation

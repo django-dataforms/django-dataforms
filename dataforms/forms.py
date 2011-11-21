@@ -65,7 +65,7 @@ class BaseDataForm(forms.BaseForm):
 
     def is_valid(self, check_required=True, *args, **kwargs):
         """
-        :arg check_required: Whether or not to validate required fields. Default True.
+        :param check_required: Whether or not to validate required fields. Default True.
         """
 
         # We still erase bindings.
@@ -434,15 +434,15 @@ def create_collection(request, collection, submission, readonly=False, section=N
     """
     Based on a form collection slug, create a list of form objects.
     
-    :param request: the current page request object, so we can pull POST and other vars.
-    :param collection: a data form collection slug or object
-    :param submission: create-on-use submission slug or object; passed in to retrieve
+    :param request: *required* (object); the current page request object, so we can pull POST and other vars.
+    :param collection: *required*, (string or object); a Dataform collection slug or object
+    :param submission: *required*, (string or object); a create-on-use submission slug or object; passed in to retrieve
         Answers from an existing Submission, or to be the slug for a new Submission.
-    :param readonly: optional readonly; converts form fields to be readonly.
+    :param readonly: *optional* (boolean); converts form fields to be readonly.
         Usefull for display only logic.
-    :param section: optional section; allows a return of only forms on that section. 
+    :param section: *optional* (string or object); allows a return of only forms on that section. 
     
-    :return: a BaseCollection object, populated with the correct data forms and data
+    :rtype: a BaseCollection object, populated with the correct Dataforms and data
     """
     
     # Slightly evil, do type checking to see if collection is a Collection object or string
@@ -511,17 +511,18 @@ def create_form(request, form, submission, title=None,
         # Create a bound form to a previous submission object
         create_form(request, slug="personal-info", submission=Submission.objects.get(...))
         
-    :param request: the current page request object, so we can pull POST and other vars.
-    :param form: a data form slug or object
-    :param submission: create-on-use submission slug or object; passed in to retrieve
+    :param request: *required* (object); the current page request object, so we can pull POST and other vars.
+    :param form: *required* (string or object); a Dataform slug or object
+    :param submission: *required* (string or object); a create-on-use submission slug or object; passed in to retrieve
         Answers from an existing Submission, or to be the slug for a new Submission.
-    :param title: optional title; pulled from DB by default
-    :param description: optional description; pulled from DB by default
-    :param section: optional section; will be added as an attr to the form instance 
-    :param readonly: optional readonly; converts form fields to be readonly.
+    :param title: *optional* (string); a title for the form, pulled from DB by default
+    :param description: *optional* (string); a description pulled from DB by default
+    :param section: *optional* (string or object); a section that will be added as an attr to the form instance 
+    :param readonly: *optional* (boolean) readonly converts form fields to be readonly.
         Usefull for display only logic.
-    :param answers: optional answers; answer dictionary for the submission
-    :param return_class: optional return_class; returns only the form class and decouples database saves
+    :param answers: *optional* (dictionary); a answer dictionary for the submission.  
+        It should follow the same format os get_answers().
+    :param return_class: *optional* (boolean); returns only the form class and decouples database saves
         Usefull for when you want to save the form somewhere else.
     """
             
@@ -884,7 +885,7 @@ def get_answers(submission, for_form=False, form=None, field=None):
         to be True when used the keys will be used as form element names.
     :param form: Only get the answer for a specific form. Also accepts a data_form slug.
     :param field: Only get the answer for a specific field. Also accepts a list of field_slugs.
-    :return: tuple of a dictionary of answers and submission object
+    :rtype: a dictionary of answers.
     """
     
     data = defaultdict(list)
@@ -1046,7 +1047,7 @@ def _field_for_db(name, packed_return=False):
     "id_form-name--field-name" --> "field-name"
     "id_form-name--field-name" --> "form-name", "field-name"
     
-    :arg packed_return: whether or not to return a tuple of
+    :param packed_return: whether or not to return a tuple of
         (form_name, field_name), or just the field_name
     """
     
