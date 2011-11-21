@@ -1,0 +1,59 @@
+{% extends 'dataforms/base.html' %}
+{% load i18n %}
+
+{% block extrahead %}
+	{{ block.super }}
+	{% for css in media_css %}
+		<link rel="stylesheet" type="text/css" href="{{ css }}" />
+	{% endfor %}
+	<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}dataforms/css/build.css" />
+	{% for js in media_js %}
+		<script type="text/javascript" language="JavaScript" src="{{ js }}"></script>
+	{% endfor %}
+
+	<script type="text/javascript" language="JavaScript" src="{{ STATIC_URL }}dataforms/js/build.js"></script>
+{% endblock %}
+
+{% block breadcrumbs %}
+	<div class="breadcrumbs">
+		<a href="../../">{% trans "Home" %}</a> &rsaquo;
+		<a href="">{% trans "Dataforms" %}</a> &rsaquo; Build
+	</div>
+{% endblock %}
+
+{% block content %}
+	<h1>Form Builder</h1>
+    <div id="content-main">
+    	<ul id="builder-nav">
+    		<li><a rel="add-fields" href="">Add a Field</a></li>
+    		<li><a rel="field-settings" href="">Field Settings</a></li>
+    		<li><a rel="form-seittings" href="">Form Settings</a></li>
+    	</ul>
+    	
+    	<div id="builder-panel">
+    		<div id="add-fields" class="panel">
+	    		<h2>Add Fields</h2>
+	    		<ul>
+		    		{% for field in fields %}
+		    			<li><a id="field-{{ field }}" href="">{{ field }}</a></li>
+		    		{% endfor %}
+	    		</ul>
+	    		<div class="clear"><!-- --></div>
+	    	</div>
+	    	<div id="field-settings" class="panel">
+	    		<h2>Field Settings</h2>
+	    	</div>
+	    	<div id="form-settings" class="panel">
+	    		<h2>Form Settings</h2>
+	    		
+	   		</div>	
+    	</div>
+    	
+    	<div id="form-layout">
+    		<ul id="form-layout-fields">
+    			
+    		</ul>
+    	</div>
+	    	
+    </div>
+{% endblock %}

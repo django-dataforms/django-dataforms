@@ -19,12 +19,12 @@ import sys, os
 #sys.path.append(os.path.abspath('.'))
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__) + '/../../'))
-os.environ["DJANGO_SETTINGS_MODULE"] = 'dataforms.settings'
+os.environ["DJANGO_SETTINGS_MODULE"] = 'dataforms.app_settings'
 
-from dataforms import settings
+from dataforms import app_settings
 from django.core.management import setup_environ
 
-setup_environ(settings)
+setup_environ(app_settings)
 
 # -- General configuration -----------------------------------------------------
 
@@ -36,7 +36,7 @@ extensions = ['sphinx.ext.autodoc']
 templates_path = ['_templates']
 
 # The suffix of source filenames.
-source_suffix = '.txt'
+source_suffix = '.rst'
 
 # The encoding of source files.
 #source_encoding = 'utf-8'

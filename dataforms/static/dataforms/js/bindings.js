@@ -7,7 +7,16 @@ function setBindings() {
 
 	// Parse the bindings from the hidden field into a javascript array
 	$.each(binding_selectors, function(index, binding){
-		bindings.push(jQuery.parseJSON($(this).val()));
+		var binding = jQuery.parseJSON($(this).val());
+		if (binding) {
+			bindings.push(binding);
+		}
+		
+		// Remove values from all hidden fields
+		$.unique($(this).parents('form')).submit(function() {
+			$(".dataform-field:hidden").val('').removeAttr('checked');			
+		});
+		
 	});
 
 	$.each(bindings, function(i1, bindingArray){
@@ -16,21 +25,26 @@ function setBindings() {
 			
 			var selector = smartGetSelector(binding.selector);
 			
-			selector.data('binding', binding);
+			if (selector.data('bindings')) {
+				selector.data('bindings').push(binding);
+			}
+			else {
+				selector.data('bindings', [binding]);
+			}
 			
 			// Set the event handlers			
 			if (selector.is('select')) {
-				selector.change(doBinding);
+				selector.change(doBindings);
 			}
 			else if (selector.is('input:text, textarea')) {
-				selector.keyup(doBinding);
+				selector.keyup(doBindings);
 			}
 			else {
-				selector.click(doBinding);
+				selector.click(doBindings);
 			}
 
 			selector.bind('init', function(event){
-				doBinding(event, true);
+				doBindings(event, true);
 			});
 
 			// Manually trigger bindings for page start
@@ -64,100 +78,103 @@ function smartGetSelector(name, choiceValue) {
 }
 
 
-function doBinding(event, noAnimation) {
+function doBindings(event, noAnimation) {
 	// Assign the binding
 	var selector = $(event.currentTarget);
-	var binding = selector.data('binding');
-	var isTrue = hasTruth(selector);
+	var bindings = selector.data('bindings');
 	
-	//console.log($(event.currentTarget));
+	$.each(bindings, function(index, binding){
+		var isTrue = hasTruth(selector, binding);	
 	
-	if (noAnimation) {
-		var speed = 0;
-	}
-	else {
-		var speed = 100;
-	}
-
-	// Do show/hide action
-	if (binding.action == 'show-hide') {
-
-			
-		// If true
-		if (isTrue) {
-			
-			if (binding.true_field) {
-				// Loop through the true fields to show
-				$.each(binding.true_field, function(index, selector){
-					$("label[for*='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li").show(speed);
-				});
-			}
-			
-			if (binding.true_choice) {
-				// Loop though the true field choices to show
-				$.each(binding.true_choice, function(index, selector){
-
-					var bindingElement = smartGetSelector(selector[0], selector[1]);
-					
-					$("label[for*='id_"+selector[0]+"_0']").first().show(speed);
-					// Show if the value matches the fieldchoice
-					if (bindingElement.is("option")) {
-						bindingElement.removeAttr('disabled');
-					}
-					else {
-						bindingElement.closest('li').show(speed)
-					}
-				});
-			}
-			
+		if (noAnimation) {
+			var speed = 0;
 		}
-		// If false
 		else {
-			
-			if (binding.false_field) {
-				// Loop through the false fields to hide
-				$.each(binding.false_field, function(index, selector){
-					$("label[for*='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li").hide(speed);
-				});
-			}
-
-			// Loop though the false field choices to hide
-			if (binding.false_choice) {
-				$.each(binding.false_choice, function(index, selector){
-					
-					var bindingElement = smartGetSelector(selector[0], selector[1]);
-					
-					// Hide if the value matches the fieldchoice
-					if (bindingElement.is("option")) {
-						bindingElement.attr('disabled', 'disabled');
-					}
-					else {
-						bindingElement.closest('li').hide('fast', function(){
-							if (bindingElement.closest(".dataform-field,tr,ul,p").find('input:visible').length == 0) {
-								$("label[for*='id_"+selector[0]+"']").first().hide();
-							}
-						});
-					}
-				});
-			}
+			var speed = 100;
 		}
+	
+		// Do show/hide action
+		if (binding.action == 'show-hide') {
+	
+				
+			// If true
+			if (isTrue) {
+				
+				if (binding.true_field) {
+					// Loop through the true fields to show
+					$.each(binding.true_field, function(index, selector){
+						$("label[for*='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li").show(speed);
+					});
+				}
+				
+				if (binding.true_choice) {
+					// Loop though the true field choices to show
+					$.each(binding.true_choice, function(index, selector){
+	
+						var bindingElement = smartGetSelector(selector[0], selector[1]);
+						
+						$("label[for*='id_"+selector[0]+"_0']").first().show(speed);
+						// Show if the value matches the fieldchoice
+						if (bindingElement.is("option")) {
+							bindingElement.removeAttr('disabled');
+						}
+						else {
+							bindingElement.closest('li').show(speed)
+						}
+					});
+				}
+				
+			}
+			// If false
+			else {
+				
+				if (binding.false_field) {
+					// Loop through the false fields to hide
+					$.each(binding.false_field, function(index, selector){
+						$("label[for*='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li").hide(speed);
+					});
+				}
+	
+				// Loop though the false field choices to hide
+				if (binding.false_choice) {
+					$.each(binding.false_choice, function(index, selector){
+						
+						var bindingElement = smartGetSelector(selector[0], selector[1]);
+						
+						// Hide if the value matches the fieldchoice
+						if (bindingElement.is("option")) {
+							bindingElement.attr('disabled', 'disabled');
+						}
+						else {
+							bindingElement.closest('li').hide('fast', function(){
+								if (bindingElement.closest(".dataform-field,tr,ul,p").find('input:visible').length == 0) {
+									$("label[for*='id_"+selector[0]+"']").first().hide();
+								}
+							});
+						}
+					});
+				}
+			}
+				
 			
-		
-	}
-	// Do custom function, not implemented yet...
-	else {
-		// TODO: Need to code this.		
-	}
+		}
+		// Do custom function, not implemented yet...
+		else {
+			// TODO: Need to code this.		
+		}
+	
+	});
 
 }
 
 
-function hasTruth(selector) {
+function hasTruth(selector, binding) {
 	var bindingValue;
 	var selectorValue = [];
-	var binding = selector.data('binding');
+	//var binding = selector.data('bindings');
 	var bindingOperator = binding.operator;
 	var result = false;
+	
 	
 	// Find out the operator and the value
 	if (binding.field_choice) {
@@ -273,9 +290,9 @@ function hasTruth(selector) {
 			}
 		});
 	}
-	
 	return result;
 }
+
 
 $(function() {
 	setBindings();

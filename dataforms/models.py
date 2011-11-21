@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models.fields import CommaSeparatedIntegerField
 from django.utils.translation import ugettext_lazy as _
 from fields import SeparatedValuesField
-from settings import FIELD_TYPE_CHOICES, BINDING_OPERATOR_CHOICES, \
+from app_settings import FIELD_TYPE_CHOICES, BINDING_OPERATOR_CHOICES, \
     BINDING_ACTION_CHOICES
     
 
@@ -30,29 +30,17 @@ class CollectionDataForm(models.Model):
 
     collection = models.ForeignKey('Collection', null=True)
     data_form = models.ForeignKey('DataForm', null=True)
-    section = models.ForeignKey('Section', null=True)
-    order = models.IntegerField(verbose_name=_('order'), null=True, blank=True)
+    section = models.ForeignKey('Section', blank=True, null=True)
+    order = models.IntegerField(verbose_name=_('order'), blank=True, null=True)
 
     class Meta:
-        unique_together = ('collection', 'data_form')
+        unique_together = ('collection', 'data_form', 'section')
         ordering = ['order', ]
         verbose_name = 'Collection Mapping'
         verbose_name_plural = 'Collection Mappings'
 
     def __unicode__(self):
-        return u'%s in %s' % (self.collection, self.data_form)
-
-
-class CollectionVersion(models.Model):
-    """
-    Model that will keep a record of the newest version of a collection
-    """
-    slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True)
-    collection = models.ForeignKey('Collection')
-    last_modified = models.DateTimeField(auto_now=True)
-    
-    def __unicode__(self):
-        return u"%s (%s)" % (self.slug, self.collection)
+        return u'%s in %s (%s)' % (self.collection, self.data_form, self.section)
 
 
 class Section(models.Model):
@@ -118,7 +106,9 @@ class Field(models.Model):
     slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True, validators=[reserved_delimiter])
     help_text = models.TextField(verbose_name=_('field help text'), blank=True)
     initial = models.TextField(verbose_name=_('initial value of the field'), blank=True)
-    arguments = models.CharField(verbose_name=_('additional arguments'),
+    classes = models.CharField(verbose_name=_('additional widget classes'), 
+                                      help_text="A comma separated string of class names.", blank=True, max_length=255)
+    arguments = models.CharField(verbose_name=_('additional field arguments'),
         help_text="A JSON dictionary of keyword arguments.", blank=True, max_length=255)
     required = models.BooleanField(verbose_name=_('field is required'), default=False)
     visible = models.BooleanField(verbose_name=_('field is visible'), default=True)
@@ -159,14 +149,11 @@ class Binding(models.Model):
         if self.field_choice and self.operator != 'checked':
             raise ValidationError("Operator must be equal to 'checked of Field Choice is selected.")
         
-        # A True Field or True Choice is required
-        if not self.true_field and not self.true_choice:
-            raise ValidationError('A True Field or True Choice is required.')
+        # A field or choice is required
+        if (not self.true_field and not self.true_choice
+            and not self.false_field and not self.field_choice):
+            raise ValidationError('A Field or Choice is required.')
 
-        # A False Field or False Choice is required
-        if not self.false_field and not self.false_choice:
-            raise ValidationError('A False Field or False Choice is required.')
-        
         # If action is function, then a function is needed
         if self.action == 'function' and not self.function:
             raise ValidationError('A function is required if action is function.')
@@ -225,7 +212,7 @@ class Choice(models.Model):
     """
     Model that holds choices for fields and their values
     """
-    title = models.CharField(verbose_name=_('choice title'), max_length=255)
+    title = models.CharField(verbose_name=_('choice title'), max_length=255, unique=True)
     value = models.CharField(verbose_name=_('choice value'), max_length=255, validators=[reserved_delimiter])
 
     def __unicode__(self):
@@ -233,7 +220,8 @@ class Choice(models.Model):
     
     class Meta:
         ordering = ['title']
-        unique_together = ('title', 'value',)
+        # FIXME: This fails on MySQL using InnoDB due to MySQL bug http://bugs.mysql.com/bug.php?id=4541
+        #unique_together = ('title', 'value',)
 
 
 class Submission(models.Model):
@@ -257,7 +245,7 @@ class AnswerManager(models.Manager):
             SELECT a.*, f.field_type, f.slug AS field_slug, 
                 d.slug AS data_form_slug, c.value as choice_value, ac.choice_id
                      FROM dataforms_answer a 
-                     LEFT JOIN dataforms_answer_choice ac ON a.id = ac.answer_id
+                     LEFT JOIN dataforms_answerchoice ac ON a.id = ac.answer_id
                      LEFT JOIN dataforms_choice c ON ac.choice_id = c.id
                      INNER JOIN dataforms_field f ON a.field_id = f.id
                      INNER JOIN dataforms_dataform d ON a.data_form_id = d.id 
@@ -271,10 +259,10 @@ class AnswerManager(models.Manager):
             params.append(data_form_id)
             
         if field_slugs:
-            sql += 'AND a.field_id IN (%s)'
-            params.append(','.join(field_slugs))
-        
-        return self.raw(sql, params)
+            sql += 'AND f.slug IN (%s)' % ','.join(["%s"]*len(field_slugs))
+            params += field_slugs
+
+        return self.raw(sql, tuple(params))
 
 
 class Answer(models.Model):
@@ -286,7 +274,7 @@ class Answer(models.Model):
     data_form = models.ForeignKey(DataForm)
     field = models.ForeignKey(Field)
     value = models.TextField(blank=True, null=True)
-    choice = models.ManyToManyField(Choice, blank=True, null=True)
+    choice = models.ManyToManyField(Choice, through='AnswerChoice', blank=True, null=True)
 
     def __unicode__(self):
         return unicode(self.field)
@@ -294,6 +282,10 @@ class Answer(models.Model):
     objects = AnswerManager()
 
 
+class AnswerChoice(models.Model):
+    choice = models.ForeignKey('Choice')
+    answer = models.ForeignKey('Answer')
+    
+    def __unicode__(self):
+        return self.choice.title
 
-    
-    

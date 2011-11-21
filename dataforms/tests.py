@@ -16,7 +16,7 @@ Usage::
 """
 
 import forms
-from models import DataForm, Submission, AnswerText
+from models import DataForm, Submission, Answer
 from test_helpers import RequestFactory, CustomTestCase
 from django import template
 rf = RequestFactory()
@@ -69,7 +69,8 @@ TEST_COLLECTION_POST_DATA = {
 TEST_COLLECTION_POST_DATA.update(TEST_FORM_POST_DATA)
 
 class FormsTestCase(CustomTestCase):
-	fixtures = ['../dataforms/tests.json']
+	
+	fixtures = ['dataforms_test.json']
 	
 	def testDataFormClass(self):
 		# Make sure we're checking for DataForm existence before creation
@@ -94,11 +95,13 @@ class FormsTestCase(CustomTestCase):
 		form = forms.create_form(request, form="personal-information", submission="myForm")
 		
 		# Make sure there's no submission object yet
-		self.assertRaises(AttributeError, getattr, form, 'submission')
+		# Removed, now we always expect to be a submission
+		# object attached.
+		#self.assertRaises(AttributeError, getattr, form, 'submission')
 		
 		# Validate the form to populate cleaned_data for the save function
 		form.is_valid()
-		if form.errors:
+		if form.errors:	
 			self.fail(form.errors)
 		
 		# Try saving the form
@@ -117,11 +120,11 @@ class FormsTestCase(CustomTestCase):
 		x.render(c)
 		
 		# Ensure Unicode encoding is being returned from models correctly
-		answer_texts = AnswerText.objects.all()
+		answers = Answer.objects.all()
 		
-		for answer_text in answer_texts:
+		for value in answers:
 			try:
-				answer_text.__unicode__()
+				value.__unicode__()
 			except UnicodeEncodeError:
 				self.fail("UnicodeEncodeError: 'ascii' codec can't encode character... Make sure you are using unicode() in every model's __unicode__() function, NOT str()")
 		
@@ -196,7 +199,7 @@ class FormsTestCase(CustomTestCase):
 	def testGetAnswers(self):
 		# Test getting answers the submission from the tests fixture using a string arg
 		answers = forms.get_answers(submission="testSubmission")
-		
+
 		# Just make sure it's not empty.
 		# FIXME: actually compare data against `tests` fixture
 		# FIXME: should verify that answers come back WITHOUT form name prepended
@@ -214,11 +217,11 @@ class FormsTestCase(CustomTestCase):
 		
 	def testGetSingleFieldAnswers(self):
 		submission = Submission.objects.get(slug="testSubmission")
-	
+
 		# Test get_answers when given a single field string
 		lang_answer = forms.get_answers(submission, field="other-languages")
 		bio_answer = forms.get_answers(submission, field="biography")
-	
+
 		self.assertEqual(len(lang_answer), 1, "Too many answers returned! Got: %s, should have: 1." % len(lang_answer))
 		self.assertEqual(lang_answer['other-languages'], u'\u2600')
 
@@ -229,7 +232,7 @@ class FormsTestCase(CustomTestCase):
 		submission = Submission.objects.get(slug="testSubmission")
 		
 		# Test get_answers when given multiple field slugs
-		answers = forms.get_answers(submission=submission, for_form=False, field=["other-languages","biography"])
+		answers = forms.get_answers(submission=submission)
 
 		self.assertEqual(answers['other-languages'], u'\u2600')
 		self.assertEqual(answers['biography'], u'Blah blah blah\u2600')

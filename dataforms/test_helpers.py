@@ -1,11 +1,10 @@
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Q
 from django.test import TestCase, Client
-from django.utils.datastructures import SortedDict
 from forms import _field_for_form, \
 	get_answers # kind of breaking low coupling here
 from models import Submission, Answer
-from settings import BOOLEAN_FIELDS, MULTI_CHOICE_FIELDS, UPLOAD_FIELDS
+from app_settings import BOOLEAN_FIELDS, MULTI_CHOICE_FIELDS, UPLOAD_FIELDS
 
 
 class RequestFactory(Client):
@@ -47,6 +46,7 @@ class RequestFactory(Client):
 		return WSGIRequest(environ)
 
 class CustomTestCase(TestCase):
+	
 	def assertDictionaryEqual(self, from_post, from_db):
 		"""
 		Just a nicer way to see out dictionary differences
@@ -80,7 +80,7 @@ class CustomTestCase(TestCase):
 		if isinstance(submission, str):
 			submission = Submission.objects.get(slug=submission)
 		answers_from_db = get_answers(submission=submission, for_form=True)
-		
+
 		# ------ 1 ------
 		# This fixes the fact that a POST request will not have a checkbox key,
 		# but the DB _may_ contain a blank string for a checkbox False value
@@ -110,7 +110,7 @@ class CustomTestCase(TestCase):
 		# and that won't be true from get_answers
 		
 		# Get all Answers that won't be lists
-		# FIXME: excluding upload fields here. Once testing is implemented, remove +UPLOAD_FIELDS
+		# FIXME: excluding upload fields here. Once testing is implemented, remove + UPLOAD_FIELDS
 		answers = Answer.objects.select_related('field').filter(
 			submission=submission
 		).exclude(Q(field__field_type__in=MULTI_CHOICE_FIELDS+BOOLEAN_FIELDS+UPLOAD_FIELDS))
@@ -121,9 +121,16 @@ class CustomTestCase(TestCase):
 		for form_name, field_name in field_names:
 			form_field_name = _field_for_form(name=field_name, form=form_name)
 			try:
-				answers_from_db[form_field_name] = [answers_from_db[form_field_name]]
+				# Delete blank answers, we assume they are not in the post.
+				if not answers_from_db[form_field_name]:
+					del answers_from_db[form_field_name]
+				else:
+					answers_from_db[form_field_name] = [answers_from_db[form_field_name]]
 			except KeyError:
-				self.fail("It looks like get_answers() (or saving) might be borked. '%s' was supposed to exist in answers_from_db, but doesn't. Perhaps a certain storage mechanism in the save() function is not working properly? Or you messed with the fields and haven't updated TEST_FORM_POST_DATA?" % form_field_name)
+				self.fail("It looks like get_answers() (or saving) might be borked. '%s'"
+						" was supposed to exist in answers_from_db, but doesn't. Perhaps a certain"
+						" storage mechanism in the save() function is not working properly? Or you messed"
+						" with the fields and haven't updated TEST_FORM_POST_DATA?" % form_field_name)
 		
 		# ------ 3 ------
 		# Actually compare the submitted data to the DB data

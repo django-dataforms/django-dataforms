@@ -1,5 +1,5 @@
 from collections import defaultdict
-from django.db import connections, models
+from django.db import connections, models, transaction
 from itertools import groupby
 
 def query_to_grouped_dict(cursor, groupid='id'):
@@ -69,6 +69,7 @@ def insert_many(objects, using="default"):
     con.cursor().executemany(
         "insert into %s (%s) values (%s)" % (table, column_names, placeholders),
         parameters)
+    transaction.commit_unless_managed()
 
 
 def update_many(objects, fields=[], using="default"):
@@ -98,6 +99,7 @@ def update_many(objects, fields=[], using="default"):
     con.cursor().executemany(
         "update %s set %s where %s=%%s" % (table, assignments, con.ops.quote_name(meta.pk.column)),
         parameters)
+    transaction.commit_unless_managed()
     
     
 def delete_many(objects, table=None, using="default"):
@@ -113,4 +115,6 @@ def delete_many(objects, table=None, using="default"):
     con.cursor().executemany(
         "delete from %s where %s=%%s" % (table, con.ops.quote_name(meta.pk.column)),
         parameters)
+    transaction.commit_unless_managed()
+    
     

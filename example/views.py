@@ -1,4 +1,4 @@
-from dataforms.utils.file_handler import handle_upload
+from dataforms.utils.file import handle_upload
 from dataforms.forms import create_form, create_collection
 from django.conf import settings
 from django.http import HttpResponse
