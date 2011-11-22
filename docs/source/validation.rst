@@ -4,7 +4,7 @@ Dataforms Form Validation
 Validation on Dataforms is very similiar to how you would do validation on a regular
 Django form.  The are only 2 things that you needs to remember:
 
-	*	Make sure you declare a *staticmethod* decorator on all classes that are to be 
+	*	Make sure you declare a *staticmethod* decorator on all methods that are to be 
 		used for validation on Dataforms
 		
 	*	| The name of you validation class has to match the slug of the dataform

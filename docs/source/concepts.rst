@@ -3,7 +3,7 @@ Concepts and Definitions
 
 Below are some important concepts that are helpfull to understand when working
 with Dataforms.
-
+ 
 
 Collection
 ----------

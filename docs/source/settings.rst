@@ -78,3 +78,4 @@ Below are the available settings for Dataforms that can go in your settings.py f
 	| Specify where or not to use remote JQuery libraries.
 	| *default* = True
 
+ 
