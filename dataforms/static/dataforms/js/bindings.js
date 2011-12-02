@@ -103,7 +103,7 @@ function doBindings(event, noAnimation) {
 				if (binding.true_field) {
 					// Loop through the true fields to show
 					$.each(binding.true_field, function(index, selector){
-						$("label[for*='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li").show(speed);
+						$("label[for='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li").show(speed);
 					});
 				}
 				
@@ -112,8 +112,8 @@ function doBindings(event, noAnimation) {
 					$.each(binding.true_choice, function(index, selector){
 	
 						var bindingElement = smartGetSelector(selector[0], selector[1]);
-						
-						$("label[for*='id_"+selector[0]+"_0']").first().show(speed);
+	
+						$("label[for='id_"+selector[0]+"_0']").first().show(speed);
 						// Show if the value matches the fieldchoice
 						if (bindingElement.is("option")) {
 							bindingElement.removeAttr('disabled');
@@ -131,7 +131,7 @@ function doBindings(event, noAnimation) {
 				if (binding.false_field) {
 					// Loop through the false fields to hide
 					$.each(binding.false_field, function(index, selector){
-						$("label[for*='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li").hide(speed);
+						$("label[for='id_"+selector+"']").closest(".dataform-field,tr,ul,p,li").hide(speed);
 					});
 				}
 	
@@ -148,7 +148,7 @@ function doBindings(event, noAnimation) {
 						else {
 							bindingElement.closest('li').hide('fast', function(){
 								if (bindingElement.closest(".dataform-field,tr,ul,p").find('input:visible').length == 0) {
-									$("label[for*='id_"+selector[0]+"']").first().hide();
+									$("label[for='id_"+selector[0]+"']").first().hide();
 								}
 							});
 						}
