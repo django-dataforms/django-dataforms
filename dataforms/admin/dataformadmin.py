@@ -17,7 +17,7 @@ class DataFormAdmin(admin.ModelAdmin):
     
     fieldsets = (
         (None, {
-            'fields' : ('title', 'description', 'slug', 'visible',),
+            'fields' : ('title', 'description', 'slug', 'javascript_include', 'visible',),
             'description': "A data form is a dynamic Django form."
         }),
     )

@@ -602,10 +602,12 @@ def create_form(request, form, submission, title=None,
     form.submission = submission
     form.section = section
     form.query_data = query_data
+    form.js_include = query_data['dataform_query'].javascript_include
     
     form.meta['submission'] = submission
     form.meta['section'] = section
     form.meta['query_data'] = query_data
+    form.meta['js_include'] = query_data['dataform_query'].javascript_include
     
     return form
 

@@ -67,6 +67,7 @@ class DataForm(models.Model):
     description = models.TextField(verbose_name=_('description'), blank=True)
     slug = models.SlugField(verbose_name=_('slug'), max_length=255, unique=True, validators=[reserved_delimiter])
     visible = models.BooleanField(verbose_name=_('form is visible'), default=True)
+    javascript_include = models.CharField(max_length=500, blank=True)
 
     def __unicode__(self):
         return self.slug
