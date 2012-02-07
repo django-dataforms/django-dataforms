@@ -64,8 +64,7 @@ class BindingAdmin(admin.ModelAdmin):
             '<li>' + c + '</li>' for c in obj.true_field
         ]) if obj.true_field else ''
         choices = ''.join([
-            '<li>' + '%s (%s)' % (c.split('___')[0], c.split('___')[1].upper()) + '</li>' 
-            for c in obj.true_choice
+            '<li>' + c + '</li>' for c in obj.true_choice
         ]) if obj.true_choice else ''
         return '<ul>' + fields + choices + '</ul>'
     true_fields_list.allow_tags = True
