@@ -15,3 +15,4 @@ class ChoiceInline(admin.TabularInline):
 class FieldInline(admin.TabularInline):
     model = DataFormField
     extra = 1
+    

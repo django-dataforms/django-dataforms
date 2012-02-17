@@ -1,4 +1,4 @@
-from dataforms.app_settings import ADMIN_JS
+from dataforms.app_settings import ADMIN_JS, ADMIN_CSS
 from django.contrib import admin
 from inlines import CollectionInline
 

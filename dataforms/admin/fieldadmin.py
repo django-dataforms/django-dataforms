@@ -1,6 +1,6 @@
 from dataforms.admin.forms import FieldAdminForm
 from dataforms.models import Field, DataForm
-from dataforms.app_settings import ADMIN_JS
+from dataforms.app_settings import ADMIN_JS, ADMIN_CSS
 from django import forms
 from django.contrib import admin
 from inlines import ChoiceInline, FieldInline
@@ -16,7 +16,7 @@ class FieldAdminForm(forms.ModelForm):
         if 'meta' in data:
             raise forms.ValidationError("You cannot use the term 'meta' as a label as it is reserved.")
         return data    
-
+    
 
 class FieldMappingAdmin(admin.ModelAdmin):
     list_display = ('id', 'dataform_slug', 'field_slug', 'field_label', 'order')
@@ -41,6 +41,7 @@ class FieldMappingAdmin(admin.ModelAdmin):
         
     class Media:
         js = ADMIN_JS
+        css = { 'all' : ADMIN_CSS }
         
 class FieldAdmin(admin.ModelAdmin):
     list_select_related = True
@@ -49,7 +50,8 @@ class FieldAdmin(admin.ModelAdmin):
     list_display = ('label', 'slug', 'field_type', 'visible', 'required', 'choices_link')
     list_editable = ('field_type', 'visible', 'required',)
     search_fields = ('label','slug')
-    inlines = [ChoiceInline, FieldInline]
+    #inlines = [ChoiceInline, FieldInline]
+    inlines = [ChoiceInline]
     save_as = True
     form = FieldAdminForm
     
@@ -57,3 +59,8 @@ class FieldAdmin(admin.ModelAdmin):
         return '<a href="../fieldchoice/?field__id__exact=%s">Choices<a>' % obj.pk
     choices_link.allow_tags = True
     choices_link.short_description = "Choices"
+
+    class Media:
+        js = ADMIN_JS
+        css = { 'all' : ADMIN_CSS }
+        

@@ -22,6 +22,10 @@ class Collection(models.Model):
     def __unicode__(self):
         return self.slug
 
+    class Meta:
+        verbose_name = 'Form Collection'
+        verbose_name_plural = 'Form Collections'
+
 
 class CollectionDataForm(models.Model):
     """ 
@@ -74,6 +78,8 @@ class DataForm(models.Model):
     
     class Meta:
         ordering = ['title', ]
+        verbose_name = 'Form'
+        verbose_name_plural = 'Forms'
 
 
 class DataFormField(models.Model):
@@ -167,6 +173,10 @@ class Binding(models.Model):
     def __unicode__(self):
         return '%s' % self.pk
  
+    class Meta:
+        verbose_name = 'Field Binding'
+        verbose_name_plural = 'Field Bindings'
+    
     
 class FieldChoiceManager(models.Manager):
 
@@ -223,6 +233,8 @@ class Choice(models.Model):
         ordering = ['title']
         # FIXME: This fails on MySQL using InnoDB due to MySQL bug http://bugs.mysql.com/bug.php?id=4541
         #unique_together = ('title', 'value',)
+        verbose_name = 'Field Choice'
+        verbose_name_plural = 'Field Choices'
 
 
 class Submission(models.Model):

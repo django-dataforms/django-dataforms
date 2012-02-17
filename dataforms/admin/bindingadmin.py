@@ -1,5 +1,5 @@
 from dataforms.admin.forms import BindingAdminForm
-from dataforms.app_settings import ADMIN_JS
+from dataforms.app_settings import ADMIN_JS, ADMIN_CSS
 from django.conf.urls.defaults import patterns
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
@@ -93,5 +93,5 @@ class BindingAdmin(admin.ModelAdmin):
     
     class Media:
         js = ADMIN_JS
-        
+        css = { 'all' : ADMIN_CSS }
 

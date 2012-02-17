@@ -60,8 +60,12 @@ REMOTE_JQUERY_CSS = (
 	'https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/base/jquery-ui.css',
 )
 
-ADMIN_JS = REMOTE_JQUERY_JS + (
+ADMIN_JS = (
 	'%sdataforms/js/admin.js' % settings.STATIC_URL,
+)
+
+ADMIN_CSS = (
+	'%sdataforms/css/admin.css' % settings.STATIC_URL,
 )
 
 FORM_MEDIA = {
@@ -78,7 +82,14 @@ if USE_REMOTE_JQUERY:
 	FORM_MEDIA['css'] = {
 		'all' : REMOTE_JQUERY_CSS
 	}
-	#FORM_MEDIA['js'].reverse()
+	ADMIN_JS = tuple(set(REMOTE_JQUERY_JS+ADMIN_JS))
+
+ADMIN_MEDIA = {
+	'js' : ADMIN_JS,
+	'css' : {
+		'all' : ADMIN_CSS
+	}
+}
 
 BINDING_OPERATOR_CHOICES = (
     ('checked', 'Checked or Has Value',),
