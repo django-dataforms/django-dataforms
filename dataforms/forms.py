@@ -32,10 +32,14 @@ except ImportError: validation = None
 
 class BaseDataForm(forms.BaseForm):
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, readonly=False, *args, **kwargs):
         super(BaseDataForm, self).__init__(*args, **kwargs)
         self._generate_bound_fields()
-
+        
+        #set fields as readonly if property is true
+        #if readonly:
+        self._readonly_fields()
+            
  
     def __getattr__(self, name):
         if 'clean_' in name:
@@ -193,6 +197,15 @@ class BaseDataForm(forms.BaseForm):
         # Return a submission so the collection or form can have this.
         return self.submission
 
+
+    def _readonly_fields(self):
+        """
+        Helper function to set read only fields.
+        """
+        for field in self.fields:
+            self.fields[field].widget.attrs['readonly'] = 'readonly'
+            self.fields[field].widget.attrs['disabled'] = 'disabled'
+    
     
     def _prepare_answer(self, answer, choices):
         
@@ -495,7 +508,7 @@ def create_collection(request, collection, submission, readonly=False, section=N
     return collection
 
 
-def create_form(request, form, submission, title=None,
+def create_form(request, form, submission=None, title=None,
             description=None, section=None, readonly=False, answers=None,
             return_class=False, force_bind=False):
     """
@@ -513,13 +526,13 @@ def create_form(request, form, submission, title=None,
         
     :param request: *required* (object); the current page request object, so we can pull POST and other vars.
     :param form: *required* (string or object); a Dataform slug or object
-    :param submission: *required* (string or object); a create-on-use submission slug or object; passed in to retrieve
+    :param submission: *optional* (string or object); a create-on-use submission slug or object; passed in to retrieve
         Answers from an existing Submission, or to be the slug for a new Submission.
     :param title: *optional* (string); a title for the form, pulled from DB by default
     :param description: *optional* (string); a description pulled from DB by default
     :param section: *optional* (string or object); a section that will be added as an attr to the form instance 
     :param readonly: *optional* (boolean) readonly converts form fields to be readonly.
-        Usefull for display only logic.
+        Usefull for display only logic. Does not work when return_class is True.
     :param answers: *optional* (dictionary); a answer dictionary for the submission.  
         It should follow the same format os get_answers().
     :param return_class: *optional* (boolean); returns only the form class and decouples database saves
@@ -527,7 +540,7 @@ def create_form(request, form, submission, title=None,
     """
             
     # Create our form class and get the querys we used
-    FormClass, query_data = _create_form(form=form, title=title, description=description, readonly=readonly)
+    FormClass, query_data = _create_form(form=form, title=title, description=description)
     
     # Return just the class object if a Form Class is only needed
     # This will de-couple the database integration allowing the developer
@@ -546,7 +559,7 @@ def create_form(request, form, submission, title=None,
     elif submission:
         data = get_answers(submission=submission, for_form=True)
     else:
-        data = None
+        data = []
     
     # Parse Upload Fields into list
     upload_fields = []
@@ -584,7 +597,7 @@ def create_form(request, form, submission, title=None,
                 files[field] = existing_files[field]
                 
         
-        form = FormClass(data=request.POST, files=files)
+        form = FormClass(data=request.POST, files=files, readonly=readonly)
     else:
         # We populate the initial data of the form from the database answers. Any questions we
         # don't have answers for in the database will use their initial field defaults.
@@ -593,9 +606,9 @@ def create_form(request, form, submission, title=None,
         # You can manually bind to force validation wihtout a POST by setting
         # is_bound to True
         if force_bind:
-            form = FormClass(data=data, files=existing_files)
+            form = FormClass(data=data, files=existing_files, readonly=readonly)
         else:
-            form = FormClass(initial=(data))
+            form = FormClass(initial=(data), readonly=readonly)
         
     # Now that we have an instantiated form object, let's add our custom attributes
     # TODO: I now have this in the meta....we should remove these.
@@ -640,7 +653,7 @@ def create_sections(collection):
     return sections
 
 
-def _create_form(form, title=None, description=None, readonly=False):
+def _create_form(form, title=None, description=None):
     """
     Creates a form class object.
     
@@ -798,10 +811,6 @@ def _create_form(form, title=None, description=None, readonly=False):
                 
             else:
                 field_kwargs['initial'] = ''.join(field_kwargs['initial'])
-        
-        if readonly:
-            widget_attrs['readonly'] = 'readonly'
-            widget_attrs['disabled'] = "disabled"
         
         # Add our additional css classes
         if row.has_key('classes'):
