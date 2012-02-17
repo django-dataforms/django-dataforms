@@ -37,8 +37,8 @@ class BaseDataForm(forms.BaseForm):
         self._generate_bound_fields()
         
         #set fields as readonly if property is true
-        #if readonly:
-        self._readonly_fields()
+        if readonly:
+            self._readonly_fields()
             
  
     def __getattr__(self, name):
