@@ -575,9 +575,9 @@ def create_form(request, form, submission=None, title=None,
             # Try to attach the existing uploaded files.  If this fails
             # we assume it was deleted and will pass nothing.
             try:
-                dataform_file = open(''.join([settings.MEDIA_ROOT, data[item]]), 'r')
-                data[item] = DataFormFile(dataform_file, name=data[item])
-                existing_files[item] = data[item]
+                with open(''.join([settings.MEDIA_ROOT, data[item]]), 'rb') as dataform_file:
+                    data[item] = DataFormFile(dataform_file, name=data[item])
+                    existing_files[item] = data[item]
             except:
                 pass
     
