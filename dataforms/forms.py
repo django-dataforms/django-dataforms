@@ -17,7 +17,7 @@ from models import DataForm, Collection, Field, FieldChoice, Choice, Answer, \
     AnswerChoice, Submission, CollectionDataForm, Section, Binding
 from app_settings import FIELD_MAPPINGS, SINGLE_CHOICE_FIELDS, MULTI_CHOICE_FIELDS, \
     CHOICE_FIELDS, UPLOAD_FIELDS, FIELD_DELIMITER, STATIC_CHOICE_FIELDS, FORM_MEDIA, \
-    VALIDATION_MODULE
+    VALIDATION_MODULE, CHOICES_MODULE
 from utils.file import handle_upload, DataFormFile
 from utils.sql import update_many, insert_many
 import datetime
@@ -26,9 +26,12 @@ import os
 
 
 # Load the user's custom validation, if it exists
-try: validation = __import__(VALIDATION_MODULE, fromlist=['*'])
-except ImportError: validation = None
+try: validation_module = __import__(VALIDATION_MODULE, fromlist=['*'])
+except ImportError: validation_module = None
 
+# Load the user's custom choices, if it exists
+try: choices_module = __import__(CHOICES_MODULE, fromlist=['*'])
+except ImportError: choices_module = None
 
 class BaseDataForm(forms.BaseForm):
 
@@ -797,8 +800,13 @@ def _create_form(form, title=None, description=None):
             if row['field_type'] == 'Select':
                 choices += ('', '--------'),
 
+            choices_func = getattr(choices_module, row['slug'].replace('-', '_'), None)
+
             # Populate our choices tuple
-            choices += choices_dict[row['id']]
+            if choices_func:
+                choices += choices_func()
+            else:
+                choices += choices_dict[row['id']]
             field_kwargs['choices'] = choices
 
             if row['field_type'] in MULTI_CHOICE_FIELDS:
@@ -838,8 +846,8 @@ def _create_form(form, title=None, description=None):
         final_fields[form_field_name] = final_field
 
     # Grab the dynamic validation function from validation.py
-    if validation:
-        validate = getattr(validation, form_class_title, None)
+    if validation_module:
+        validate = getattr(validation_module, form_class_title, None)
 
         if validate:
             # Pull the "clean_" functions from the validation
