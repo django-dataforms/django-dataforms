@@ -8,7 +8,7 @@ FIELD_MAPPINGS = {}
 
 if hasattr(settings, 'DATAFORMS_FIELD_MAPPINGS'):
 	FIELD_MAPPINGS = settings.DATAFORMS_FIELD_MAPPINGS
-	
+
 FIELD_MAPPINGS.update( {
 	'TextInput' : { 'class': 'django.forms.CharField', 'widget': 'django.forms.TextInput' },
 	'Textarea' : { 'class': 'django.forms.CharField', 'widget': 'django.forms.Textarea' },
@@ -27,9 +27,9 @@ FIELD_MAPPINGS.update( {
 	'DecimalInput' : { 'class': 'django.forms.DecimalField', 'widget': 'django.forms.TextInput' },
 	# Note Widget:  This is a way you can add sub headings to your forms.  See - dataforms.widgets.NoteWidget
 	'Note' : { 'class': 'django.forms.CharField', 'widget': 'dataforms.widgets.NoteWidget' },
-	
+
 	# FIXME: Remove After testing....
-	'USStateField' : { 'class': 'django.contrib.localflavor.us.forms.USStateField', 'widget' : 'django.forms.TextInput' },   
+	'USStateField' : { 'class': 'django.contrib.localflavor.us.forms.USStateField', 'widget' : 'django.forms.TextInput' },
 } )
 
 # Path for file uploads (don't forget trailing slash)
@@ -49,6 +49,8 @@ STATIC_CHOICE_FIELDS = getattr(settings, "DATAFORMS_STATIC_CHOICE_FIELDS", ())
 FIELD_DELIMITER = getattr(settings, "DATAFORMS_FIELD_DELIMITER", "__")
 
 VALIDATION_MODULE = getattr(settings, "DATAFORMS_VALIDATION_MODULE", "validation")
+
+CHOICES_MODULE = getattr(settings, "DATAFORMS_CHOICES_MODULE", "choices")
 
 FIELD_TYPE_CHOICES = tuple([(field,field) for field in FIELD_MAPPINGS])
 
