@@ -168,9 +168,6 @@ class BaseDataForm(forms.BaseForm):
             answers = (Answer.objects.select_related('submission', 'data_from', 'field')
                        .filter(data_form__slug=self.slug, submission=self.submission))
 
-        # Get All possible choices from form models dict
-        choices = Choice.objects.all()
-
         # Setup answer list so we can do a bulk update
         answer_objects = []
 
@@ -180,19 +177,8 @@ class BaseDataForm(forms.BaseForm):
             # Delete the choices so we can re-insert
             AnswerChoice.objects.filter(answer=answer).delete()
 
-            answer_obj, choice_relations = self._prepare_answer(answer, choices)
+            answer_obj = self._prepare_answer(answer)
             answer_objects.append(answer_obj)
-
-            # If there are choices, do mass insert on them for each answer.
-            if choice_relations:
-                answer_choices = []
-                for choice in choice_relations:
-                    answer_choice = AnswerChoice()
-                    answer_choice.answer = answer
-                    answer_choice.choice = choice
-                    answer_choices.append(answer_choice)
-
-                insert_many(answer_choices)
 
         # Update the answers
         update_many(answer_objects, fields=['value'])
@@ -210,36 +196,20 @@ class BaseDataForm(forms.BaseForm):
             self.fields[field].widget.attrs['disabled'] = 'disabled'
 
 
-    def _prepare_answer(self, answer, choices):
+    #def _prepare_answer(self, answer, choices):
+    def _prepare_answer(self, answer):
 
         field = answer.field
         key = _field_for_form(field, self.slug)
-        choice_relations = []
-
-
-        if field.field_type in STATIC_CHOICE_FIELDS:
-            answer.value = ','.join(self.cleaned_data[key])
 
         # Because Choices are m2m relations, we need to do this after the save.
-        elif field.field_type in CHOICE_FIELDS:
-
-            answer_choices = []
+        if field.field_type in CHOICE_FIELDS or field.field_type in STATIC_CHOICE_FIELDS:
 
             # If string, wrap as a list because the for-loop below assumes a list
             if isinstance(self.cleaned_data[key], str) or isinstance(self.cleaned_data[key], unicode):
                 self.cleaned_data[key] = [self.cleaned_data[key]]
 
-            # Add the selected choices
-            for choice_answer in self.cleaned_data[key]:
-                cur_choice = filter(lambda c: c.value == choice_answer, choices)
-                if cur_choice:
-                    cur_choice = cur_choice[0]
-                    answer_choices.append(unicode(cur_choice.value))
-                    choice_relations.append(cur_choice)
-
-            # Save the string representation of the choice answers in to
-            # answer.value
-            answer.value = ','.join(answer_choices)
+            answer.value = ','.join(self.cleaned_data[key])
 
         else:
 
@@ -272,7 +242,7 @@ class BaseDataForm(forms.BaseForm):
 
             answer.value = content
 
-        return answer, choice_relations
+        return answer
 
 
     def _remove_extraneous_fields(self):
